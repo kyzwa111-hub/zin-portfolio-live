@@ -21,11 +21,13 @@ The Telegram inbox in the same control room stores bot messages for review. A us
 
 ## Webhook
 
-Register the public HTTPS endpoint below after deployment:
+Register the current public HTTPS endpoint below after deployment:
 
 ```text
-POST https://<your-domain>/api/telegram/webhook
+POST https://zinportfolio-ghrs3ies.manus.space/api/telegram/webhook
 ```
+
+If the public domain changes, update this endpoint and register the new URL with Telegram.
 
 The application derives a webhook secret from `TELEGRAM_BOT_TOKEN` and verifies Telegram's `x-telegram-bot-api-secret-token` header. Use Telegram's `setWebhook` method with the same derived secret when deploying to a new domain.
 

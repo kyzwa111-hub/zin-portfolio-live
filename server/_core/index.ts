@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { getTelegramWebhookSecret, handleTelegramWebhook } from "../telegram";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -36,6 +37,19 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  app.post("/api/telegram/webhook", async (req, res) => {
+    if (req.header("x-telegram-bot-api-secret-token") !== getTelegramWebhookSecret()) {
+      res.status(401).json({ ok: false });
+      return;
+    }
+    try {
+      await handleTelegramWebhook(req.body);
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("[Telegram] Webhook error:", error);
+      res.status(500).json({ ok: false });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",

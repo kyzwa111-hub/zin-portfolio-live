@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { AccessRequest, FormTemplate, InsertUser, LinkedInUpdate, TelegramMessage, accessRequests, formTemplates, linkedinUpdates, telegramMessages, telegramSettings, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,128 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function createAccessRequest(input: {
+  requestId: string;
+  tokenHash: string;
+  expiresAt: Date;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  const result = await db.insert(accessRequests).values(input);
+  return result;
+}
+
+export async function getAccessRequest(requestId: string, tokenHash: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(accessRequests).where(and(eq(accessRequests.requestId, requestId), eq(accessRequests.tokenHash, tokenHash))).limit(1);
+  return result[0];
+}
+
+export async function getAccessRequestByRequestId(requestId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(accessRequests).where(eq(accessRequests.requestId, requestId)).limit(1);
+  return result[0];
+}
+
+export async function updateAccessRequest(requestId: string, update: Partial<Pick<AccessRequest, "status" | "telegramUserId" | "telegramUsername" | "approvedAt">>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.update(accessRequests).set(update).where(eq(accessRequests.requestId, requestId));
+}
+
+export async function listAccessRequests(limit = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(accessRequests).orderBy(desc(accessRequests.createdAt)).limit(limit);
+}
+
+export async function revokeAccessRequest(requestId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.update(accessRequests).set({ status: "revoked", revokedAt: new Date() }).where(eq(accessRequests.requestId, requestId));
+}
+
+export async function getTelegramSetting(settingKey: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(telegramSettings).where(eq(telegramSettings.settingKey, settingKey)).limit(1);
+  return result[0]?.settingValue;
+}
+
+export async function upsertTelegramSetting(settingKey: string, settingValue: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.insert(telegramSettings).values({ settingKey, settingValue }).onDuplicateKeyUpdate({ set: { settingValue } });
+}
+
+export async function listLinkedInUpdates(): Promise<LinkedInUpdate[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(linkedinUpdates).orderBy(desc(linkedinUpdates.createdAt));
+}
+
+export async function createLinkedInUpdate(input: Pick<LinkedInUpdate, "label" | "title" | "excerpt" | "dateLabel" | "status" | "linkedinUrl">) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.insert(linkedinUpdates).values(input);
+}
+
+export async function updateLinkedInUpdate(id: number, input: Partial<Pick<LinkedInUpdate, "label" | "title" | "excerpt" | "dateLabel" | "status" | "linkedinUrl">>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.update(linkedinUpdates).set(input).where(eq(linkedinUpdates.id, id));
+}
+
+export async function deleteLinkedInUpdate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.delete(linkedinUpdates).where(eq(linkedinUpdates.id, id));
+}
+
+export async function listFormTemplates(activeOnly = false): Promise<FormTemplate[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const query = db.select().from(formTemplates).orderBy(desc(formTemplates.updatedAt));
+  if (activeOnly) return query.where(eq(formTemplates.isActive, 1));
+  return query;
+}
+
+export async function createFormTemplate(input: Omit<FormTemplate, "id" | "createdAt" | "updatedAt">) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.insert(formTemplates).values(input);
+}
+
+export async function updateFormTemplate(id: number, input: Partial<Omit<FormTemplate, "id" | "createdAt" | "updatedAt">>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.update(formTemplates).set(input).where(eq(formTemplates.id, id));
+}
+
+export async function deleteFormTemplate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.delete(formTemplates).where(eq(formTemplates.id, id));
+}
+
+export async function createTelegramMessage(input: Omit<TelegramMessage, "id" | "createdAt">) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.insert(telegramMessages).values(input);
+}
+
+export async function listTelegramMessages(limit = 200) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(telegramMessages).orderBy(desc(telegramMessages.createdAt)).limit(limit);
+  return rows.reverse();
+}
+
+export async function getTelegramMessageByExternalId(telegramMessageId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(telegramMessages).where(eq(telegramMessages.telegramMessageId, telegramMessageId)).limit(1);
+  return rows[0];
+}

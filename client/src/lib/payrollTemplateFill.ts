@@ -60,10 +60,18 @@ function fillMonthlyPaye(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
   sheet.W7 = { t: "s", v: "" };
 }
 
+export function getSSBTemplateValues(monthlyGross: number) {
+  const contributionBase = Math.min(Math.max(0, monthlyGross), 300_000);
+  const employerHealth = contributionBase * 0.02;
+  const employerInjury = contributionBase * 0.01;
+  const employerTotal = employerHealth + employerInjury;
+  const employeeTotal = contributionBase * 0.02;
+  return { contributionBase, employerHealth, employerInjury, employerTotal, employeeTotal, total: employerTotal + employeeTotal };
+}
+
 function fillMonthlySsb(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const employerInjury = data.monthlyGross * 0.01;
-  const employerTotal = data.employerSSB + employerInjury;
+  const { contributionBase, employerHealth, employerInjury, employerTotal, employeeTotal, total } = getSSBTemplateValues(data.monthlyGross);
   sheet.A7 = { t: "n", v: 1 };
   sheet.B7 = { t: "s", v: "Payroll employee" };
   sheet.C7 = { t: "s", v: "Payroll employee" };
@@ -71,12 +79,12 @@ function fillMonthlySsb(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
   sheet.E7 = { t: "s", v: "Payroll employee" };
   sheet.F7 = { t: "s", v: "—" };
   sheet.G7 = { t: "n", v: money(data.monthlyGross) };
-  sheet.H7 = { t: "n", v: money(data.employerSSB) };
-  sheet.I7 = { t: "n", v: money(data.employeeSSB) };
+  sheet.H7 = { t: "n", v: money(employerHealth) };
+  sheet.I7 = { t: "n", v: money(employeeTotal) };
   sheet.J7 = { t: "n", v: money(employerInjury) };
   sheet.K7 = { t: "n", v: money(employerTotal) };
-  sheet.L7 = { t: "n", v: money(data.employeeSSB) };
-  sheet.M7 = { t: "n", v: money(employerTotal + data.employeeSSB) };
+  sheet.L7 = { t: "n", v: money(employeeTotal) };
+  sheet.M7 = { t: "n", v: money(total) };
   sheet.N7 = { t: "s", v: `${data.taxLabel} estimate` };
 }
 

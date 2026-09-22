@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TAX_RULES, calculateAnnualPIT, calculateProgressiveTax, calculateSSB } from "../client/src/components/PayrollCalculator";
+import { getSSBTemplateValues } from "../client/src/lib/payrollTemplateFill";
 
 describe("Myanmar payroll calculator", () => {
   it("applies the progressive tax brackets", () => {
@@ -23,5 +24,9 @@ describe("Myanmar payroll calculator", () => {
   it("uses the official SSB structure: employee 2%, employer 3%, capped at 300,000 MMK", () => {
     expect(calculateSSB(250_000)).toEqual({ contributionBase: 250_000, employeeSSB: 5_000, employerSSB: 7_500 });
     expect(calculateSSB(800_000)).toEqual({ contributionBase: 300_000, employeeSSB: 6_000, employerSSB: 9_000 });
+  });
+
+  it("splits the SSB template employer columns without double-counting injury contribution", () => {
+    expect(getSSBTemplateValues(800_000)).toEqual({ contributionBase: 300_000, employerHealth: 6_000, employerInjury: 3_000, employerTotal: 9_000, employeeTotal: 6_000, total: 15_000 });
   });
 });

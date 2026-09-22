@@ -1,5 +1,5 @@
 import { and, desc, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { AccessRequest, FormTemplate, InsertUser, LinkedInUpdate, TelegramMessage, accessRequests, formTemplates, linkedinUpdates, telegramMessages, telegramSettings, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -9,7 +9,7 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      _db = drizzle(process.env.DATABASE_URL, { casing: "camelCase" });
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -33,7 +33,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     const values: InsertUser = {
       openId: user.openId,
     };
-    const updateSet: Record<string, unknown> = {};
+    const updateSet: Partial<InsertUser> = {};
 
     const textFields = ["name", "email", "loginMethod"] as const;
     type TextField = (typeof textFields)[number];
@@ -68,7 +68,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    updateSet.updatedAt = new Date();
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -117,7 +119,7 @@ export async function getAccessRequestByRequestId(requestId: string) {
 export async function updateAccessRequest(requestId: string, update: Partial<Pick<AccessRequest, "status" | "telegramUserId" | "telegramUsername" | "approvedAt">>) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
-  await db.update(accessRequests).set(update).where(eq(accessRequests.requestId, requestId));
+  await db.update(accessRequests).set({ ...update, updatedAt: new Date() }).where(eq(accessRequests.requestId, requestId));
 }
 
 export async function listAccessRequests(limit = 100) {
@@ -129,7 +131,7 @@ export async function listAccessRequests(limit = 100) {
 export async function revokeAccessRequest(requestId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
-  await db.update(accessRequests).set({ status: "revoked", revokedAt: new Date() }).where(eq(accessRequests.requestId, requestId));
+  await db.update(accessRequests).set({ status: "revoked", revokedAt: new Date(), updatedAt: new Date() }).where(eq(accessRequests.requestId, requestId));
 }
 
 export async function getTelegramSetting(settingKey: string) {
@@ -142,7 +144,7 @@ export async function getTelegramSetting(settingKey: string) {
 export async function upsertTelegramSetting(settingKey: string, settingValue: string) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
-  await db.insert(telegramSettings).values({ settingKey, settingValue }).onDuplicateKeyUpdate({ set: { settingValue } });
+  await db.insert(telegramSettings).values({ settingKey, settingValue }).onConflictDoUpdate({ target: telegramSettings.settingKey, set: { settingValue, updatedAt: new Date() } });
 }
 
 export async function listLinkedInUpdates(): Promise<LinkedInUpdate[]> {
@@ -160,7 +162,7 @@ export async function createLinkedInUpdate(input: Pick<LinkedInUpdate, "label" |
 export async function updateLinkedInUpdate(id: number, input: Partial<Pick<LinkedInUpdate, "label" | "title" | "excerpt" | "dateLabel" | "status" | "linkedinUrl">>) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
-  await db.update(linkedinUpdates).set(input).where(eq(linkedinUpdates.id, id));
+  await db.update(linkedinUpdates).set({ ...input, updatedAt: new Date() }).where(eq(linkedinUpdates.id, id));
 }
 
 export async function deleteLinkedInUpdate(id: number) {
@@ -186,7 +188,7 @@ export async function createFormTemplate(input: Omit<FormTemplate, "id" | "creat
 export async function updateFormTemplate(id: number, input: Partial<Omit<FormTemplate, "id" | "createdAt" | "updatedAt">>) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
-  await db.update(formTemplates).set(input).where(eq(formTemplates.id, id));
+  await db.update(formTemplates).set({ ...input, updatedAt: new Date() }).where(eq(formTemplates.id, id));
 }
 
 export async function deleteFormTemplate(id: number) {

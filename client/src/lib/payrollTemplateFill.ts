@@ -4,6 +4,7 @@ import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun } fro
 export type AutoFillKind = "monthly-paye" | "monthly-ssb" | "annual-ird" | "annual-cover-letter";
 
 export type PayrollAutoFillData = {
+  fiscalYear: string;
   monthlyGross: number;
   annualGross: number;
   employeeSSB: number;
@@ -25,7 +26,7 @@ export type PayrollAutoFillData = {
 
 const money = (value: number) => Math.round(value);
 const isoDate = new Date().toISOString().slice(0, 10);
-const year = new Date().getFullYear();
+const fileSafeFiscalYear = (fiscalYear: string) => fiscalYear.replace(/[^0-9-]/g, "-");
 
 function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -49,7 +50,7 @@ function fillMonthlyPaye(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
   sheet.A7 = { t: "n", v: 1 };
   sheet.B7 = { t: "s", v: "Payroll employee" };
   sheet.M7 = { t: "s", v: new Date().toLocaleString("en-US", { month: "short" }).toUpperCase() };
-  sheet.N7 = { t: "n", v: year };
+  sheet.N7 = { t: "s", v: `FY ${data.fiscalYear}` };
   sheet.O7 = { t: "s", v: isoDate.split("-").reverse().join("-") };
   sheet.P7 = { t: "n", v: money(data.monthlyGross) };
   sheet.Q7 = { t: "n", v: 0 };
@@ -85,7 +86,7 @@ function fillMonthlySsb(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
   sheet.K7 = { t: "n", v: money(employerTotal) };
   sheet.L7 = { t: "n", v: money(employeeTotal) };
   sheet.M7 = { t: "n", v: money(total) };
-  sheet.N7 = { t: "s", v: `${data.taxLabel} estimate` };
+  sheet.N7 = { t: "s", v: `FY ${data.fiscalYear} · ${data.taxLabel} estimate` };
 }
 
 function fillAnnualIrd(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
@@ -113,7 +114,7 @@ export async function downloadFilledExcelTemplate(templateUrl: string, kind: "mo
   if (kind === "monthly-ssb") fillMonthlySsb(workbook, data);
   if (kind === "annual-ird") fillAnnualIrd(workbook, data);
   const output = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  saveBlob(new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `zin-min-htet-${kind}-${year}-filled.xlsx`);
+  saveBlob(new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `zin-min-htet-${kind}-FY-${fileSafeFiscalYear(data.fiscalYear)}-filled.xlsx`);
 }
 
 export async function downloadFilledCoverLetter(data: PayrollAutoFillData) {
@@ -126,7 +127,7 @@ export async function downloadFilledCoverLetter(data: PayrollAutoFillData) {
         new Paragraph({ text: "Subject: Annual salary statement preparation — auto-filled working draft", heading: HeadingLevel.HEADING_2, spacing: { after: 240 } }),
         new Paragraph({ children: [new TextRun("Employer / Company: "), new TextRun({ text: "[Enter employer name]", bold: true })] }),
         new Paragraph({ children: [new TextRun("TIN: "), new TextRun({ text: "[Enter TIN]", bold: true })] }),
-        new Paragraph({ text: `Financial year basis: ${data.taxEffective}`, spacing: { after: 180 } }),
+        new Paragraph({ text: `Financial year: FY ${data.fiscalYear} (${data.taxEffective})`, spacing: { after: 180 } }),
         new Paragraph({ text: "This working draft was auto-filled from the Zin Min Htet payroll calculator. Replace the placeholders, attach the official salary statement, and verify current IRD filing requirements before submission.", spacing: { after: 180 } }),
         new Paragraph({ text: `Estimated annual gross salary: ${money(data.annualGross).toLocaleString()} MMK` }),
         new Paragraph({ text: `Estimated employee SSB: ${money(data.employeeSSB * 12).toLocaleString()} MMK` }),
@@ -137,5 +138,5 @@ export async function downloadFilledCoverLetter(data: PayrollAutoFillData) {
     }],
   });
   const blob = await Packer.toBlob(document);
-  saveBlob(blob, `zin-min-htet-annual-cover-letter-${year}-filled.docx`);
+  saveBlob(blob, `zin-min-htet-annual-cover-letter-FY-${fileSafeFiscalYear(data.fiscalYear)}-filled.docx`);
 }

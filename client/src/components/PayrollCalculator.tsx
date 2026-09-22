@@ -8,6 +8,7 @@ type TaxMode = "employee" | "employer";
 type AccessSession = { requestId: string; token: string };
 type TaxRuleVersion = "2025-2026" | "2026-2027";
 type TaxRule = {
+  fiscalYear: TaxRuleVersion;
   label: string;
   effective: string;
   salaryExemption: number;
@@ -22,6 +23,7 @@ type TaxRule = {
 
 export const TAX_RULES: Record<TaxRuleVersion, TaxRule> = {
   "2025-2026": {
+    fiscalYear: "2025-2026",
     label: "FY 2025–2026",
     effective: "1 Apr 2025 – 31 Mar 2026",
     salaryExemption: 4_800_000,
@@ -34,6 +36,7 @@ export const TAX_RULES: Record<TaxRuleVersion, TaxRule> = {
     source: "IRD Union Taxation Law 2025",
   },
   "2026-2027": {
+    fiscalYear: "2026-2027",
     label: "FY 2026–2027 · current",
     effective: "1 Apr 2026 – 31 Mar 2027",
     salaryExemption: 4_800_000,
@@ -122,12 +125,21 @@ export function calculateSSB(monthlyGross: number) {
   };
 }
 
+export function calculatePITDetails(grossIncome: number, parentCount: number, spouseCount: number, childCount: number, lifeInsurance: number, employeeSSBAnnual: number, otherDeductions: number, rules = TAX_RULES["2026-2027"]) {
+  const personalRelief = Math.min(Math.max(0, grossIncome) * rules.basicReliefRate, rules.basicReliefCap);
+  const parentRelief = Math.min(2, Math.max(0, Math.floor(parentCount))) * rules.parentRelief;
+  const spouseRelief = Math.min(1, Math.max(0, Math.floor(spouseCount))) * rules.spouseRelief;
+  const childRelief = Math.max(0, Math.floor(childCount)) * rules.childRelief;
+  const dependentRelief = parentRelief + spouseRelief + childRelief;
+  const ssbRelief = Math.min(Math.max(0, employeeSSBAnnual), 72_000);
+  const allowableDeductions = Math.max(0, lifeInsurance) + ssbRelief + Math.max(0, otherDeductions);
+  const taxableIncome = Math.max(0, grossIncome - personalRelief - dependentRelief - allowableDeductions);
+  const annualPIT = grossIncome <= rules.salaryExemption ? 0 : calculateProgressiveTax(taxableIncome, rules.brackets);
+  return { grossIncome, salaryExemption: rules.salaryExemption, personalRelief, parentRelief, spouseRelief, childRelief, dependentRelief, lifeInsurance: Math.max(0, lifeInsurance), ssbRelief, otherDeductions: Math.max(0, otherDeductions), allowableDeductions, taxableIncome, annualPIT };
+}
+
 export function calculateAnnualPIT(grossIncome: number, parentCount: number, spouseCount: number, childCount: number, lifeInsurance: number, employeeSSBAnnual: number, otherDeductions: number, rules = TAX_RULES["2026-2027"]) {
-  if (grossIncome <= rules.salaryExemption) return 0;
-  const personalRelief = Math.min(grossIncome * rules.basicReliefRate, rules.basicReliefCap);
-  const dependentRelief = parentCount * rules.parentRelief + Math.min(spouseCount, 1) * rules.spouseRelief + childCount * rules.childRelief;
-  const taxableIncome = Math.max(0, grossIncome - personalRelief - dependentRelief - lifeInsurance - Math.min(employeeSSBAnnual, 72_000) - otherDeductions);
-  return calculateProgressiveTax(taxableIncome, rules.brackets);
+  return calculatePITDetails(grossIncome, parentCount, spouseCount, childCount, lifeInsurance, employeeSSBAnnual, otherDeductions, rules).annualPIT;
 }
 
 export default function PayrollCalculator() {
@@ -155,7 +167,8 @@ export default function PayrollCalculator() {
     if (!accessGranted) return null;
     const monthlyGross = numberValue(basicSalary) + numberValue(allowance) + numberValue(overtime);
     const annualGross = monthlyGross * 12 + numberValue(annualBonus) + numberValue(otherEarnings);
-    const { employeeSSB, employerSSB } = calculateSSB(monthlyGross);
+    const ssb = calculateSSB(monthlyGross);
+    const { employeeSSB, employerSSB } = ssb;
     const parentCount = Math.min(2, Math.floor(numberValue(parents)));
     const spouseCount = Math.min(1, Math.floor(numberValue(spouse)));
     const childCount = Math.floor(numberValue(children));
@@ -169,12 +182,12 @@ export default function PayrollCalculator() {
       }
     }
     const taxableGross = annualGross + (taxMode === "employer" ? annualPIT : 0);
-    const personalRelief = Math.min(taxableGross * rules.basicReliefRate, rules.basicReliefCap);
-    const taxableIncome = Math.max(0, taxableGross - personalRelief - parentCount * rules.parentRelief - spouseCount * rules.spouseRelief - childCount * rules.childRelief - numberValue(lifeInsurance) - Math.min(employeeSSB * 12, 72_000) - numberValue(otherDeductions));
+    const pitDetails = calculatePITDetails(taxableGross, ...reliefArgs, rules);
+    const taxableIncome = pitDetails.taxableIncome;
     const monthlyPIT = annualPIT / 12;
     const monthlyNet = Math.max(0, monthlyGross - employeeSSB - (taxMode === "employee" ? monthlyPIT : 0));
     const employerCost = monthlyGross + employerSSB + (taxMode === "employer" ? monthlyPIT : 0);
-    return { monthlyGross, employeeSSB, employerSSB, monthlyPIT, monthlyNet, employerCost, taxableIncome, annualPIT, annualGross };
+    return { monthlyGross, employeeSSB, employerSSB, ssbBase: ssb.contributionBase, monthlyPIT, monthlyNet, employerCost, taxableIncome, annualPIT, annualGross, pitDetails };
   }, [accessGranted, allowance, annualBonus, basicSalary, children, lifeInsurance, otherDeductions, otherEarnings, overtime, parents, rules, spouse, taxMode]);
 
   const field = (label: string, value: string, setValue: (value: string) => void, hint = "MMK / month") => (
@@ -198,6 +211,8 @@ export default function PayrollCalculator() {
         </>
       ) : (
         <>
+          <div className="calculator-fy-banner"><strong>{rules.label.replace(" · current", "")}</strong><span>FY input format · {rules.effective} · annual PIT and exported forms follow this selection</span></div>
+          <div className="calculator-detail-card"><div><p className="section-kicker">Calculation detail · PIT</p><p>Annual gross {formatMMK(result?.pitDetails.grossIncome ?? 0)} − personal relief {formatMMK(result?.pitDetails.personalRelief ?? 0)} − dependent relief {formatMMK(result?.pitDetails.dependentRelief ?? 0)} − allowable deductions {formatMMK(result?.pitDetails.allowableDeductions ?? 0)}.</p><strong>Taxable income {formatMMK(result?.taxableIncome ?? 0)} → annual PIT {formatMMK(result?.annualPIT ?? 0)} → monthly PIT {formatMMK(result?.monthlyPIT ?? 0)}</strong></div><div><p className="section-kicker">Calculation detail · SSB</p><p>Contribution base = lower of monthly gross and 300,000 MMK: {formatMMK(result?.ssbBase ?? 0)}.</p><strong>Employee 2% {formatMMK(result?.employeeSSB ?? 0)} · Employer 3% {formatMMK(result?.employerSSB ?? 0)}</strong></div></div>
           <div className="calculator-shell">
             <div className="calculator-form"><div className="calculator-form-heading"><h3>Monthly earnings</h3><span>MMK</span></div><div className="calculator-fields">{field("Basic salary", basicSalary, setBasicSalary)}{field("Recurring allowance", allowance, setAllowance)}{field("Overtime / other monthly pay", overtime, setOvertime)}</div><div className="calculator-form-heading"><h3>Annual additions</h3><span>Optional</span></div><div className="calculator-fields">{field("Annual bonus", annualBonus, setAnnualBonus, "MMK / year")}{field("Other annual earnings", otherEarnings, setOtherEarnings, "MMK / year")}{field("Life insurance premium", lifeInsurance, setLifeInsurance, "MMK / year")}{field("Other allowable deductions", otherDeductions, setOtherDeductions, "MMK / year")}</div><div className="calculator-form-heading"><h3>Reliefs</h3><span>Annual count</span></div><div className="calculator-fields calculator-counts">{field("Dependent parents", parents, setParents, "Up to 2 × 1,000,000")}{field("Non-earning spouse", spouse, setSpouse, "1 × 1,000,000")}{field("Qualifying children", children, setChildren, "500,000 each")}</div><div className="tax-mode"><div><strong>Who bears employee PIT?</strong><small>Employee mode deducts PIT from net pay. Employer mode gross-ups the PIT and adds it to employer cost.</small></div><div className="tax-mode-buttons"><button className={taxMode === "employee" ? "active" : ""} onClick={() => setTaxMode("employee")}>Employee</button><button className={taxMode === "employer" ? "active" : ""} onClick={() => setTaxMode("employer")}>Employer</button></div></div></div>
             <div className="calculator-results"><div className="calculator-result-top"><div><p className="section-kicker">Estimated monthly result</p><h3>{formatMMK(result?.monthlyNet ?? 0)}</h3><span>Net pay after SSB{taxMode === "employee" ? " and employee PIT" : " · employee PIT paid by employer"}</span></div><div className="calculator-result-actions"><label className="tax-version-select"><span>Rule version</span><select value={taxVersion} onChange={(event) => setTaxVersion(event.target.value as TaxRuleVersion)}><option value="2026-2027">FY 2026–2027 · current</option><option value="2025-2026">FY 2025–2026</option></select></label><button className="button-print" onClick={() => downloadPayslipPdf(result, rules, taxMode)} disabled={!result}><Download size={15} /> Download payslip PDF</button></div></div><div className="result-list"><div><span>Gross cash earnings</span><strong>{formatMMK(result?.monthlyGross ?? 0)}</strong></div><div><span>Employee SSB · 2%</span><strong>{formatMMK(result?.employeeSSB ?? 0)}</strong></div><div><span>Monthly PIT estimate</span><strong>{formatMMK(result?.monthlyPIT ?? 0)}</strong></div><div><span>Employer SSB · 3%</span><strong>{formatMMK(result?.employerSSB ?? 0)}</strong></div><div><span>Employer monthly cost</span><strong>{formatMMK(result?.employerCost ?? 0)}</strong></div><div><span>Annual taxable income</span><strong>{formatMMK(result?.taxableIncome ?? 0)}</strong></div></div><div className="calculator-note"><Info size={15} /><p>Estimate only. SSB uses the official 2% employee + 3% employer structure on a 300,000 MMK monthly contribution base. {rules.label} is effective {rules.effective}. The selected salary rules are based on {rules.source}; verify final payroll treatment with IRD, SSB, and a qualified payroll/tax adviser.</p></div></div>
@@ -205,13 +220,13 @@ export default function PayrollCalculator() {
           <div className="payslip-print"><div className="payslip-print-header"><div><span>PAYSLIP ESTIMATE</span><h1>Zin Min Htet</h1></div><strong>{rules.label}</strong></div><div className="payslip-print-meta"><span>Basis: {rules.effective}</span><span>Tax mode: {taxMode === "employee" ? "Employee-borne PIT" : "Employer-borne PIT"}</span></div><div className="payslip-print-grid"><div><span>Gross cash earnings</span><strong>{formatMMK(result?.monthlyGross ?? 0)}</strong></div><div><span>Employee SSB</span><strong>{formatMMK(result?.employeeSSB ?? 0)}</strong></div><div><span>Monthly PIT</span><strong>{formatMMK(result?.monthlyPIT ?? 0)}</strong></div><div><span>Net pay</span><strong>{formatMMK(result?.monthlyNet ?? 0)}</strong></div><div><span>Employer SSB</span><strong>{formatMMK(result?.employerSSB ?? 0)}</strong></div><div><span>Employer monthly cost</span><strong>{formatMMK(result?.employerCost ?? 0)}</strong></div></div><p className="payslip-print-footnote">Estimate only. Confirm final payroll treatment with the relevant Myanmar authorities or a qualified payroll/tax adviser.</p></div>
         </>
       )}
-      {accessGranted && <PayrollFormDownloads data={result ? { monthlyGross: result.monthlyGross, annualGross: result.annualGross, employeeSSB: result.employeeSSB, employerSSB: result.employerSSB, monthlyPIT: result.monthlyPIT, annualPIT: result.annualPIT, monthlyNet: result.monthlyNet, employerCost: result.employerCost, taxableIncome: result.taxableIncome, lifeInsurance: numberValue(lifeInsurance), otherDeductions: numberValue(otherDeductions), parents: numberValue(parents), spouse: numberValue(spouse), children: numberValue(children), taxLabel: rules.label, taxEffective: rules.effective, taxMode } : null} />}
+      {accessGranted && <PayrollFormDownloads data={result ? { fiscalYear: rules.fiscalYear, monthlyGross: result.monthlyGross, annualGross: result.annualGross, employeeSSB: result.employeeSSB, employerSSB: result.employerSSB, monthlyPIT: result.monthlyPIT, annualPIT: result.annualPIT, monthlyNet: result.monthlyNet, employerCost: result.employerCost, taxableIncome: result.taxableIncome, lifeInsurance: numberValue(lifeInsurance), otherDeductions: numberValue(otherDeductions), parents: numberValue(parents), spouse: numberValue(spouse), children: numberValue(children), taxLabel: rules.label, taxEffective: rules.effective, taxMode } : null} />}
       <div className="calculator-sources"><span>Rules checked against</span><a href="https://www.ird.gov.mm/laws/union-taxation-law" target="_blank" rel="noreferrer">IRD Union Taxation Law index</a><a href="https://ssb.gov.mm/portal/contribute_cal" target="_blank" rel="noreferrer">SSB contribution calculator</a><a href="https://taxsummaries.pwc.com/myanmar/individual/taxes-on-personal-income" target="_blank" rel="noreferrer">PwC tax summary</a></div>
     </section>
   );
 }
 
 export type PayrollCalculatorResult = ReturnType<typeof calculateAnnualPIT>;
-export const PAYROLL_CALCULATOR_VERSION = "mm-payroll-estimate-with-rule-selector";
+export const PAYROLL_CALCULATOR_VERSION = "mm-payroll-estimate-with-fy-pit-ssb-detail";
 export const privacyNote = "Salary inputs are calculated locally in the browser and are not saved.";
 export const updateNotice = "Re-check official IRD and SSB sources whenever tax-year rules change.";

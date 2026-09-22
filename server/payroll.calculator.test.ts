@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TAX_RULES, calculateAnnualPIT, calculateProgressiveTax } from "../client/src/components/PayrollCalculator";
+import { TAX_RULES, calculateAnnualPIT, calculateProgressiveTax, calculateSSB } from "../client/src/components/PayrollCalculator";
 
 describe("Myanmar payroll calculator", () => {
   it("applies the progressive tax brackets", () => {
@@ -18,5 +18,10 @@ describe("Myanmar payroll calculator", () => {
     expect(TAX_RULES["2025-2026"].effective).toContain("31 Mar 2026");
     expect(TAX_RULES["2026-2027"].effective).toContain("1 Apr 2026");
     expect(calculateAnnualPIT(12_000_000, 0, 0, 0, 0, 0, 0, TAX_RULES["2025-2026"])).toBeGreaterThan(0);
+  });
+
+  it("uses the official SSB structure: employee 2%, employer 3%, capped at 300,000 MMK", () => {
+    expect(calculateSSB(250_000)).toEqual({ contributionBase: 250_000, employeeSSB: 5_000, employerSSB: 7_500 });
+    expect(calculateSSB(800_000)).toEqual({ contributionBase: 300_000, employeeSSB: 6_000, employerSSB: 9_000 });
   });
 });

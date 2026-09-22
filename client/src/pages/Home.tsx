@@ -152,7 +152,23 @@ const recommendations = [
   },
 ];
 
+const weeklyProfileModes = [
+  { theme: "systems", kicker: "Payroll systems · Yangon, Myanmar", lede: "I’m Zin Min Htet — a payroll and compensation operations professional who turns complex recurring work into clear, dependable systems.", focus: "Payroll systems", cardTop: ["make it", "understandable"], cardBottom: ["make it", "reliable"], caption: "Systems / accuracy / trust" },
+  { theme: "people", kicker: "People operations · Yangon, Myanmar", lede: "I’m Zin Min Htet — a people-focused operations professional who keeps payroll, communication, and employee support moving with care.", focus: "People operations", cardTop: ["keep it", "human"], cardBottom: ["make room", "for trust"], caption: "People / clarity / care" },
+  { theme: "momentum", kicker: "Process improvement · Yangon, Myanmar", lede: "I’m Zin Min Htet — a practical operations professional who improves handoffs, removes friction, and builds momentum across teams.", focus: "Process improvement", cardTop: ["find the", "next step"], cardBottom: ["keep work", "moving"], caption: "Momentum / handoffs / progress" },
+];
+
+function getWeekNumber(date: Date) {
+  const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const dayOfYear = Math.floor((date.getTime() - start.getTime()) / 86400000) + 1;
+  return Math.ceil(dayOfYear / 7);
+}
+
 export default function Home() {
+  const weeklyProfile = useMemo(() => {
+    const week = getWeekNumber(new Date());
+    return { ...weeklyProfileModes[week % weeklyProfileModes.length], week };
+  }, []);
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<(typeof projects)[number] | null>(null);
   const [lastUpdated, setLastUpdated] = useState("just now");
@@ -209,23 +225,24 @@ export default function Home() {
       </header>
 
       <main id="top">
-        <section className="hero-section section-pad">
+        <section className={`hero-section section-pad hero-theme-${weeklyProfile.theme}`}>
           <div className="hero-copy">
-            <p className="eyebrow"><span className="eyebrow-dot" /> Payroll &amp; HR operations · Yangon, Myanmar</p>
+            <p className="eyebrow"><span className="eyebrow-dot" /> {weeklyProfile.kicker}</p>
             <h1>Clear work.<br /><span>Human impact.</span></h1>
-            <p className="hero-lede">I’m Zin Min Htet — a payroll and compensation operations professional with hands-on experience supporting multi-client payroll, statutory compliance, and people-focused operations.</p>
+            <p className="hero-lede">{weeklyProfile.lede}</p>
             <div className="hero-actions">
               <a className="button-primary" href="#work">Explore selected work <ArrowUpRight size={17} /></a>
               <a className="text-link" href="/manus-storage/Zin_Min_Htet_CV__8f66dc0b_490a55be.pdf" target="_blank" rel="noreferrer">View CV <ExternalLink size={15} /></a>
               <a className="text-link" href="#about">More about my approach <ArrowDownRight size={16} /></a>
             </div>
-            <div className="hero-meta"><span><Check size={14} /> Payroll systems</span><span><Check size={14} /> HR coordination</span><span><Check size={14} /> Client communication</span></div>
+            <div className="hero-meta"><span><Check size={14} /> {weeklyProfile.focus}</span><span><Check size={14} /> HR coordination</span><span><Check size={14} /> Client communication</span></div>
           </div>
           <div className="hero-visual" aria-label="Professional team and operations visual">
             <div className="hero-image-wrap"><img className="profile-photo" src="/manus-storage/profile_c95ef462_5513abdb.png" alt="Zin Min Htet professional profile photo" onError={(event) => { event.currentTarget.style.display = "none"; }} /></div>
-            <div className="hero-card hero-card-top"><span>01</span><strong>make it<br />understandable</strong></div>
-            <div className="hero-card hero-card-bottom"><span>02</span><strong>make it<br />reliable</strong></div>
-            <div className="hero-caption">Operations / people / trust</div>
+            <div className="hero-week-badge"><span>WEEK {String(weeklyProfile.week).padStart(2, "0")}</span><strong>Weekly focus</strong><em>{weeklyProfile.focus}</em></div>
+            <div className="hero-card hero-card-top"><span>01</span><strong>{weeklyProfile.cardTop.map((line) => <span key={line}>{line}<br /></span>)}</strong></div>
+            <div className="hero-card hero-card-bottom"><span>02</span><strong>{weeklyProfile.cardBottom.map((line) => <span key={line}>{line}<br /></span>)}</strong></div>
+            <div className="hero-caption">{weeklyProfile.caption}</div>
           </div>
         </section>
 

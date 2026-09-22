@@ -130,6 +130,16 @@ h1 span, h2 i { color: var(--coral); font-family: "Playfair Display", Georgia, s
 .hero-card-top { height: 122px; left: 2%; top: 18%; }
 .hero-card-bottom { background: var(--blue); bottom: 8%; height: 118px; right: 0; }
 .hero-caption { bottom: 1%; color: var(--muted-copy); font-size: 9px; letter-spacing: .14em; position: absolute; right: 2%; text-transform: uppercase; }
+.hero-week-badge { background: rgba(255,253,249,.92); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 5px; padding: 12px 14px; position: absolute; right: 4%; top: 0; transform: translateY(-12%); z-index: 2; }
+.hero-week-badge span { color: var(--coral); font-size: 9px; font-weight: 800; letter-spacing: .14em; }
+.hero-week-badge strong { color: var(--ink); font-size: 10px; letter-spacing: .03em; }
+.hero-week-badge em { color: var(--muted-copy); font-size: 9px; font-style: normal; }
+.hero-theme-people .hero-card-top, .hero-theme-people .hero-week-badge span { color: #fff; }
+.hero-theme-people .hero-card-top { background: #739b86; }
+.hero-theme-people .hero-week-badge span { color: #739b86; }
+.hero-theme-momentum .hero-card-top { background: #6e5c9e; }
+.hero-theme-momentum .hero-week-badge span { color: #6e5c9e; }
+.hero-theme-momentum .hero-card-bottom { background: #2d536e; }
 .signal-strip { background: var(--blue); color: #fff; overflow: hidden; white-space: nowrap; }
 .signal-track { align-items: center; display: flex; font-family: "Playfair Display", Georgia, serif; font-size: 16px; font-style: italic; gap: 42px; justify-content: center; letter-spacing: .02em; min-height: 68px; }
 .signal-track b { color: #e7b34c; font-family: system-ui, sans-serif; font-size: 14px; font-style: normal; }
@@ -356,6 +366,8 @@ h2 { font-size: clamp(42px, 5vw, 72px); font-weight: 500; letter-spacing: -.075e
   .hero-meta { gap: 12px; margin-top: 34px; }
   .hero-visual { min-height: 405px; }
   .hero-image-wrap { height: 76%; width: 76%; }
+  .hero-week-badge { padding: 9px 10px; right: 0; transform: translateY(-5%); }
+  .hero-week-badge em { max-width: 96px; }
   .hero-card { width: 98px; }
   .hero-card-top { left: 0; top: 16%; }
   .hero-card-bottom { bottom: 7%; }

@@ -25,7 +25,7 @@ const projects = [
     type: "Payroll systems",
     description:
       "High-volume payroll coordination across clients, industries, allowances, deductions, and statutory reporting needs.",
-    image: "/manus-storage/multi-client-operations_fc0da14f.jpg",
+    image: "/manus-storage/multi-client-operations_fc0da14f_e67dbd0c.jpg",
     tag: "Scale + accuracy",
   },
   {
@@ -34,7 +34,7 @@ const projects = [
     type: "HR operations",
     description:
       "Cross-functional work that keeps teams aligned: client communication, finance handoffs, employee support, and clean documentation.",
-    image: "/manus-storage/people-operations-teambuilding_f7484045.jpg",
+    image: "/manus-storage/people-operations-teambuilding_f7484045_e0a14152.jpg",
     tag: "Human-centered",
   },
   {
@@ -43,7 +43,7 @@ const projects = [
     type: "MP&O team culture",
     description:
       "An MP&O team-building event that brought colleagues together beyond the daily payroll workflow. The day created space for cross-team connection, shared energy, and the kind of informal communication that strengthens collaboration back at work. For a multi-client operations team, these moments matter: trust and coordination are part of delivering accurate, responsive service to every client.",
-    image: "/manus-storage/team-culture-mpo_65fefebb.jpg",
+    image: "/manus-storage/team-culture-mpo_65fefebb_c04ff0a6.jpg",
     tag: "People first",
   },
   {
@@ -52,7 +52,7 @@ const projects = [
     type: "Project delivery",
     description:
       "From planning details to on-the-ground coordination, supporting polished experiences for teams, partners, and stakeholders.",
-    image: "/manus-storage/event_b154039c.jpeg",
+    image: "/manus-storage/event_b154039c_d5d697af.jpeg",
     tag: "Detail-led",
   },
 ];
@@ -216,13 +216,13 @@ export default function Home() {
             <p className="hero-lede">I’m Zin Min Htet — a payroll and compensation operations professional with hands-on experience supporting multi-client payroll, statutory compliance, and people-focused operations.</p>
             <div className="hero-actions">
               <a className="button-primary" href="#work">Explore selected work <ArrowUpRight size={17} /></a>
-              <a className="text-link" href="/manus-storage/Zin_Min_Htet_CV__8f66dc0b.pdf" target="_blank" rel="noreferrer">View CV <ExternalLink size={15} /></a>
+              <a className="text-link" href="/manus-storage/Zin_Min_Htet_CV__8f66dc0b_490a55be.pdf" target="_blank" rel="noreferrer">View CV <ExternalLink size={15} /></a>
               <a className="text-link" href="#about">More about my approach <ArrowDownRight size={16} /></a>
             </div>
             <div className="hero-meta"><span><Check size={14} /> Payroll systems</span><span><Check size={14} /> HR coordination</span><span><Check size={14} /> Client communication</span></div>
           </div>
           <div className="hero-visual" aria-label="Professional team and operations visual">
-            <div className="hero-image-wrap"><img className="profile-photo" src="/manus-storage/profile_c95ef462.png" alt="Zin Min Htet professional profile photo" onError={(event) => { event.currentTarget.style.display = "none"; }} /></div>
+            <div className="hero-image-wrap"><img className="profile-photo" src="/manus-storage/profile_c95ef462_5513abdb.png" alt="Zin Min Htet professional profile photo" onError={(event) => { event.currentTarget.style.display = "none"; }} /></div>
             <div className="hero-card hero-card-top"><span>01</span><strong>make it<br />understandable</strong></div>
             <div className="hero-card hero-card-bottom"><span>02</span><strong>make it<br />reliable</strong></div>
             <div className="hero-caption">Operations / people / trust</div>

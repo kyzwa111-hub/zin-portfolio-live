@@ -676,3 +676,83 @@ h2 { font-size: clamp(42px, 5vw, 72px); font-weight: 500; letter-spacing: -.075e
   .services-hero h2 { font-size: clamp(53px, 16vw, 78px); }
   .service-tools > .calculator-section, .service-tools > .bulk-section, .service-tools > .cb-section { padding-left: 20px; padding-right: 20px; }
 }
+
+
+/* 2026 visual refinement: editorial portfolio, softer depth, clearer hierarchy */
+:root {
+  --cream: #f7f3ec;
+  --paper: #fffdfa;
+  --ink: #172b3d;
+  --blue: #172b3d;
+  --coral: #e86645;
+  --gold: #e9b95e;
+  --line: rgba(23,43,61,.14);
+}
+body { background: var(--cream); }
+.site-shell { background: var(--cream); }
+.portfolio-header { backdrop-filter: blur(14px); background: rgba(247,243,236,.88); border-bottom: 1px solid rgba(23,43,61,.08); position: sticky; top: 0; }
+.brand { letter-spacing: -.055em; }
+.brand-mark { box-shadow: 0 7px 18px rgba(232,102,69,.28); }
+.site-nav a { position: relative; }
+.site-nav a:not(.nav-cta):after { background: var(--coral); bottom: -7px; content: ""; height: 2px; left: 0; position: absolute; transform: scaleX(0); transform-origin: left; transition: transform 180ms ease; width: 100%; }
+.site-nav a:not(.nav-cta):hover:after { transform: scaleX(1); }
+.nav-cta { border-bottom: 0; border-radius: 999px; padding: 10px 15px; background: var(--blue); color: #fff !important; transition: background 180ms ease, transform 180ms ease; }
+.nav-cta:hover { background: var(--coral); transform: translateY(-2px); }
+.personal-panel { background: radial-gradient(circle at 83% 13%, rgba(233,185,94,.22), transparent 21%), radial-gradient(circle at 12% 86%, rgba(232,102,69,.16), transparent 24%), linear-gradient(135deg,#132b40 0%,#173c55 52%,#132b40 100%); }
+.personal-panel:after { background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 44px 44px; content: ""; inset: 0; opacity: .22; pointer-events: none; position: absolute; }
+.personal-panel-inner, .personal-details-grid, .experience-strip { z-index: 1; }
+.personal-copy { position: relative; z-index: 2; }
+.personal-panel h1 { font-size: clamp(78px, 10.8vw, 152px); text-shadow: 0 18px 34px rgba(0,0,0,.16); }
+.personal-lede { font-size: 18px; max-width: 550px; }
+.personal-panel .button-primary { border-radius: 999px; box-shadow: 0 10px 22px rgba(232,102,69,.2); padding: 16px 21px; }
+.personal-panel .button-primary:hover { box-shadow: 0 15px 28px rgba(232,102,69,.3); }
+.personal-profile-card { filter: drop-shadow(0 24px 30px rgba(0,0,0,.2)); }
+.profile-photo-frame { border: 1px solid rgba(255,255,255,.23); border-radius: 170px 170px 14px 14px; }
+.profile-photo-frame img { transform: scale(1.015); }
+.profile-card-caption { border-radius: 0 12px 0 0; }
+.profile-card-note { border-radius: 12px 0 0 0; box-shadow: 0 9px 24px rgba(0,0,0,.15); }
+.personal-details-grid { margin-top: 104px; }
+.strengths-card { background: rgba(255,255,255,.045); border-radius: 18px; padding: 20px 24px 24px clamp(20px, 4vw, 58px); }
+.strength-row { transition: padding 180ms ease, background 180ms ease; }
+.strength-row:hover { background: rgba(255,255,255,.06); padding-left: 10px; }
+.experience-mini { border-left-width: 3px; border-radius: 0 12px 12px 0; padding: 16px 16px 16px 18px; transition: background 180ms ease, transform 180ms ease; }
+.experience-mini:hover { background: rgba(255,255,255,.06); transform: translateY(-3px); }
+.services-panel { background: linear-gradient(180deg,#f7f3ec 0%,#fbf8f3 100%); }
+.services-hero { padding-bottom: 76px; padding-top: 132px; }
+.services-hero h2 { font-size: clamp(58px, 7.2vw, 102px); }
+.services-hero-copy { background: rgba(255,255,255,.58); border: 1px solid var(--line); border-left: 3px solid var(--coral); border-radius: 0 18px 18px 0; box-shadow: 0 18px 40px rgba(23,43,61,.06); padding: 27px 28px; }
+.telegram-button { border-radius: 999px; box-shadow: 0 10px 20px rgba(23,43,61,.14); }
+.service-cards, .hr-sector-grid { gap: 18px; }
+.service-card { border-radius: 18px; box-shadow: 0 8px 20px rgba(23,43,61,.045); min-height: 228px; padding: 27px; position: relative; overflow: hidden; }
+.service-card:after { background: var(--coral); border-radius: 50%; content: ""; height: 130px; opacity: .07; position: absolute; right: -48px; top: -48px; width: 130px; }
+.service-card:hover { box-shadow: 0 16px 32px rgba(23,43,61,.1); transform: translateY(-7px); }
+.service-card strong { font-size: 18px; }
+.hr-sector-card { border-radius: 18px; box-shadow: 0 12px 26px rgba(23,43,61,.13); min-height: 228px; padding: 27px; }
+.hr-sector-card:hover { box-shadow: 0 18px 34px rgba(23,43,61,.2); transform: translateY(-7px); }
+.service-tools > section { border-top: 1px solid rgba(23,43,61,.08); }
+.site-footer { background: #132b40; color: rgba(255,255,255,.7); padding-bottom: 28px; padding-top: 28px; }
+.site-footer .footer-brand { color: #fff; }
+.site-footer .footer-note { color: rgba(255,255,255,.65); }
+.site-footer .footer-year { color: var(--gold); }
+@media (max-width: 850px) {
+  .personal-panel { padding-left: clamp(20px, 6vw, 54px); padding-right: clamp(20px, 6vw, 54px); }
+  .personal-details-grid, .experience-strip { margin-left: auto; margin-right: auto; }
+  .services-hero, .service-cards, .hr-sector-block { padding-left: clamp(20px, 6vw, 54px); padding-right: clamp(20px, 6vw, 54px); }
+}
+@media (max-width: 700px) {
+  .portfolio-header { padding-bottom: 17px; padding-top: 17px; }
+  .site-nav { border: 1px solid var(--line); border-radius: 16px; left: 14px; right: 14px; top: 62px; }
+  .nav-cta { border-radius: 10px; width: 100%; justify-content: center; }
+  .personal-panel { padding-bottom: 0; padding-top: 57px; }
+  .personal-panel h1 { font-size: clamp(66px, 20vw, 104px); line-height: .88; }
+  .personal-lede { font-size: 15px; }
+  .personal-contact-row { flex-direction: column; gap: 12px; margin-top: 35px; }
+  .personal-profile-card { min-height: 390px; margin-top: 18px; }
+  .profile-photo-frame { height: 80%; width: 86%; }
+  .personal-details-grid { margin-top: 70px; padding-bottom: 64px; padding-top: 58px; }
+  .strengths-card { padding-left: 16px; padding-right: 16px; }
+  .services-hero { gap: 30px; padding-bottom: 55px; padding-top: 82px; }
+  .services-hero-copy { padding: 22px; }
+  .service-card, .hr-sector-card { border-radius: 14px; padding: 22px; }
+  .site-footer { align-items: flex-start; flex-direction: column; gap: 14px; }
+}

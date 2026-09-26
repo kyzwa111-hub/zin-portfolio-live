@@ -4,11 +4,12 @@ import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun } fro
 export type AutoFillKind = "monthly-paye" | "monthly-ssb" | "annual-ird" | "annual-cover-letter";
 
 export type PayrollAutoFillData = {
-  fiscalYear: string;
   monthlyGross: number;
   annualGross: number;
   employeeSSB: number;
   employerSSB: number;
+  employeeSSBAnnual: number;
+  employerSSBAnnual: number;
   monthlyPIT: number;
   annualPIT: number;
   monthlyNet: number;
@@ -22,11 +23,12 @@ export type PayrollAutoFillData = {
   taxLabel: string;
   taxEffective: string;
   taxMode: "employee" | "employer";
+  financialYear: string;
 };
 
 const money = (value: number) => Math.round(value);
 const isoDate = new Date().toISOString().slice(0, 10);
-const fileSafeFiscalYear = (fiscalYear: string) => fiscalYear.replace(/[^0-9-]/g, "-");
+const year = new Date().getFullYear();
 
 function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -50,13 +52,13 @@ function fillMonthlyPaye(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
   sheet.A7 = { t: "n", v: 1 };
   sheet.B7 = { t: "s", v: "Payroll employee" };
   sheet.M7 = { t: "s", v: new Date().toLocaleString("en-US", { month: "short" }).toUpperCase() };
-  sheet.N7 = { t: "s", v: `FY ${data.fiscalYear}` };
+  sheet.N7 = { t: "n", v: year };
   sheet.O7 = { t: "s", v: isoDate.split("-").reverse().join("-") };
   sheet.P7 = { t: "n", v: money(data.monthlyGross) };
   sheet.Q7 = { t: "n", v: 0 };
   sheet.R7 = { t: "n", v: money(data.monthlyPIT) };
   sheet.S7 = { t: "s", v: `${data.taxLabel} · ${data.taxMode === "employee" ? "employee-borne PIT" : "employer-borne PIT"}` };
-  sheet.T7 = { t: "s", v: "" };
+  sheet.T7 = { t: "s", v: data.financialYear };
   sheet.U7 = { t: "s", v: "" };
   sheet.W7 = { t: "s", v: "" };
 }
@@ -86,19 +88,19 @@ function fillMonthlySsb(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
   sheet.K7 = { t: "n", v: money(employerTotal) };
   sheet.L7 = { t: "n", v: money(employeeTotal) };
   sheet.M7 = { t: "n", v: money(total) };
-  sheet.N7 = { t: "s", v: `FY ${data.fiscalYear} · ${data.taxLabel} estimate` };
+  sheet.N7 = { t: "s", v: `${data.financialYear} · ${data.taxLabel} estimate` };
 }
 
 function fillAnnualIrd(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
   const sheet = workbook.Sheets["Employee List"] ?? workbook.Sheets[workbook.SheetNames[0]];
-  const totalDeductions = data.employeeSSB * 12 + data.lifeInsurance + data.otherDeductions;
+  const totalDeductions = data.employeeSSBAnnual + data.lifeInsurance + data.otherDeductions;
   sheet.A7 = { t: "n", v: 1 };
   sheet.B7 = { t: "s", v: "Payroll employee" };
   sheet.K7 = { t: "s", v: "Payroll employee" };
   sheet.L7 = { t: "n", v: money(data.annualGross) };
   sheet.M7 = { t: "n", v: 0 };
   sheet.N7 = { t: "n", v: money(data.annualGross) };
-  sheet.O7 = { t: "n", v: money(data.employeeSSB * 12) };
+  sheet.O7 = { t: "n", v: money(data.employeeSSBAnnual) };
   sheet.P7 = { t: "n", v: money(data.lifeInsurance) };
   sheet.Q7 = { t: "n", v: money(data.otherDeductions) };
   sheet.R7 = { t: "n", v: money(totalDeductions) };
@@ -106,6 +108,7 @@ function fillAnnualIrd(workbook: XLSX.WorkBook, data: PayrollAutoFillData) {
   sheet.T7 = { t: "n", v: Math.floor(data.children) };
   sheet.U7 = { t: "n", v: Math.floor(data.parents) };
   sheet.V7 = { t: "n", v: money(data.annualPIT) };
+  sheet.W7 = { t: "s", v: data.financialYear };
 }
 
 export async function downloadFilledExcelTemplate(templateUrl: string, kind: "monthly-paye" | "monthly-ssb" | "annual-ird", data: PayrollAutoFillData) {
@@ -114,7 +117,7 @@ export async function downloadFilledExcelTemplate(templateUrl: string, kind: "mo
   if (kind === "monthly-ssb") fillMonthlySsb(workbook, data);
   if (kind === "annual-ird") fillAnnualIrd(workbook, data);
   const output = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  saveBlob(new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `zin-min-htet-${kind}-FY-${fileSafeFiscalYear(data.fiscalYear)}-filled.xlsx`);
+  saveBlob(new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `zin-min-htet-${kind}-${data.financialYear}-filled.xlsx`);
 }
 
 export async function downloadFilledCoverLetter(data: PayrollAutoFillData) {
@@ -127,16 +130,19 @@ export async function downloadFilledCoverLetter(data: PayrollAutoFillData) {
         new Paragraph({ text: "Subject: Annual salary statement preparation — auto-filled working draft", heading: HeadingLevel.HEADING_2, spacing: { after: 240 } }),
         new Paragraph({ children: [new TextRun("Employer / Company: "), new TextRun({ text: "[Enter employer name]", bold: true })] }),
         new Paragraph({ children: [new TextRun("TIN: "), new TextRun({ text: "[Enter TIN]", bold: true })] }),
-        new Paragraph({ text: `Financial year: FY ${data.fiscalYear} (${data.taxEffective})`, spacing: { after: 180 } }),
+        new Paragraph({ text: `Financial year basis: ${data.financialYear} (${data.taxEffective})`, spacing: { after: 180 } }),
         new Paragraph({ text: "This working draft was auto-filled from the Zin Min Htet payroll calculator. Replace the placeholders, attach the official salary statement, and verify current IRD filing requirements before submission.", spacing: { after: 180 } }),
         new Paragraph({ text: `Estimated annual gross salary: ${money(data.annualGross).toLocaleString()} MMK` }),
-        new Paragraph({ text: `Estimated employee SSB: ${money(data.employeeSSB * 12).toLocaleString()} MMK` }),
-        new Paragraph({ text: `Estimated annual PIT withheld: ${money(data.annualPIT).toLocaleString()} MMK`, spacing: { after: 240 } }),
+        new Paragraph({ text: `Annual taxable income: ${money(data.taxableIncome).toLocaleString()} MMK` }),
+        new Paragraph({ text: `Estimated employee SSB: ${money(data.employeeSSBAnnual).toLocaleString()} MMK` }),
+        new Paragraph({ text: `Estimated employer SSB: ${money(data.employerSSBAnnual).toLocaleString()} MMK` }),
+        new Paragraph({ text: `Estimated annual PIT withheld: ${money(data.annualPIT).toLocaleString()} MMK` }),
+        new Paragraph({ text: `Estimated monthly PIT: ${money(data.monthlyPIT).toLocaleString()} MMK`, spacing: { after: 240 } }),
         new Paragraph({ text: "Respectfully,", spacing: { after: 240 } }),
         new Paragraph({ text: "[Authorized signatory]" }),
       ],
     }],
   });
   const blob = await Packer.toBlob(document);
-  saveBlob(blob, `zin-min-htet-annual-cover-letter-FY-${fileSafeFiscalYear(data.fiscalYear)}-filled.docx`);
+  saveBlob(blob, `zin-min-htet-annual-cover-letter-${data.financialYear}-filled.docx`);
 }

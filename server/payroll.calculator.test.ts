@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TAX_RULES, calculateAnnualPIT, calculatePITDetails, calculateProgressiveTax, calculateSSB } from "../client/src/components/PayrollCalculator";
+import { TAX_RULES, calculateAnnualPIT, calculateFyAnnualGross, calculateProgressiveTax, calculateSSB, formatFinancialYear } from "../client/src/components/PayrollCalculator";
 import { getSSBTemplateValues } from "../client/src/lib/payrollTemplateFill";
 
 describe("Myanmar payroll calculator", () => {
@@ -21,18 +21,19 @@ describe("Myanmar payroll calculator", () => {
     expect(calculateAnnualPIT(12_000_000, 0, 0, 0, 0, 0, 0, TAX_RULES["2025-2026"])).toBeGreaterThan(0);
   });
 
+  it("formats financial years consistently for UI and exports", () => {
+    expect(formatFinancialYear("2026-2027")).toBe("FY 2026-2027");
+    expect(formatFinancialYear("FY 2025-2026")).toBe("FY 2025-2026");
+  });
+
+  it("sums explicit April-to-March income and preserves the monthly fallback", () => {
+    expect(calculateFyAnnualGross([1_000_000, 1_100_000, 0, 0], 800_000)).toBe(2_100_000);
+    expect(calculateFyAnnualGross([], 800_000)).toBe(9_600_000);
+  });
+
   it("uses the official SSB structure: employee 2%, employer 3%, capped at 300,000 MMK", () => {
     expect(calculateSSB(250_000)).toEqual({ contributionBase: 250_000, employeeSSB: 5_000, employerSSB: 7_500 });
     expect(calculateSSB(800_000)).toEqual({ contributionBase: 300_000, employeeSSB: 6_000, employerSSB: 9_000 });
-  });
-
-  it("returns an auditable PIT breakdown", () => {
-    const details = calculatePITDetails(12_000_000, 1, 0, 1, 72_000, 72_000, 0);
-    expect(details.personalRelief).toBe(2_400_000);
-    expect(details.dependentRelief).toBe(1_500_000);
-    expect(details.ssbRelief).toBe(72_000);
-    expect(details.taxableIncome).toBe(7_956_000);
-    expect(details.annualPIT).toBe(calculateAnnualPIT(12_000_000, 1, 0, 1, 72_000, 72_000, 0));
   });
 
   it("splits the SSB template employer columns without double-counting injury contribution", () => {

@@ -19,13 +19,13 @@ export const appRouter = router({
   }),
 
   calculatorAccess: router({
-    request: publicProcedure.mutation(async () => {
+    request: publicProcedure.input(z.object({ requesterName: z.string().trim().min(2).max(160) })).mutation(async ({ input }) => {
       const requestId = randomBytes(12).toString("base64url");
       const token = randomBytes(32).toString("base64url");
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      await createAccessRequest({ requestId, tokenHash: hashAccessToken(token), expiresAt });
+      await createAccessRequest({ requestId, requesterName: input.requesterName, tokenHash: hashAccessToken(token), expiresAt });
       let adminNotified = false;
-      try { adminNotified = await requestAdminApproval(requestId); } catch (error) { console.warn("[Telegram] Could not notify admin:", error); }
+      try { adminNotified = await requestAdminApproval(requestId, input.requesterName); } catch (error) { console.warn("[Telegram] Could not notify admin:", error); }
       let botUsername = "Payroll_Officer_bot";
       try { botUsername = await getTelegramBotUsername(); } catch (error) { console.warn("[Telegram] Could not read bot username:", error); }
       return { requestId, token, expiresAt: expiresAt.toISOString(), botUsername, adminNotified } as const;

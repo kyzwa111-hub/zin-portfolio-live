@@ -68,10 +68,10 @@ async function sendText(chatId: string, text: string, relatedChatId: string, use
   return sent;
 }
 
-async function sendAdminMessage(requestId: string) {
+async function sendAdminMessage(requestId: string, requesterName: string) {
   const adminChatId = await getTelegramSetting(ADMIN_CHAT_SETTING);
   if (!adminChatId) return false;
-  const text = `Payroll calculator access request\n\nRequest ID: ${requestId}\nExpires in 10 minutes.\n\nApprove only if you recognize this request.`;
+  const text = `Payroll calculator access request\n\nRequester name: ${requesterName}\nRequest ID: ${requestId}\nExpires in 10 minutes.\n\nApprove only if you recognize this request.`;
   const sent = await telegramApi<TelegramSentMessage>("sendMessage", {
     chat_id: adminChatId,
     text,
@@ -174,8 +174,8 @@ export async function handleTelegramWebhook(update: TelegramUpdate) {
   if (update.callback_query) await handleCallback(update.callback_query);
 }
 
-export async function requestAdminApproval(requestId: string) {
-  return sendAdminMessage(requestId);
+export async function requestAdminApproval(requestId: string, requesterName: string) {
+  return sendAdminMessage(requestId, requesterName);
 }
 
 export async function sendTelegramAdminReply(chatId: string, text: string) {

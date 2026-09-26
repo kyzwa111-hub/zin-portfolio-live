@@ -1,5 +1,5 @@
 import { and, desc, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle } from "drizzle-orm/mysql2";
 import { AccessRequest, FormTemplate, InsertUser, LinkedInUpdate, TelegramMessage, accessRequests, formTemplates, linkedinUpdates, telegramMessages, telegramSettings, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -9,7 +9,7 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL, { casing: "camelCase" });
+      _db = drizzle(process.env.DATABASE_URL);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -30,11 +30,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
+    const values: InsertUser = { openId: user.openId };
     const updateSet: Partial<InsertUser> = {};
-
     const textFields = ["name", "email", "loginMethod"] as const;
     type TextField = (typeof textFields)[number];
 
@@ -47,7 +44,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
 
     textFields.forEach(assignNullable);
-
     if (user.lastSignedIn !== undefined) {
       values.lastSignedIn = user.lastSignedIn;
       updateSet.lastSignedIn = user.lastSignedIn;
@@ -59,20 +55,11 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = 'admin';
       updateSet.role = 'admin';
     }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
+    if (!values.lastSignedIn) values.lastSignedIn = new Date();
+    if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
     updateSet.updatedAt = new Date();
-    await db.insert(users).values(values).onConflictDoUpdate({
-      target: users.openId,
-      set: updateSet,
-    });
+
+    await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -85,21 +72,14 @@ export async function getUserByOpenId(openId: string) {
     console.warn("[Database] Cannot get user: database not available");
     return undefined;
   }
-
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function createAccessRequest(input: {
-  requestId: string;
-  tokenHash: string;
-  expiresAt: Date;
-}) {
+export async function createAccessRequest(input: { requestId: string; requesterName: string; tokenHash: string; expiresAt: Date }) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
-  const result = await db.insert(accessRequests).values(input);
-  return result;
+  return db.insert(accessRequests).values(input);
 }
 
 export async function getAccessRequest(requestId: string, tokenHash: string) {
@@ -144,13 +124,18 @@ export async function getTelegramSetting(settingKey: string) {
 export async function upsertTelegramSetting(settingKey: string, settingValue: string) {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
-  await db.insert(telegramSettings).values({ settingKey, settingValue }).onConflictDoUpdate({ target: telegramSettings.settingKey, set: { settingValue, updatedAt: new Date() } });
+  await db.insert(telegramSettings).values({ settingKey, settingValue }).onDuplicateKeyUpdate({ set: { settingValue, updatedAt: new Date() } });
 }
 
 export async function listLinkedInUpdates(): Promise<LinkedInUpdate[]> {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(linkedinUpdates).orderBy(desc(linkedinUpdates.createdAt));
+  try {
+    return await db.select().from(linkedinUpdates).orderBy(desc(linkedinUpdates.createdAt));
+  } catch (error) {
+    console.warn("[Database] LinkedIn updates table unavailable; returning empty list:", error);
+    return [];
+  }
 }
 
 export async function createLinkedInUpdate(input: Pick<LinkedInUpdate, "label" | "title" | "excerpt" | "dateLabel" | "status" | "linkedinUrl">) {
@@ -174,9 +159,14 @@ export async function deleteLinkedInUpdate(id: number) {
 export async function listFormTemplates(activeOnly = false): Promise<FormTemplate[]> {
   const db = await getDb();
   if (!db) return [];
-  const query = db.select().from(formTemplates).orderBy(desc(formTemplates.updatedAt));
-  if (activeOnly) return query.where(eq(formTemplates.isActive, 1));
-  return query;
+  try {
+    const query = db.select().from(formTemplates).orderBy(desc(formTemplates.updatedAt));
+    if (activeOnly) return await query.where(eq(formTemplates.isActive, 1));
+    return await query;
+  } catch (error) {
+    console.warn("[Database] Form templates table unavailable; returning empty list:", error);
+    return [];
+  }
 }
 
 export async function createFormTemplate(input: Omit<FormTemplate, "id" | "createdAt" | "updatedAt">) {

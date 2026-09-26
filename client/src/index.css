@@ -147,18 +147,16 @@ h1 span, h2 i { color: var(--coral); font-family: "Playfair Display", Georgia, s
 .calculator-section { background: #e8e2d8; padding-bottom: 126px; padding-top: 130px; }
 .calculator-intro { align-items: flex-end; display: flex; justify-content: space-between; margin: 0 auto 55px; max-width: 1184px; }
 .calculator-intro .section-description { max-width: 360px; }
-.calculator-fy-banner { align-items: center; background: var(--blue); color: #fff; display: flex; gap: 18px; justify-content: space-between; margin: 0 auto 16px; max-width: 1184px; padding: 14px 18px; }
-.calculator-fy-banner strong { color: #f0c36a; font-size: 13px; }
-.calculator-fy-banner span { color: rgba(255,255,255,.72); font-size: 10px; text-align: right; }
-.calculator-detail-card { background: #faf8f4; border: 1px solid var(--line); display: grid; gap: 24px; grid-template-columns: 1fr 1fr; margin: 0 auto 16px; max-width: 1184px; padding: 18px 22px; }
-.calculator-detail-card p { color: var(--muted-copy); font-size: 10px; line-height: 1.5; margin: 7px 0; }
-.calculator-detail-card strong { color: var(--ink); font-size: 11px; }
-.calculator-detail-card small { color: var(--muted-copy); display: block; font-size: 9px; margin-top: 7px; }
 .calculator-gate { align-items: center; background: var(--paper); border: 1px solid var(--line); display: flex; gap: 22px; margin: 0 auto; max-width: 1184px; padding: 30px; }
 .calculator-gate-icon { align-items: center; background: var(--blue); color: #f0c36a; display: flex; flex-shrink: 0; height: 52px; justify-content: center; width: 52px; }
 .calculator-gate-copy { flex: 1; }
 .calculator-gate-copy h3 { font-size: clamp(20px, 2vw, 28px); letter-spacing: -.03em; margin: 6px 0 8px; }
 .calculator-gate-copy p:not(.section-kicker) { color: var(--muted-copy); font-size: 12px; line-height: 1.5; margin: 0; max-width: 560px; }
+.calculator-requester-field { display: flex; flex-direction: column; gap: 7px; margin-top: 16px; max-width: 360px; }
+.calculator-requester-field span { font-size: 10px; font-weight: 700; }
+.calculator-requester-field input { background: #faf8f4; border: 1px solid var(--line); color: var(--ink); font: 600 14px "DM Sans", sans-serif; outline: none; padding: 12px 10px; width: 100%; }
+.calculator-requester-field input:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(234, 96, 64, .12); }
+.calculator-requester-field small { margin-top: 0; }
 .calculator-gate-copy small { color: var(--muted-copy); display: block; font-size: 9px; margin-top: 14px; }
 .calculator-gate-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; }
 .calculator-gate-actions button { border: 0; cursor: pointer; }
@@ -171,6 +169,24 @@ h1 span, h2 i { color: var(--coral); font-family: "Playfair Display", Georgia, s
 .payment-request-panel strong { color: var(--blue); display: block; font-size: 11px; letter-spacing: .05em; }
 .payment-request-panel small { color: var(--muted-copy); display: block; font-size: 9px; line-height: 1.45; margin-top: 11px; }
 .payment-request-panel img { background: #fff; border: 8px solid #fff; box-shadow: 0 8px 22px rgba(25,24,22,.12); justify-self: end; max-width: 190px; width: 100%; }
+.bulk-section { background: #f4eee5; padding-bottom: 126px; padding-top: 110px; }
+.bulk-intro { align-items: flex-end; display: flex; justify-content: space-between; margin: 0 auto 42px; max-width: 1184px; }
+.bulk-intro .section-description { max-width: 390px; }
+.bulk-panel { background: var(--paper); border: 1px solid var(--line); display: grid; gap: 0; grid-template-columns: repeat(3, 1fr); margin: 0 auto; max-width: 1184px; }
+.bulk-gate { grid-template-columns: 1fr auto; }
+.bulk-step { min-width: 0; padding: 28px; }
+.bulk-step + .bulk-step { border-left: 1px solid var(--line); }
+.bulk-step-num { align-items: center; background: var(--blue); color: #f0c36a; display: flex; flex-shrink: 0; font: italic 15px "Playfair Display", Georgia, serif; height: 30px; justify-content: center; margin-bottom: 18px; width: 30px; }
+.bulk-step strong { display: block; font-size: 13px; margin-bottom: 8px; }
+.bulk-step p { color: var(--muted-copy); font-size: 11px; line-height: 1.55; margin: 0 0 16px; }
+.bulk-upload { align-items: center; background: var(--blue); color: #fff; cursor: pointer; display: inline-flex; font-size: 10px; font-weight: 700; gap: 8px; padding: 11px 13px; }
+.bulk-upload input { display: none; }
+.bulk-notes { margin: 18px auto 0; max-width: 1184px; }
+.bulk-notes details { background: rgba(255,253,249,.72); border: 1px solid var(--line); }
+.bulk-notes summary { color: var(--blue); cursor: pointer; font-size: 11px; font-weight: 700; list-style: none; padding: 14px 18px; }
+.bulk-notes summary::-webkit-details-marker { display: none; }
+.bulk-notes p { border-top: 1px solid var(--line); color: var(--muted-copy); font-size: 11px; line-height: 1.65; margin: 0; padding: 15px 18px; }
+.bulk-gate .calculator-gate-status { padding: 28px; }
 .calculator-shell { display: grid; gap: 24px; grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr); margin: 0 auto; max-width: 1184px; }
 .calculator-form, .calculator-results { background: var(--paper); border: 1px solid var(--line); padding: 30px; }
 .calculator-form-heading { align-items: baseline; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; margin: 0 0 19px; padding-bottom: 10px; }
@@ -179,6 +195,8 @@ h1 span, h2 i { color: var(--coral); font-family: "Playfair Display", Georgia, s
 .calculator-form-heading span { color: var(--muted-copy); font-size: 10px; text-transform: uppercase; }
 .calculator-fields { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); }
 .calculator-fields:nth-of-type(2) { grid-template-columns: repeat(4, 1fr); }
+.calculator-fy-help { color: var(--muted-copy); font-size: 12px; line-height: 1.6; margin: -7px 0 14px; max-width: 620px; }
+.calculator-fy-income { grid-template-columns: repeat(4, 1fr); }
 .calculator-field { display: flex; flex-direction: column; gap: 7px; }
 .calculator-field span { font-size: 10px; font-weight: 700; }
 .calculator-field input { background: #faf8f4; border: 1px solid var(--line); color: var(--ink); font: 600 14px "DM Sans", sans-serif; min-width: 0; outline: none; padding: 12px 10px; transition: border-color 160ms ease, box-shadow 160ms ease; width: 100%; }
@@ -385,13 +403,10 @@ h2 { font-size: clamp(42px, 5vw, 72px); font-weight: 500; letter-spacing: -.075e
   .hero-card-top { left: 0; top: 16%; }
   .hero-card-bottom { bottom: 7%; }
   .signal-track { justify-content: flex-start; padding-left: 20px; }
-  .about-section, .calculator-section, .work-section, .experience-section, .updates-section, .contact-section { padding-bottom: 80px; padding-top: 80px; }
+  .about-section, .calculator-section, .bulk-section, .work-section, .experience-section, .updates-section, .contact-section { padding-bottom: 80px; padding-top: 80px; }
   .calculator-intro { align-items: flex-start; flex-direction: column; gap: 26px; }
-  .calculator-fy-banner { align-items: flex-start; flex-direction: column; gap: 6px; }
-  .calculator-fy-banner span { text-align: left; }
-  .calculator-detail-card { grid-template-columns: 1fr; }
   .calculator-shell { grid-template-columns: 1fr; }
-  .calculator-fields, .calculator-fields:nth-of-type(2) { grid-template-columns: repeat(2, 1fr); }
+  .calculator-fields, .calculator-fields:nth-of-type(2), .calculator-fy-income { grid-template-columns: repeat(2, 1fr); }
   .calculator-form, .calculator-results { padding: 22px; }
   .calculator-result-actions { align-items: flex-start; }
   .payroll-downloads-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
@@ -400,6 +415,10 @@ h2 { font-size: clamp(42px, 5vw, 72px); font-weight: 500; letter-spacing: -.075e
   .calculator-gate-status { margin-top: 2px; }
   .payment-request-panel { align-items: flex-start; grid-template-columns: 1fr; padding: 22px; }
   .payment-request-panel img { justify-self: start; max-width: 230px; }
+  .bulk-intro { align-items: flex-start; flex-direction: column; gap: 26px; }
+  .bulk-panel, .bulk-gate { grid-template-columns: 1fr; }
+  .bulk-step + .bulk-step { border-left: 0; border-top: 1px solid var(--line); }
+  .bulk-gate .calculator-gate-status { border-top: 1px solid var(--line); padding: 18px 22px; }
   .tax-mode { align-items: flex-start; flex-direction: column; }
   .section-intro, .section-heading-row, .updates-head { align-items: flex-start; flex-direction: column; gap: 26px; }
   h2 { font-size: 44px; }
@@ -546,4 +565,114 @@ h2 { font-size: clamp(42px, 5vw, 72px); font-weight: 500; letter-spacing: -.075e
   .telegram-message-meta { align-items: flex-start; flex-wrap: wrap; }
   .telegram-message-meta span { margin-left: 0; width: 100%; }
   .telegram-reply-form { align-items: stretch; flex-direction: column; }
+}
+
+/* Two-part portfolio redesign */
+.two-part-portfolio { background: #f6f2eb; }
+.portfolio-header { background: #f6f2eb; }
+.personal-panel { background: #172d42; color: #fffdf9; overflow: hidden; padding: 76px clamp(20px, 8vw, 128px) 0; position: relative; }
+.personal-panel:before { background: radial-gradient(circle, rgba(231,96,63,.42) 0 12%, transparent 13%), radial-gradient(circle, rgba(231,179,76,.18) 0 16%, transparent 17%); content: ""; height: 520px; position: absolute; right: -170px; top: -190px; width: 520px; }
+.personal-panel-inner { align-items: center; display: grid; gap: clamp(40px, 8vw, 130px); grid-template-columns: minmax(0, 1fr) minmax(310px, .72fr); margin: 0 auto; max-width: 1184px; position: relative; }
+.personal-copy { max-width: 660px; }
+.personal-panel .eyebrow { color: #e7b34c; }
+.personal-panel .eyebrow-dot { background: #e7b34c; }
+.personal-title-row { align-items: center; display: flex; gap: 10px; margin-bottom: 16px; }
+.personal-icon { align-items: center; border: 1px solid rgba(255,253,249,.35); color: #e7b34c; display: inline-flex; height: 43px; justify-content: center; width: 43px; }
+.personal-label { color: rgba(255,253,249,.7); font-size: 12px; letter-spacing: .12em; margin: 0; text-transform: uppercase; }
+.personal-panel h1 { color: #fffdf9; font-size: clamp(74px, 11vw, 150px); margin-bottom: 27px; }
+.personal-panel h1 span { color: #e7603f; }
+.personal-lede { color: rgba(255,253,249,.72); font-size: 17px; line-height: 1.7; margin-bottom: 34px; max-width: 520px; }
+.personal-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 25px; }
+.personal-panel .button-primary { background: #e7603f; }
+.personal-panel .button-primary:hover { background: #f07a5c; }
+.light-link { color: #fffdf9; }
+.light-link:hover { color: #e7b34c; }
+.personal-contact-row { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 48px; }
+.personal-contact-row a { align-items: center; color: rgba(255,253,249,.72); display: inline-flex; font-size: 11px; gap: 8px; text-decoration: none; }
+.personal-contact-row a:hover { color: #fffdf9; }
+.personal-contact-row svg { color: #e7b34c; }
+.personal-profile-card { min-height: 505px; position: relative; }
+.profile-photo-frame { background: linear-gradient(150deg, #315b73, #0d1c2b); height: 80%; margin-left: 10%; overflow: hidden; position: absolute; right: 0; top: 6%; width: 80%; }
+.profile-photo-frame:after { background: linear-gradient(145deg, transparent 35%, rgba(231,96,63,.42)); content: ""; inset: 0; position: absolute; }
+.profile-photo-frame img { filter: saturate(.78); height: 100%; object-fit: cover; object-position: center top; width: 100%; }
+.profile-card-caption { background: #e7603f; bottom: 5%; display: flex; flex-direction: column; gap: 8px; left: 0; padding: 16px; position: absolute; width: 140px; z-index: 1; }
+.profile-card-caption span { font-size: 10px; letter-spacing: .12em; }
+.profile-card-caption strong { font-size: 10px; line-height: 1.35; text-transform: uppercase; }
+.profile-card-note { align-items: center; background: #fffdf9; bottom: 0; color: #172d42; display: flex; font-size: 10px; gap: 7px; padding: 12px 15px; position: absolute; right: 0; }
+.profile-card-note svg { color: #e7603f; }
+.personal-details-grid { border-top: 1px solid rgba(255,253,249,.2); display: grid; gap: 70px; grid-template-columns: 1.05fr .95fr; margin: 90px auto 0; max-width: 1184px; padding: 72px 0 86px; position: relative; }
+.personal-panel .section-kicker { color: #e7b34c; }
+.personal-about-copy h2 { color: #fffdf9; font-size: clamp(38px, 5vw, 68px); letter-spacing: -.07em; line-height: .95; margin-bottom: 27px; }
+.personal-about-copy h2 i { color: #e7603f; }
+.personal-about-copy > p:not(.section-kicker) { color: rgba(255,253,249,.68); font-size: 13px; line-height: 1.75; margin-bottom: 14px; max-width: 520px; }
+.strengths-card { border-left: 1px solid rgba(255,253,249,.2); padding-left: clamp(20px, 4vw, 58px); }
+.strength-row { align-items: center; border-bottom: 1px solid rgba(255,253,249,.2); display: grid; gap: 15px; grid-template-columns: 30px 1fr auto; padding: 17px 0; }
+.strength-row span { color: #e7b34c; font: italic 13px "Playfair Display", Georgia, serif; }
+.strength-row strong { font-size: 13px; font-weight: 500; }
+.strength-row svg { color: #e7603f; }
+.experience-strip { border-top: 1px solid rgba(255,253,249,.2); margin: 0 auto; max-width: 1184px; padding: 28px 0 38px; position: relative; }
+.experience-strip-heading { align-items: center; display: flex; justify-content: space-between; }
+.experience-strip-heading .section-kicker { margin-bottom: 0; }
+.experience-strip-heading > span { color: rgba(255,253,249,.6); font-size: 10px; }
+.experience-list { display: grid; gap: 20px; grid-template-columns: repeat(3, 1fr); margin-top: 24px; }
+.experience-mini { border-left: 2px solid #e7603f; padding-left: 15px; }
+.experience-mini-top { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
+.experience-mini-top span, .experience-mini small { color: rgba(255,253,249,.55); font-size: 9px; }
+.experience-mini-top b { color: #e7b34c; font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
+.experience-mini h3 { font-size: 14px; margin: 12px 0 5px; }
+.experience-mini p { color: #e7603f; font-size: 10px; margin-bottom: 8px; }
+.experience-mini small { display: block; line-height: 1.5; }
+.services-panel { background: #f6f2eb; }
+.services-hero { align-items: end; display: grid; gap: 50px; grid-template-columns: 1fr .7fr; padding-bottom: 68px; padding-top: 112px; }
+.services-hero h2 { color: #172d42; font-size: clamp(54px, 7vw, 96px); letter-spacing: -.08em; line-height: .9; margin: 0; }
+.services-hero h2 i { color: #e7603f; }
+.services-hero-copy { border-left: 1px solid #d9d2c8; padding-left: 28px; }
+.services-hero-copy p { color: #756f67; font-size: 13px; line-height: 1.7; margin-bottom: 23px; max-width: 380px; }
+.telegram-dot { background: #32a9e0; border-radius: 50%; display: inline-block; height: 8px; width: 8px; }
+.telegram-button { align-items: center; background: #172d42; color: #fffdf9; display: inline-flex; font-size: 11px; font-weight: 700; gap: 18px; padding: 14px 17px; text-decoration: none; transition: background 180ms ease, transform 180ms ease; }
+.telegram-button:hover { background: #e7603f; transform: translateY(-2px); }
+.service-cards { display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); padding-bottom: 75px; }
+.service-card { align-items: flex-start; background: #fffdf9; border: 1px solid #d9d2c8; display: flex; flex-direction: column; gap: 18px; min-height: 205px; padding: 23px; transition: border-color 180ms ease, transform 180ms ease; }
+.service-card:hover { border-color: #e7603f; transform: translateY(-4px); }
+.service-card-number { color: #e7603f; font: italic 17px "Playfair Display", Georgia, serif; }
+.service-card strong { color: #172d42; display: block; font-size: 17px; margin-bottom: 8px; }
+.service-card p { color: #756f67; font-size: 11px; line-height: 1.55; margin: 0; max-width: 260px; }
+.service-card-status { color: #32a9e0; font-size: 9px; font-weight: 700; letter-spacing: .1em; margin-top: auto; text-transform: uppercase; }
+.hr-sector-block { border-top: 1px solid #d9d2c8; padding-bottom: 84px; padding-top: 72px; }
+.hr-sector-heading { align-items: end; display: grid; gap: 50px; grid-template-columns: 1fr .7fr; margin-bottom: 30px; }
+.hr-sector-heading h3 { color: #172d42; font-size: clamp(34px, 4vw, 54px); letter-spacing: -.07em; line-height: .95; margin: 0; }
+.hr-sector-heading h3 i { color: #e7603f; }
+.hr-sector-heading > p { color: #756f67; font-size: 12px; line-height: 1.7; margin: 0; max-width: 390px; }
+.hr-sector-grid { display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); }
+.hr-sector-card { background: #172d42; color: #fffdf9; display: flex; flex-direction: column; gap: 18px; min-height: 205px; padding: 23px; transition: background 180ms ease, transform 180ms ease; }
+.hr-sector-card:hover { background: #243d55; transform: translateY(-4px); }
+.hr-sector-icon { color: #e7b34c; font: italic 17px "Playfair Display", Georgia, serif; }
+.hr-sector-card strong { display: block; font-size: 16px; margin-bottom: 8px; }
+.hr-sector-card p { color: rgba(255,253,249,.65); font-size: 11px; line-height: 1.55; margin: 0; }
+.hr-sector-card .service-card-status { color: #e7b34c; }
+.service-tools > .calculator-section, .service-tools > .bulk-section, .service-tools > .cb-section { margin: 0; max-width: none; }
+.service-tools > .calculator-section { padding-top: 85px; }
+.service-tools > .bulk-section { padding-top: 85px; }
+.service-tools > .cb-section { padding-top: 85px; }
+.site-footer { flex-wrap: wrap; }
+.footer-note { align-items: center; display: inline-flex; gap: 6px; }
+@media (max-width: 850px) {
+  .personal-panel-inner, .personal-details-grid, .services-hero { grid-template-columns: 1fr; }
+  .personal-profile-card { min-height: 430px; max-width: 520px; width: 100%; }
+  .personal-details-grid { gap: 42px; }
+  .strengths-card { border-left: 0; border-top: 1px solid rgba(255,253,249,.2); padding-left: 0; padding-top: 35px; }
+  .experience-list, .service-cards, .hr-sector-grid { grid-template-columns: 1fr; }
+  .service-card { min-height: auto; }
+  .hr-sector-card { min-height: auto; }
+  .hr-sector-heading { grid-template-columns: 1fr; gap: 22px; }
+  .services-hero-copy { border-left: 0; border-top: 1px solid #d9d2c8; padding-left: 0; padding-top: 25px; }
+}
+@media (max-width: 700px) {
+  .personal-panel { padding-top: 45px; }
+  .personal-panel h1 { font-size: clamp(68px, 20vw, 104px); }
+  .personal-profile-card { min-height: 350px; }
+  .experience-strip-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .services-hero { padding-top: 78px; }
+  .services-hero h2 { font-size: clamp(53px, 16vw, 78px); }
+  .service-tools > .calculator-section, .service-tools > .bulk-section, .service-tools > .cb-section { padding-left: 20px; padding-right: 20px; }
 }

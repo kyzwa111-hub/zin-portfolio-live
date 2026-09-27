@@ -8,5 +8,12 @@
     "directory": "./dist/public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "zin-portfolio-telegram",
+      "database_id": "70281058-b80b-4187-becb-beafa9004b8e"
+    }
+  ]
 }

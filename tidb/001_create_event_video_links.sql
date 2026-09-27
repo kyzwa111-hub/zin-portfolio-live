@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS event_video_links (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  url_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  video_url VARCHAR(2048) NOT NULL,
+  platform VARCHAR(32) NOT NULL,
+  title VARCHAR(500) NULL,
+  creator_name VARCHAR(255) NULL,
+  license_name VARCHAR(80) NULL,
+  rights_status VARCHAR(32) NOT NULL DEFAULT 'unverified',
+  review_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  source_kind VARCHAR(16) NOT NULL DEFAULT 'manual',
+  source_query VARCHAR(255) NULL,
+  first_seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_event_video_links_url_hash (url_hash),
+  KEY idx_event_video_links_review_created (review_status, created_at),
+  KEY idx_event_video_links_platform_created (platform, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

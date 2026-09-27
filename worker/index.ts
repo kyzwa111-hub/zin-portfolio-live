@@ -12,7 +12,12 @@ interface Env {
   DB: D1Database;
   TELEGRAM_BOT_TOKEN: string;
   TELEGRAM_ADMIN_USERNAME: string;
+  TIDB_DATABASE_URL?: string;
+  YOUTUBE_DATA_API_KEY?: string;
 }
+
+import { addVideoLink, listVideoLinks, TiDBNotConfiguredError, updateVideoReviewStatus, VideoLinkValidationError } from "./videoLinks";
+import { runDailyYouTubeDiscovery } from "./videoDiscovery";
 
 type AccessStatus = "pending" | "approved" | "denied" | "expired" | "revoked";
 const ADMIN_CHAT_KEY = "admin_chat_id";
@@ -29,6 +34,12 @@ function trpcResult(data: unknown): Response {
 }
 function trpcError(message: string, status = 400): Response {
   return json([{ error: { json: { message, code: -32600, data: { code: status === 400 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR", httpStatus: status } } } }], status);
+}
+function videoLinkErrorResponse(error: unknown): Response {
+  if (error instanceof VideoLinkValidationError) return json({ error: error.message }, 400);
+  if (error instanceof TiDBNotConfiguredError) return json({ error: "TiDB video storage is not configured yet." }, 503);
+  console.error("TiDB video-link request failed", error);
+  return json({ error: "TiDB video storage is unavailable. Check the connection and create the required table." }, 503);
 }
 function randomToken(size = 32): string {
   const bytes = crypto.getRandomValues(new Uint8Array(size));
@@ -173,6 +184,27 @@ async function handleAdminApi(request: Request, env: Env): Promise<Response> {
   if (url.pathname === "/api/admin/logout" && request.method === "POST") {
     await env.DB.prepare("DELETE FROM admin_sessions WHERE session_hash = ?").bind(session.hash).run();
     return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json", "cache-control": "no-store", "set-cookie": "admin_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0" } });
+  }
+  if (url.pathname === "/api/admin/video-links" && request.method === "GET") {
+    const statusValue = url.searchParams.get("status");
+    if (statusValue && !["pending", "approved", "rejected"].includes(statusValue)) return json({ error: "Invalid review status." }, 400);
+    try { return json({ links: await listVideoLinks(env, statusValue as "pending" | "approved" | "rejected" | undefined) }); }
+    catch (error) { return videoLinkErrorResponse(error); }
+  }
+  if (url.pathname === "/api/admin/video-links" && request.method === "POST") {
+    const body = await request.json().catch(() => ({}));
+    try { return json({ ok: true, link: await addVideoLink(env, body as Parameters<typeof addVideoLink>[1], "manual") }, 201); }
+    catch (error) { return videoLinkErrorResponse(error); }
+  }
+  if (url.pathname === "/api/admin/video-links/review" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { id?: string | number; status?: string };
+    const id = String(body.id ?? "");
+    const status = String(body.status ?? "");
+    if (!/^\d{1,20}$/.test(id) || !["pending", "approved", "rejected"].includes(status)) return json({ error: "Invalid video review update." }, 400);
+    try {
+      const updated = await updateVideoReviewStatus(env, id, status as "pending" | "approved" | "rejected");
+      return updated ? json({ ok: true }) : json({ error: "Video link not found." }, 404);
+    } catch (error) { return videoLinkErrorResponse(error); }
   }
   if (url.pathname === "/api/admin/overview" && request.method === "GET") {
     const requests = await env.DB.prepare("SELECT request_id, requester_name, status, telegram_username, expires_at, approved_at, created_at, updated_at, ip_address, country, city FROM access_requests ORDER BY created_at DESC LIMIT 200").all();
@@ -342,5 +374,9 @@ export default {
       return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady });
     }
     return serveAssetsWithAccessRecovery(request, env);
+  },
+  async scheduled(_controller: unknown, env: Env): Promise<void> {
+    const result = await runDailyYouTubeDiscovery(env);
+    console.log(JSON.stringify({ event: "daily_youtube_video_discovery", ...result }));
   },
 };

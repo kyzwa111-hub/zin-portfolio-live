@@ -809,3 +809,12 @@ body { background: var(--cream); }
   .workspace-unlock-copy .calculator-requester-field, .workspace-unlock-copy .calculator-gate-actions { display: flex; margin-right: 0; width: 100%; }
   .workspace-unlock-copy .calculator-gate-actions { align-items: flex-start; flex-direction: column; }
 }
+
+.workspace-request-form > p { color: var(--muted-copy); font-size: 12px; line-height: 1.6; margin: 0; }
+.workspace-request-form .calculator-requester-field { display: inline-flex; margin-right: 14px; max-width: 260px; vertical-align: bottom; }
+.workspace-request-form .calculator-gate-actions { display: inline-flex; margin-top: 17px; vertical-align: bottom; }
+.workspace-cancel { background: transparent; border: 0; cursor: pointer; padding: 8px 0; }
+@media (max-width: 700px) {
+  .workspace-request-form .calculator-requester-field, .workspace-request-form .calculator-gate-actions { display: flex; margin-right: 0; width: 100%; }
+  .workspace-request-form .calculator-gate-actions { align-items: flex-start; flex-direction: column; }
+}

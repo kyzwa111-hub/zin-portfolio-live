@@ -16,6 +16,7 @@ import { useState } from "react";
 import PayrollCalculator from "@/components/PayrollCalculator";
 import BulkPayroll from "@/components/BulkPayroll";
 import CBResourceCenter from "@/components/CBResourceCenter";
+import WorkspaceAccessGate from "@/components/WorkspaceAccessGate";
 
 const experience = [
   {
@@ -123,10 +124,11 @@ export default function Home() {
               <h2>All services,<br /><i>in one place.</i></h2>
             </div>
             <div className="services-hero-copy">
-              <p>Request access through Telegram to unlock the practical tools below. Payroll data stays protected, and access is approved by the administrator.</p>
-              <a className="telegram-button" href="https://t.me/Payroll_Officer_bot" target="_blank" rel="noreferrer"><span>Open Telegram</span><ArrowUpRight size={16} /></a>
+              <p>One protected workspace for HR administration, payroll calculations, bulk exports, and C&amp;B resources. Access is approved by the administrator.</p>
             </div>
           </div>
+
+          <div className="section-pad"><WorkspaceAccessGate /></div>
 
           <div className="service-cards section-pad" aria-label="Available services">
             <article className="service-card"><span className="service-card-number">01</span><div><strong>Payroll calculator</strong><p>Estimate PIT, SSB, net pay, and employer cost for Myanmar payroll.</p></div><span className="service-card-status">Telegram unlock</span></article>

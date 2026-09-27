@@ -785,3 +785,27 @@ body { background: var(--cream); }
   .service-tools > .bulk-section,
   .service-tools > .cb-section { padding-bottom: 62px; padding-top: 62px; }
 }
+
+
+/* One shared unlock gate for the complete HR workspace */
+.workspace-unlock { align-items: center; background: linear-gradient(110deg,#fffdfa,#fff7ed); border: 2px solid var(--coral); border-radius: 20px; box-shadow: 0 18px 38px rgba(232,102,69,.14); display: flex; gap: 24px; margin: 0 auto 18px; max-width: 1184px; padding: 28px 32px; }
+.workspace-unlock-icon { align-items: center; background: var(--coral); border-radius: 16px; color: #fff; display: flex; flex-shrink: 0; height: 54px; justify-content: center; width: 54px; }
+.workspace-unlock-copy { flex: 1; }
+.workspace-unlock-copy .section-kicker { margin-bottom: 9px; }
+.workspace-unlock-copy h3 { color: var(--blue); font-size: clamp(22px, 2.4vw, 31px); letter-spacing: -.04em; margin: 0 0 7px; }
+.workspace-unlock-copy > p:not(.section-kicker) { color: var(--muted-copy); font-size: 12px; line-height: 1.6; margin: 0; max-width: 680px; }
+.workspace-unlock-copy .calculator-requester-field { display: inline-flex; margin: 17px 14px 0 0; max-width: 260px; vertical-align: bottom; }
+.workspace-unlock-copy .calculator-gate-actions { display: inline-flex; margin-top: 17px; vertical-align: bottom; }
+.workspace-unlock-copy > small { color: var(--muted-copy); display: block; font-size: 9px; margin-top: 12px; }
+.workspace-unlock-status { align-items: center; color: var(--muted-copy); display: inline-flex; flex-shrink: 0; font-size: 10px; gap: 7px; white-space: nowrap; }
+.workspace-unlock-status svg { color: var(--coral); }
+.calculator-section > .calculator-gate,
+.calculator-section > .payment-request-panel,
+.bulk-section > .bulk-gate,
+.bulk-section > .payment-request-panel { display: none !important; }
+@media (max-width: 700px) {
+  .workspace-unlock { align-items: flex-start; flex-direction: column; padding: 23px; }
+  .workspace-unlock-status { align-self: flex-start; }
+  .workspace-unlock-copy .calculator-requester-field, .workspace-unlock-copy .calculator-gate-actions { display: flex; margin-right: 0; width: 100%; }
+  .workspace-unlock-copy .calculator-gate-actions { align-items: flex-start; flex-direction: column; }
+}

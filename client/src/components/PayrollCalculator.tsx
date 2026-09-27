@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Calculator, CheckCircle2, Download, ExternalLink, Info, LockKeyhole, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import jsPDF from "jspdf";
 import PayrollFormDownloads from "@/components/PayrollFormDownloads";
+import { readAccessSession } from "@/lib/accessSession";
 
 type TaxMode = "employee" | "employer";
 type AccessSession = { requestId: string; token: string };
@@ -138,7 +139,7 @@ export function calculateAnnualPIT(grossIncome: number, parentCount: number, spo
 }
 
 export default function PayrollCalculator() {
-  const [access, setAccess] = useState<AccessSession | null>(null);
+  const [access, setAccess] = useState<AccessSession | null>(() => readAccessSession());
   const [paymentRequested, setPaymentRequested] = useState(false);
   const [requesterName, setRequesterName] = useState("");
   const [taxVersion, setTaxVersion] = useState<TaxRuleVersion>("2026-2027");
@@ -146,6 +147,12 @@ export default function PayrollCalculator() {
   const statusQuery = trpc.calculatorAccess.status.useQuery(access ?? emptyStatusInput, { enabled: Boolean(access), refetchInterval: access ? 2500 : false });
   const accessGranted = statusQuery.data?.status === "approved";
   const rules = TAX_RULES[taxVersion];
+
+  useEffect(() => {
+    const syncAccess = () => setAccess(readAccessSession());
+    window.addEventListener("access-session-updated", syncAccess);
+    return () => window.removeEventListener("access-session-updated", syncAccess);
+  }, []);
 
   const [basicSalary, setBasicSalary] = useState("800000");
   const [allowance, setAllowance] = useState("100000");

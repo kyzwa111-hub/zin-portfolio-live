@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Download, FileSpreadsheet, LockKeyhole, ShieldCheck, Upload } from "lucide-react";
 import * as XLSX from "xlsx";
 import { trpc } from "@/lib/trpc";
 import { TAX_RULES, calculateAnnualPIT, calculateSSB, formatFinancialYear } from "@/components/PayrollCalculator";
+import { readAccessSession } from "@/lib/accessSession";
 
 type TaxMode = "employee" | "employer";
 type AccessSession = { requestId: string; token: string };
@@ -131,7 +132,7 @@ function exportRows(rows: CalculatedRow[]) {
 }
 
 export default function BulkPayroll() {
-  const [access, setAccess] = useState<AccessSession | null>(null);
+  const [access, setAccess] = useState<AccessSession | null>(() => readAccessSession());
   const [requesterName, setRequesterName] = useState("");
   const [paymentRequested, setPaymentRequested] = useState(false);
   const [rows, setRows] = useState<CalculatedRow[]>([]);
@@ -139,6 +140,12 @@ export default function BulkPayroll() {
   const statusQuery = trpc.calculatorAccess.status.useQuery(access ?? emptyStatusInput, { enabled: Boolean(access), refetchInterval: access ? 2500 : false });
   const accessGranted = statusQuery.data?.status === "approved";
   const botUsername = accessRequest.data?.botUsername ?? "Payroll_Officer_bot";
+
+  useEffect(() => {
+    const syncAccess = () => setAccess(readAccessSession());
+    window.addEventListener("access-session-updated", syncAccess);
+    return () => window.removeEventListener("access-session-updated", syncAccess);
+  }, []);
   const summary = useMemo(() => rows.length ? `${rows.length} employee${rows.length === 1 ? "" : "s"} calculated locally` : "No employee file uploaded yet", [rows.length]);
   const handleFile = async (file: File) => {
     const buffer = await file.arrayBuffer();

@@ -23,6 +23,8 @@ TiDB URL သို့မဟုတ် YouTube API key မရှိပါက၊ �
 
 `event_video_links` ဇယားမှာ ဗီဒီယို URL၊ platform၊ ခေါင်းစဉ်၊ ချန်နယ်အမည်၊ တွေ့ရှိစေသော ရှာဖွေရေးစကားစု၊ license အမည်ရရှိပါက ထိုအမည်၊ စစ်ဆေးမှုအခြေအနေနှင့် ပထမ/နောက်ဆုံးတွေ့ရှိချိန်တို့ကို သိမ်းပါတယ်။ URL hash ကို အသုံးပြုပြီး ထပ်နေသော link များကို တစ်ခုတည်းအဖြစ် စုစည်းပါတယ်။
 
+Worker သည် `YOUTUBE_DATA_API_KEY` ကို Google အကြံပြုထားသော `X-Goog-Api-Key` HTTP header မှတစ်ဆင့် ပို့ပါတယ်။ Key ကို request URL ထဲ မထည့်သလို application log ထဲမှာလည်း မဖော်ပြပါ။ အသေးစိတ်ကို [Google ၏ API key လုံခြုံရေးလမ်းညွှန်](https://docs.cloud.google.com/docs/authentication/api-keys-best-practices) မှာ ကြည့်နိုင်ပါတယ်။
+
 **အများမြင်နိုင်ခြင်း သို့မဟုတ် မြန်မာနိုင်ငံတွင် ကြည့်ရှုနိုင်ခြင်းသည် ဒေါင်းလုဒ်လုပ်ခွင့်၊ ပြန်တင်ခွင့် သို့မဟုတ် ပြန်လည်အသုံးပြုခွင့်ကို မပေးပါ။**
 
 ## တရားဝင်စာတမ်းများ
@@ -30,6 +32,3 @@ TiDB URL သို့မဟုတ် YouTube API key မရှိပါက၊ �
 - https://developers.google.com/youtube/v3/docs/search/list
 - https://developers.google.com/youtube/v3/determine_quota_cost
 - https://developers.cloudflare.com/workers/configuration/cron-triggers/
-
-
-The Worker sends `YOUTUBE_DATA_API_KEY` in Google's recommended `X-Goog-Api-Key` HTTP header; the key is not added to the request URL or returned in application logs. Google API key security guidance: https://docs.cloud.google.com/docs/authentication/api-keys-best-practices

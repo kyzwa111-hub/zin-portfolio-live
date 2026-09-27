@@ -1,5 +1,6 @@
 /* Public HR webinars and recommendations */
 .recommendations-section,.webinars-page{background:#fff;color:#1f1f1f}
+.webinars-page-nav{display:flex;justify-content:space-between;gap:16px;max-width:900px;margin:0 auto 32px;padding:0 6vw}.webinars-page-nav a{color:#1f1f1f;font-size:.85rem;font-weight:700;text-decoration:none}.webinars-page-nav a:hover{color:#b55438}
 .recommendations-section{padding:72px 6vw;background:#f5f3ee}
 .section-heading{max-width:760px;margin:0 auto 40px}.section-heading h2{font-size:clamp(1.8rem,4vw,3.2rem);margin:0 0 12px}.section-heading>p:last-child{color:#555;line-height:1.7}
 .testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:1100px;margin:auto}.testimonial-card{background:#fff;border:1px solid #e7e2da;border-radius:16px;padding:24px;display:flex;flex-direction:column;min-height:170px;box-shadow:0 4px 12px #00000008}.quote{line-height:1.7;flex:1;margin:0 0 20px}.quote:before{content:'“';font-size:2rem;color:#b9aa99}.testimonial-footer{border-top:1px solid #eae5da;padding-top:14px}.author,.role{margin:0}.author{font-weight:700}.role{margin-top:4px;font-size:.85rem;color:#777}

@@ -2,6 +2,7 @@ import {
   ArrowDown,
   ArrowUpRight,
   BriefcaseBusiness,
+  CalendarDays,
   Check,
   ClipboardCheck,
   Download,
@@ -107,7 +108,7 @@ export default function Home() {
         <nav className={menuOpen ? "site-nav site-nav-open" : "site-nav"}>
           <a href="#personal" onClick={closeMenu}>Personal info</a>
           <a href="#services" onClick={closeMenu}>Services</a>
-          <a href="/webinars" onClick={closeMenu}>Webinars</a>
+          <a href="/webinars" onClick={closeMenu}>Events</a>
           <a href="/admin" onClick={closeMenu}>Admin panel</a>
           <a className="nav-cta" href="https://t.me/Payroll_Officer_bot" target="_blank" rel="noreferrer" onClick={closeMenu}>Unlock Telegram <ArrowUpRight size={14} /></a>
         </nav>
@@ -126,6 +127,8 @@ export default function Home() {
               <p className="personal-lede">Payroll and HR Operations professional who turns complex recurring work into clear, dependable systems.</p>
               <div className="personal-actions">
                 <a className="button-primary" href="#services">View my services <ArrowDown size={16} /></a>
+                <a className="text-link light-link" href="/webinars"><CalendarDays size={15} /> View events</a>
+                <a className="text-link light-link" href="/admin"><ShieldCheck size={15} /> Admin panel</a>
                 <a className="text-link light-link" href="/manus-storage/Zin_Min_Htet_CV__8f66dc0b_490a55be.pdf" target="_blank" rel="noreferrer">View CV <ExternalLink size={15} /></a>
               </div>
               <div className="personal-contact-row">

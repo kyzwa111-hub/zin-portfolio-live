@@ -22,7 +22,7 @@ export default function AdminControlCenter() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [requestId, setRequestId] = useState("");
-  const [amount, setAmount] = useState("25000");
+  const [amount, setAmount] = useState("50000");
   const [method, setMethod] = useState("KBZPay");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");

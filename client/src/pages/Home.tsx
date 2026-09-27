@@ -45,6 +45,21 @@ const experience = [
   },
 ];
 
+const projects = [
+  { number: "01", title: "Multi-client payroll operations", type: "Payroll systems", tag: "Scale + accuracy" },
+  { number: "02", title: "People & operations support", type: "HR operations", tag: "Human-centered" },
+  { number: "03", title: "Team culture in action", type: "MP&O team culture", tag: "People first" },
+  { number: "04", title: "Event & stakeholder coordination", type: "Project delivery", tag: "Detail-led" },
+];
+
+const recommendations = [
+  { name: "May Thandar Kyaw", relationship: "Former colleague · AGS Myanmar", quote: "I had the opportunity to work with Zin Min Htet when he served as a Payroll Officer. Although we worked in different departments, we often worked together. He is a good listener, patient with people, and able to handle workload pressure independently. He is familiar with payroll operations and communicates carefully with others." },
+  { name: "Aye Chan Moe", relationship: "Colleague · Payroll & HR operations", quote: "I had the pleasure of working with Zin Min Htet, and I can confidently say he is one of the most hardworking and dedicated colleagues I have known. He consistently puts in the effort to deliver high-quality results. He is also a reliable team player who supports others and shares his knowledge. Any team would be fortunate to have him." },
+  { name: "Paing Thit Htoo (Ethan)", relationship: "Former direct manager · CX operations", quote: "Zin Min Htet is the kind of person who spots problems before they happen, fixes them quietly, and always puts the team first. Smart, reliable, and genuinely kind—he is the teammate everyone wants." },
+  { name: "Kyaw Htwe", relationship: "Former teammate · Oway Ride Call Center", quote: "I had the pleasure of working with Zin Min Htet at Oway Ride’s Call Center, where he proved to be a dedicated and hardworking colleague. His ability to handle challenges, communicate effectively, and stay committed to his work made a strong impression on me. I have no doubt his dedication and problem-solving skills will continue to drive his success." },
+  { name: "Ye Htin Kyaw", relationship: "Former teammate · HR team", quote: "I had the opportunity to work with Zin Min Htet in our HR team, where he served as a Payroll Officer. He handled payroll processes with diligence and accuracy, was detail-oriented, and ensured tasks were completed on time. He is familiar with payroll operations and maintains professionalism in his role." },
+];
+
 const strengths = [
   "Payroll processing & compensation",
   "PIT, SSB & statutory support",
@@ -92,6 +107,8 @@ export default function Home() {
         <nav className={menuOpen ? "site-nav site-nav-open" : "site-nav"}>
           <a href="#personal" onClick={closeMenu}>Personal info</a>
           <a href="#services" onClick={closeMenu}>Services</a>
+          <a href="/webinars" onClick={closeMenu}>Webinars</a>
+          <a href="/admin" onClick={closeMenu}>Admin panel</a>
           <a className="nav-cta" href="https://t.me/Payroll_Officer_bot" target="_blank" rel="noreferrer" onClick={closeMenu}>Unlock Telegram <ArrowUpRight size={14} /></a>
         </nav>
       </header>
@@ -144,6 +161,18 @@ export default function Home() {
             <div className="experience-list">{experience.map((item) => <article className="experience-mini" key={item.role}><div className="experience-mini-top"><span>{item.period}</span>{item.current && <b>Current</b>}</div><h3>{item.role}</h3><p>{item.company}</p><small>{item.description}</small></article>)}</div>
           </div>
         </section>
+
+        <section className="work-section section-pad" id="work">
+          <div className="section-heading-row"><div><p className="section-kicker">Selected work</p><h2>Where the details<br /><i>become visible.</i></h2></div><p className="section-description compact">A few snapshots from the work around payroll, people operations, culture, and stakeholder coordination.</p></div>
+          <div className="project-grid">{projects.map((project) => <article className="project-card" key={project.number}><div className="project-image"><span className="project-number">{project.number}</span><span className="project-open"><ArrowUpRight size={17} /></span></div><div className="project-copy"><div><p>{project.type}</p><h3>{project.title}</h3></div><span className="project-tag">{project.tag}</span></div></article>)}</div>
+        </section>
+
+        <section className="recommendations-section section-pad" id="recommendations">
+          <div className="recommendations-head"><div><p className="section-kicker">LinkedIn recommendations</p><h2>Good work is<br /><i>remembered by people.</i></h2></div><a className="recommendations-link" href="https://www.linkedin.com/in/zin-min-htet-39b0a7243/" target="_blank" rel="noreferrer">View on LinkedIn <ExternalLink size={15} /></a></div>
+          <div className="recommendations-grid">{recommendations.map((recommendation) => <article className="recommendation-card" key={recommendation.name}><div className="quote-mark">“</div><p className="recommendation-quote">{recommendation.quote}</p><div className="recommendation-author"><span className="author-avatar">{recommendation.name.split(" ").map((part) => part[0]).join("")}</span><div><strong>{recommendation.name}</strong><span>{recommendation.relationship}</span></div></div></article>)}</div>
+        </section>
+
+        <section className="contact-section section-pad" id="contact"><div className="contact-inner"><p className="section-kicker">Start a conversation</p><h2>Let’s make the<br /><i>next thing clearer.</i></h2><p>For payroll operations, HR coordination, or a thoughtful conversation about better ways of working.</p><a className="button-dark" href="mailto:fzinmin11@gmail.com">Send an email <Mail size={16} /></a><div className="contact-details"><span><MapPin size={15} /> Yangon, Myanmar</span><span><BriefcaseBusiness size={15} /> Open to meaningful opportunities</span><span><Check size={15} /> Available for a conversation</span></div></div></section>
 
         <section className="services-panel" id="services">
           <div className="services-hero section-pad">

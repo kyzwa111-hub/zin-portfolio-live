@@ -1,4 +1,5 @@
 import { CalendarDays, ExternalLink, PlayCircle, Presentation } from "lucide-react";
+import "../webinars.css";
 
 const webinars = [
   {

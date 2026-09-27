@@ -27,6 +27,22 @@ export default function AdminControlCenter() {
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
 
+  useEffect(() => {
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    const created = !meta;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "robots";
+      document.head.appendChild(meta);
+    }
+    const previous = meta.content;
+    meta.content = "noindex,nofollow";
+    return () => {
+      if (created) meta?.remove();
+      else if (meta) meta.content = previous;
+    };
+  }, []);
+
   const refresh = async () => {
     const result = await api("/api/admin/overview") as Overview;
     setData(result); setAuthorized(true);

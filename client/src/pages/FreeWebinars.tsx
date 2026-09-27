@@ -19,7 +19,6 @@ export default function FreeWebinars() {
       <section className="webinars-hero">
         <nav className="webinars-page-nav" aria-label="Event navigation">
           <a href="/">← Portfolio</a>
-          <a href="/admin">Admin panel →</a>
         </nav>
         <p className="section-kicker">HR learning & development</p>
         <h1>Free HR Webinars</h1>

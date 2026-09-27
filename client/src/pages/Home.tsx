@@ -21,7 +21,7 @@ import { useState } from "react";
 import "../workspace.css";
 import WorkspaceAccessGate from "@/components/WorkspaceAccessGate";
 import PayrollCalculator from "@/components/PayrollCalculator";
-import BulkPayroll from "@/components/BulkPayroll";
+import BulkPayroll, { BulkPayrollTemplateDownload } from "@/components/BulkPayroll";
 import CBResourceCenter from "@/components/CBResourceCenter";
 
 const experience = [
@@ -109,7 +109,6 @@ export default function Home() {
           <a href="#personal" onClick={closeMenu}>Personal info</a>
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="/webinars" onClick={closeMenu}>Events</a>
-          <a href="/admin" onClick={closeMenu}>Admin panel</a>
           <a className="nav-cta" href="https://t.me/Payroll_Officer_bot" target="_blank" rel="noreferrer" onClick={closeMenu}>Unlock Telegram <ArrowUpRight size={14} /></a>
         </nav>
       </header>
@@ -128,7 +127,6 @@ export default function Home() {
               <div className="personal-actions">
                 <a className="button-primary" href="#services">View my services <ArrowDown size={16} /></a>
                 <a className="text-link light-link" href="/webinars"><CalendarDays size={15} /> View events</a>
-                <a className="text-link light-link" href="/admin"><ShieldCheck size={15} /> Admin panel</a>
                 <a className="text-link light-link" href="/manus-storage/Zin_Min_Htet_CV__8f66dc0b_490a55be.pdf" target="_blank" rel="noreferrer">View CV <ExternalLink size={15} /></a>
               </div>
               <div className="personal-contact-row">
@@ -195,11 +193,14 @@ export default function Home() {
               { id: "payroll", number: "01", title: "Payroll tool", description: "See the number behind the payslip: PIT, SSB, net pay, and employer cost." },
               { id: "bulk", number: "02", title: "Bulk payroll", description: "Import once, calculate locally, and export calculation, SSB, and PAYE-A files." },
               { id: "cb", number: "03", title: "C&B resources", description: "Official monthly PIT, annual IRD, and SSB guidance and source links." },
-            ].map((service) => <button type="button" className={"service-card service-card-button " + (selectedWorkspace === service.id ? "selected" : "")} key={service.id} onClick={() => setSelectedWorkspace(service.id)} disabled={!workspaceApproved} aria-disabled={!workspaceApproved}><span className="service-card-number">{service.number}</span><div><strong>{service.title}</strong><p>{service.description}</p></div><span className="service-card-status">{workspaceApproved ? "Open workspace" : "Telegram unlock"}</span></button>)}
+            ].map((service) => {
+              const locked = !workspaceApproved && service.id !== "bulk";
+              return <button type="button" className={"service-card service-card-button " + (selectedWorkspace === service.id ? "selected" : "")} key={service.id} onClick={() => setSelectedWorkspace(service.id)} disabled={locked} aria-disabled={locked}><span className="service-card-number">{service.number}</span><div><strong>{service.title}</strong><p>{service.description}</p></div><span className="service-card-status">{workspaceApproved ? "Open workspace" : service.id === "bulk" ? "Template available" : "Telegram unlock"}</span></button>;
+            })}
           </div>
           <div className="hr-sector-heading section-pad"><div><p className="section-kicker"><UsersRound size={15} /> HR sector</p><h3>People work, held together.</h3><p>Choose a sector to open its related working form. Forms are local preparation templates, not government submissions.</p></div></div>
           <div className="hr-sector-grid section-pad">{hrSectorItems.map((item, index) => <button type="button" className={"hr-sector-card " + (selectedWorkspace === item.id ? "selected" : "")} key={item.id} onClick={() => setSelectedWorkspace(item.id)} disabled={!workspaceApproved} aria-disabled={!workspaceApproved}><span>0{index + 1}</span><strong>{item.title}</strong><small>{workspaceApproved ? "Open related form" : "Unlock with Telegram"}</small></button>)}</div>
-          {workspaceApproved && <div className="workspace-active-panel section-pad" aria-live="polite">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "bulk" && <BulkPayroll />}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm id={selectedWorkspace as HRSectorId} />}</div>}
+          {(workspaceApproved || selectedWorkspace === "bulk") && <div className="workspace-active-panel section-pad" aria-live="polite">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "bulk" && (workspaceApproved ? <BulkPayroll /> : <BulkPayrollTemplateDownload />)}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm id={selectedWorkspace as HRSectorId} />}</div>}
         </section>
       </main>
 

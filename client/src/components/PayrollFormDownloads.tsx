@@ -1,46 +1,17 @@
-import { useState } from "react";
-import { Download, ExternalLink, FileSpreadsheet, FileText, Loader2, WandSparkles } from "lucide-react";
-import { trpc } from "@/lib/trpc";
-import { downloadFilledCoverLetter, downloadFilledExcelTemplate, PayrollAutoFillData } from "@/lib/payrollTemplateFill";
+import { Download, ExternalLink, FileText } from "lucide-react";
+import type { PayrollAutoFillData } from "@/lib/payrollTemplateFill";
 
-type FormKind = "monthly-paye" | "monthly-ssb" | "monthly-tax-card" | "annual-ird" | "annual-cover-letter";
-type FormTemplate = { id: number; cadence: "monthly" | "annual"; kind: FormKind; title: string; versionLabel: string; description: string; fileType: "xlsx" | "docx" | "pdf"; fileUrl: string; officialLabel: string; officialUrl: string; isActive: number };
-
-const kindOrder: FormKind[] = ["monthly-paye", "monthly-ssb", "monthly-tax-card", "annual-ird", "annual-cover-letter"];
-const kindLabel: Record<FormKind, string> = { "monthly-paye": "Monthly · PAYE", "monthly-ssb": "Monthly · SSB", "monthly-tax-card": "Monthly · Tax card", "annual-ird": "Annual · IRD 03-07", "annual-cover-letter": "Annual · Cover letter" };
+const officialForms = [
+  { title: "PIT monthly government format · 03-06", kind: "Monthly PAYE", url: "/data-sources/ird-03-06.pdf", official: "https://www.ird.gov.mm/storage/forms/6a59e2576ed5c-03-06.pdf", description: "Official salary-tax withholding schedule for monthly PAYE preparation." },
+  { title: "PIT electronic format · 03-06(a)", kind: "Monthly PAYE file guide", url: "/data-sources/ird-03-06-a.pdf", official: "https://www.ird.gov.mm/storage/forms/6a59e269d243a-03-06-a.pdf", description: "Official field specification for the electronic / Excel salary withholding schedule." },
+  { title: "Annual salary filing format · 03-07", kind: "Annual IRD", url: "/data-sources/ird-03-07.pdf", official: "https://www.ird.gov.mm/storage/forms/6a59e2854eccf-03-07.pdf", description: "Official annual salary statement reference for salary, SSF, insurance, reliefs, and tax withheld." },
+  { title: "SSB monthly contribution reference", kind: "SSB", url: "/data-sources/ssb-contribution-formula.pdf", official: "https://www.ssb.gov.mm/portal/qna", description: "Official contribution formula and guidance. The current Form 13 / monthly workbook must be obtained from SSB or the relevant township office; it is not publicly downloadable here." },
+];
 
 export default function PayrollFormDownloads({ data }: { data: PayrollAutoFillData | null }) {
-  const templates = trpc.formTemplates.list.useQuery();
-  const [fillingKind, setFillingKind] = useState<FormKind | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const activeTemplates = [...((templates.data ?? []) as FormTemplate[])].sort((a, b) => kindOrder.indexOf(a.kind) - kindOrder.indexOf(b.kind));
-
-  const autoFill = async (template: FormTemplate) => {
-    if (!data) return;
-    setError(null);
-    setFillingKind(template.kind);
-    try {
-      if (template.kind === "annual-cover-letter") await downloadFilledCoverLetter(data);
-      else if (template.kind === "monthly-paye" || template.kind === "monthly-ssb" || template.kind === "annual-ird") await downloadFilledExcelTemplate(template.fileUrl, template.kind, data);
-    } catch (fillError) {
-      setError(fillError instanceof Error ? fillError.message : "Could not create the filled template.");
-    } finally {
-      setFillingKind(null);
-    }
-  };
-
-  return <div className="payroll-downloads" aria-labelledby="payroll-downloads-title">
-    <div className="payroll-downloads-heading">
-      <div><p className="section-kicker"><Download size={15} /> Form templates</p><h3 id="payroll-downloads-title">Monthly and annual formats, ready to adapt.</h3></div>
-      <p>Download individual Excel, DOCX, and PDF files. Admin can update versions and official links without editing code.</p>
-    </div>
-    {templates.isLoading ? <div className="payroll-download-loading"><Loader2 className="spin" size={16} /> Loading current form versions…</div> : activeTemplates.length ? <div className="payroll-download-grid payroll-download-grid-expanded">{activeTemplates.map((template) => <article className={`payroll-download-card ${template.cadence === "annual" ? "annual" : ""}`} key={template.id}>
-      <span className="payroll-download-label">{kindLabel[template.kind]}</span><strong>{template.title}</strong><small>{template.versionLabel} · {template.fileType.toUpperCase()}</small><p>{template.description}</p>
-      <div className="payroll-download-actions"><a className="payroll-download-action" href={template.fileUrl} download>Download blank <Download size={14} /></a>{data && (template.kind === "monthly-paye" || template.kind === "monthly-ssb" || template.kind === "annual-ird" || template.kind === "annual-cover-letter") && <button className="payroll-autofill-action" onClick={() => void autoFill(template)} disabled={fillingKind !== null}>{fillingKind === template.kind ? <Loader2 className="spin" size={13} /> : <WandSparkles size={13} />} Auto-fill &amp; download</button>}</div>
-      <a className="payroll-official-link" href={template.officialUrl} target="_blank" rel="noreferrer">{template.officialLabel} <ExternalLink size={12} /></a>
-    </article>)}</div> : <p className="payroll-download-note">No active form templates are configured yet. An admin can add the current Excel/DOCX/PDF versions from the control room.</p>}
-    {!data && activeTemplates.length > 0 && <p className="payroll-download-note"><WandSparkles size={13} /> Unlock the calculator to enable auto-fill downloads. Blank templates remain available without approval.</p>}
-    {error && <p className="payroll-download-error">{error}</p>}
-    <p className="payroll-download-note">Preparation aids only—not official government submissions. Verify current IRD and SSB requirements before filing.</p>
-  </div>;
+  return <section className="payroll-downloads" aria-labelledby="payroll-downloads-title">
+    <div className="payroll-downloads-heading"><div><p className="section-kicker"><FileText size={15} /> Official form library</p><h3 id="payroll-downloads-title">Monthly payroll and annual filing formats.</h3></div><p>Official references from IRD and SSB. Check the current version before filing.</p></div>
+    <div className="payroll-download-grid payroll-download-grid-expanded">{officialForms.map((form) => <article className="payroll-download-card" key={form.title}><span className="payroll-download-label">{form.kind}</span><strong>{form.title}</strong><p>{form.description}</p><div className="payroll-download-actions"><a className="payroll-download-action" href={form.url} target="_blank" rel="noreferrer">Open / download <Download size={14} /></a><a className="payroll-official-link" href={form.official} target="_blank" rel="noreferrer">Official source <ExternalLink size={12} /></a></div></article>)}</div>
+    <p className="payroll-download-note">{data ? "Payslip calculations are available above. Government PDFs are references; this site does not submit tax or SSB filings." : "Preparation references only. SSB Form 13 and its monthly workbook must be confirmed with the authority."}</p>
+  </section>;
 }

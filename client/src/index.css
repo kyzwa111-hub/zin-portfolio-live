@@ -756,3 +756,32 @@ body { background: var(--cream); }
   .service-card, .hr-sector-card { border-radius: 14px; padding: 22px; }
   .site-footer { align-items: flex-start; flex-direction: column; gap: 14px; }
 }
+
+
+/* Clean information architecture: keep only the approved four-part flow */
+.personal-details-grid,
+.experience-strip,
+.service-cards,
+.portfolio-header .nav-cta,
+.service-card-status { display: none !important; }
+.personal-panel { padding-bottom: 78px; }
+.personal-panel-inner { min-height: 560px; }
+.services-hero { padding-top: 116px; }
+.hr-sector-block { border-top: 0; padding-top: 54px; }
+.service-tools { border-top: 1px solid var(--line); }
+.service-tools > .calculator-section,
+.service-tools > .bulk-section,
+.service-tools > .cb-section { padding-bottom: 88px; padding-top: 88px; }
+.service-tools > .calculator-section:before,
+.service-tools > .bulk-section:before,
+.service-tools > .cb-section:before { color: var(--coral); content: "UNLOCKED WORKSPACE"; display: block; font-size: 10px; font-weight: 700; letter-spacing: .16em; margin: 0 auto 18px; max-width: 1184px; }
+.site-footer { margin-top: 0; }
+@media (max-width: 700px) {
+  .personal-panel { padding-bottom: 54px; }
+  .personal-panel-inner { min-height: 0; }
+  .services-hero { padding-top: 72px; }
+  .hr-sector-block { padding-top: 40px; }
+  .service-tools > .calculator-section,
+  .service-tools > .bulk-section,
+  .service-tools > .cb-section { padding-bottom: 62px; padding-top: 62px; }
+}

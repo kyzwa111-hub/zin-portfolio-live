@@ -66,10 +66,11 @@ async function getSetting(env: Env, key: string): Promise<string | null> {
 }
 async function ensureWebhook(request: Request, env: Env): Promise<void> {
   const desiredUrl = new URL("/api/telegram/webhook", request.url).toString();
-  if (await getSetting(env, WEBHOOK_URL_KEY) === desiredUrl) return;
   const secret = (await sha256(env.TELEGRAM_BOT_TOKEN)).slice(0, 32);
+  const marker = desiredUrl + "|" + secret;
+  if (await getSetting(env, WEBHOOK_URL_KEY) === marker) return;
   await telegram(env, "setWebhook", { url: desiredUrl, secret_token: secret, allowed_updates: ["message", "callback_query"] });
-  await saveSetting(env, WEBHOOK_URL_KEY, desiredUrl);
+  await saveSetting(env, WEBHOOK_URL_KEY, marker);
   const bot = await telegram(env, "getMe", {});
   if (bot?.username) await saveSetting(env, "bot_username", String(bot.username));
 }
@@ -179,7 +180,13 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/api/telegram/webhook" && request.method === "POST") return handleWebhook(request, env);
     if (url.pathname.startsWith("/api/trpc/")) return handleTrpc(request, env);
-    if (url.pathname === "/api/health") return json({ ok: true, backend: "cloudflare-worker" });
+    if (url.pathname === "/api/health") {
+      let telegramWebhookReady = false;
+      if (env.TELEGRAM_BOT_TOKEN && adminUsername(env)) {
+        try { await ensureWebhook(request, env); telegramWebhookReady = true; } catch { telegramWebhookReady = false; }
+      }
+      return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady });
+    }
     return env.ASSETS.fetch(request);
   },
 };

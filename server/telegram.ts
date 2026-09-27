@@ -42,6 +42,11 @@ export async function getTelegramBotUsername() {
   return bot?.username ?? "Payroll_Officer_bot";
 }
 
+export async function configureTelegramWebhook(publicBaseUrl: string) {
+  const webhookUrl = `${publicBaseUrl.replace(/\/$/, "")}/api/telegram/webhook`;
+  return telegramApi<boolean>("setWebhook", { url: webhookUrl, secret_token: getTelegramWebhookSecret(), allowed_updates: ["message", "callback_query"] });
+}
+
 async function storeMessage(input: Parameters<typeof createTelegramMessage>[0]) {
   try {
     await createTelegramMessage(input);

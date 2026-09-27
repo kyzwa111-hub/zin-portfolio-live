@@ -8,7 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { getTelegramWebhookSecret, handleTelegramWebhook } from "../telegram";
+import { configureTelegramWebhook, getTelegramWebhookSecret, handleTelegramWebhook } from "../telegram";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -74,6 +74,10 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    const publicBaseUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL;
+    if (publicBaseUrl && process.env.TELEGRAM_BOT_TOKEN) {
+      configureTelegramWebhook(publicBaseUrl).then(() => console.log(`[Telegram] Webhook configured at ${publicBaseUrl}/api/telegram/webhook`)).catch((error) => console.warn("[Telegram] Webhook setup failed:", error));
+    }
   });
 }
 

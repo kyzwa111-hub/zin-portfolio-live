@@ -47,10 +47,10 @@ const experience = [
 ];
 
 const projects = [
-  { number: "01", title: "Multi-client payroll operations", type: "Payroll systems", tag: "Scale + accuracy" },
-  { number: "02", title: "People & operations support", type: "HR operations", tag: "Human-centered" },
-  { number: "03", title: "Team culture in action", type: "MP&O team culture", tag: "People first" },
-  { number: "04", title: "Event & stakeholder coordination", type: "Project delivery", tag: "Detail-led" },
+  { number: "01", title: "Multi-client payroll operations", type: "Payroll systems", tag: "Scale + accuracy", image: "/images/portfolio/multi-client-operations.jpg", imageAlt: "Operations team pictured beside a service and workflow display." },
+  { number: "02", title: "People & operations support", type: "HR operations", tag: "Human-centered", image: "/images/portfolio/people-operations-team-building.jpg", imageAlt: "Myanmar colleagues gathered at an outdoor team-building event." },
+  { number: "03", title: "Team culture in action", type: "MP&O team culture", tag: "People first", image: "/images/portfolio/team-culture-mpo.jpg", imageAlt: "Colleagues at an indoor team-culture gathering." },
+  { number: "04", title: "Event & stakeholder coordination", type: "Project delivery", tag: "Detail-led", image: "/images/portfolio/event-stakeholder-coordination.jpg", imageAlt: "Attendee at a formal event with flags and a decorated backdrop." },
 ];
 
 const recommendations = [
@@ -165,7 +165,7 @@ export default function Home() {
 
         <section className="work-section section-pad" id="work">
           <div className="section-heading-row"><div><p className="section-kicker">Selected work</p><h2>Where the details<br /><i>become visible.</i></h2></div><p className="section-description compact">A few snapshots from the work around payroll, people operations, culture, and stakeholder coordination.</p></div>
-          <div className="project-grid">{projects.map((project) => <article className="project-card" key={project.number}><div className="project-image"><span className="project-number">{project.number}</span><span className="project-open"><ArrowUpRight size={17} /></span></div><div className="project-copy"><div><p>{project.type}</p><h3>{project.title}</h3></div><span className="project-tag">{project.tag}</span></div></article>)}</div>
+          <div className="project-grid">{projects.map((project) => <article className="project-card" key={project.number}><div className="project-image"><img src={project.image} alt={project.imageAlt} loading="lazy" decoding="async" /><span className="project-number">{project.number}</span><span className="project-open"><ArrowUpRight size={17} /></span></div><div className="project-copy"><div><p>{project.type}</p><h3>{project.title}</h3></div><span className="project-tag">{project.tag}</span></div></article>)}</div>
         </section>
 
         <section className="recommendations-section section-pad" id="recommendations">

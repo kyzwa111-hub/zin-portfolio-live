@@ -13,9 +13,6 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import PayrollCalculator from "@/components/PayrollCalculator";
-import BulkPayroll from "@/components/BulkPayroll";
-import CBResourceCenter from "@/components/CBResourceCenter";
 import WorkspaceAccessGate from "@/components/WorkspaceAccessGate";
 
 const experience = [
@@ -136,20 +133,6 @@ export default function Home() {
             <article className="service-card"><span className="service-card-number">03</span><div><strong>C&amp;B resource center</strong><p>Find official IRD, SSB, MOL, and CSO references in one curated workspace.</p></div><span className="service-card-status">Open resources</span></article>
           </div>
 
-          <div className="hr-sector-block section-pad">
-            <div className="hr-sector-heading"><div><p className="section-kicker">HR sector services</p><h3>People operations,<br /><i>made practical.</i></h3></div><p>Support for the work around payroll: employee records, attendance, leave, onboarding, and everyday HR coordination.</p></div>
-            <div className="hr-sector-grid">
-              <article className="hr-sector-card"><span className="hr-sector-icon">01</span><div><strong>Employee data &amp; HR admin</strong><p>Organize employee information, contracts, documentation, and HR records with a clear process.</p></div><span className="service-card-status">Telegram unlock</span></article>
-              <article className="hr-sector-card"><span className="hr-sector-icon">02</span><div><strong>Attendance &amp; leave</strong><p>Coordinate attendance, leave balances, overtime details, and clean monthly handoffs to payroll.</p></div><span className="service-card-status">Telegram unlock</span></article>
-              <article className="hr-sector-card"><span className="hr-sector-icon">03</span><div><strong>People operations support</strong><p>Practical help for onboarding, employee communication, HR checklists, and team coordination.</p></div><span className="service-card-status">Telegram unlock</span></article>
-            </div>
-          </div>
-
-          <div className="service-tools">
-            <PayrollCalculator />
-            <BulkPayroll />
-            <CBResourceCenter />
-          </div>
         </section>
       </main>
 

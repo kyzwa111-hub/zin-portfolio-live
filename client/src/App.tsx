@@ -6,20 +6,19 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import AdminControlCenter from "./pages/AdminControlCenter";
+import FreeWebinars from "./pages/FreeWebinars";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/webinars" component={FreeWebinars} />
       <Route path="/admin" component={AdminControlCenter} />
       {/* Legacy Manus-OAuth admin page. Its backend (oauth callback + tRPC
           telegramAdmin/linkedinUpdates/formTemplates routes) was never migrated
           to the Cloudflare Worker (see TELEGRAM_SETUP.md "Scope"), so "Sign in"
           there can never succeed. Redirect to the working Telegram-based
-          Control Center instead of shipping a dead sign-in screen. The old
-          AdminUpdates.tsx file is left in the repo, unrouted, in case those
-          features (LinkedIn updates, form templates, Telegram inbox) get
-          ported to the Worker later. */}
+          Control Center instead of shipping a dead sign-in screen. */}
       <Route path="/admin/updates">
         <Redirect to="/admin" />
       </Route>

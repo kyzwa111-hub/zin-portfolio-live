@@ -6,11 +6,13 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import AdminUpdates from "./pages/AdminUpdates";
+import AdminControlCenter from "./pages/AdminControlCenter";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/admin" component={AdminControlCenter} />
       <Route path="/admin/updates" component={AdminUpdates} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

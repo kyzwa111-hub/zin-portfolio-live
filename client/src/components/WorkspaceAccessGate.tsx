@@ -1,21 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, ExternalLink, LockKeyhole, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { writeAccessSession } from "@/lib/accessSession";
+import { readAccessSession, writeAccessSession } from "@/lib/accessSession";
 
-export default function WorkspaceAccessGate() {
+export default function WorkspaceAccessGate({ onApprovedChange }: { onApprovedChange?: (approved: boolean) => void }) {
   const [requesterName, setRequesterName] = useState("");
   const [paymentRequested, setPaymentRequested] = useState(false);
+  const [access, setAccess] = useState(() => readAccessSession());
   const accessRequest = trpc.calculatorAccess.request.useMutation({
-    onSuccess: (data) => { setPaymentRequested(true); writeAccessSession({ requestId: data.requestId, token: data.token }); },
+    onSuccess: (data) => { setPaymentRequested(true); const session = { requestId: data.requestId, token: data.token }; setAccess(session); writeAccessSession(session); },
     onError: () => setPaymentRequested(false),
   });
-  const access = accessRequest.data;
   const statusQuery = trpc.calculatorAccess.status.useQuery(
     access ? { requestId: access.requestId, token: access.token } : { requestId: "pending-request", token: "pending-request-token" },
     { enabled: Boolean(access), refetchInterval: access ? 2500 : false },
   );
-  const botUsername = access?.botUsername ?? "Payroll_Officer_bot";
+  useEffect(() => {
+    const syncSession = () => setAccess(readAccessSession());
+    window.addEventListener("access-session-updated", syncSession);
+    return () => window.removeEventListener("access-session-updated", syncSession);
+  }, []);
+  const approved = statusQuery.data?.status === "approved";
+  useEffect(() => { onApprovedChange?.(approved); }, [approved, onApprovedChange]);
+  const botUsername = accessRequest.data?.botUsername ?? "Payroll_Officer_bot";
   const botLink = `https://t.me/${botUsername}?start=admin`;
 
   return (

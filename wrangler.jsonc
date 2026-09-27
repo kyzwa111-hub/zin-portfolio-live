@@ -4,6 +4,7 @@
   "main": "./worker/index.ts",
   "compatibility_date": "2026-09-25",
   "observability": { "enabled": true },
+  "vars": { "TELEGRAM_ADMIN_USERNAME": "zinmin2244" },
   "assets": {
     "directory": "./dist/public",
     "binding": "ASSETS",

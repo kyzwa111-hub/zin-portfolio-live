@@ -187,7 +187,7 @@ export default function Home() {
           </div>
 
           <div className="section-pad"><WorkspaceAccessGate onApprovedChange={setWorkspaceApproved} /></div>
-          <BulkPayrollSection approved={workspaceApproved} selected={selectedWorkspace === "bulk"} onOpen={() => setSelectedWorkspace("bulk")} />
+          <BulkPayrollSection approved={workspaceApproved} />
 
           <div className="service-cards section-pad" aria-label="Available services">
             {[

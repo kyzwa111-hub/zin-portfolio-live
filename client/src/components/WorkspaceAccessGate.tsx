@@ -1,21 +1,22 @@
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import { CheckCircle2, ExternalLink, LockKeyhole, ShieldCheck } from "lucide-react";
-
-const telegramBot = "Payroll_Officer_bot";
+import { trpc } from "@/lib/trpc";
+import { writeAccessSession } from "@/lib/accessSession";
 
 export default function WorkspaceAccessGate() {
-  const [requestOpen, setRequestOpen] = useState(false);
   const [requesterName, setRequesterName] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-
-  const submitRequest = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const name = requesterName.trim();
-    if (!name) return;
-    setSubmitted(true);
-    const start = `access_${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}`;
-    window.open(`https://t.me/${telegramBot}?start=${encodeURIComponent(start)}`, "_blank", "noopener,noreferrer");
-  };
+  const [paymentRequested, setPaymentRequested] = useState(false);
+  const accessRequest = trpc.calculatorAccess.request.useMutation({
+    onSuccess: (data) => { setPaymentRequested(true); writeAccessSession({ requestId: data.requestId, token: data.token }); },
+    onError: () => setPaymentRequested(false),
+  });
+  const access = accessRequest.data;
+  const statusQuery = trpc.calculatorAccess.status.useQuery(
+    access ? { requestId: access.requestId, token: access.token } : { requestId: "pending-request", token: "pending-request-token" },
+    { enabled: Boolean(access), refetchInterval: access ? 2500 : false },
+  );
+  const botUsername = access?.botUsername ?? "Payroll_Officer_bot";
+  const botLink = `https://t.me/${botUsername}?start=admin`;
 
   return (
     <div className="workspace-unlock" id="telegram-unlock">
@@ -23,29 +24,27 @@ export default function WorkspaceAccessGate() {
       <div className="workspace-unlock-copy">
         <p className="section-kicker"><span className="telegram-dot" /> One Telegram unlock</p>
         <h3>Unlock the complete HR workspace.</h3>
-        {!requestOpen ? (
+        {!access ? (
           <>
-            <p>Request access once for the HR, payroll, bulk export, and C&amp;B workspace.</p>
+            <p>Request access once for the HR, payroll, bulk export, and C&amp;B workspace. The admin will review your request before payment instructions appear.</p>
+            <label className="calculator-requester-field">
+              <span>Your name</span>
+              <input value={requesterName} onChange={(event) => setRequesterName(event.target.value)} placeholder="Enter your name" autoComplete="name" maxLength={160} />
+            </label>
             <div className="calculator-gate-actions">
-              <button type="button" className="button-primary" onClick={() => setRequestOpen(true)}>Request access</button>
+              <button type="button" className="button-primary" onClick={() => accessRequest.mutate({ requesterName: requesterName.trim() })} disabled={accessRequest.isPending || requesterName.trim().length < 2}>{accessRequest.isPending ? "Sending request…" : "Request access"}</button>
+              <a className="text-link" href={botLink} target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a>
             </div>
           </>
         ) : (
-          <form className="workspace-request-form" onSubmit={submitRequest}>
-            <p>Enter your name first. Telegram will open after you submit the request.</p>
-            <label className="calculator-requester-field">
-              <span>Your name</span>
-              <input value={requesterName} onChange={(event) => setRequesterName(event.target.value)} placeholder="Enter your name" autoComplete="name" maxLength={160} autoFocus />
-            </label>
-            <div className="calculator-gate-actions">
-              <button type="submit" className="button-primary" disabled={!requesterName.trim()}>{submitted ? "Open Telegram again" : "Continue to Telegram"} <ExternalLink size={14} /></button>
-              <button type="button" className="text-link workspace-cancel" onClick={() => setRequestOpen(false)}>Cancel</button>
-            </div>
-          </form>
+          <>
+            <p>{statusQuery.data?.status === "approved" ? "Approved. The workspace is unlocked." : "Request sent. Wait for the administrator to approve it after reviewing your request."}</p>
+            <small>Request ID: {access.requestId.slice(-8)} · Requests expire after 10 minutes.</small>
+          </>
         )}
-        <small>Telegram opens only after you submit the access request.</small>
+        {paymentRequested && access && <div className="payment-request-panel workspace-payment-panel" aria-live="polite"><div><p className="section-kicker">Requester-only payment instructions</p><h3>Pay 50,000 MMK via KBZPay</h3><p>After the admin reviews your request, scan the QR code and send the payment screenshot plus your request ID to the Telegram bot. Access unlocks only after administrator approval.</p><strong>Request ID: {access.requestId.slice(-8)}</strong><small>This panel is shown only in the browser session that submitted the request.</small></div><img src="/manus-storage/pasted_file_kNMX4R_image_1509cee3.png" alt="KBZPay QR code for the 50,000 MMK access payment" /></div>}
       </div>
-      <div className="workspace-unlock-status">{submitted ? <><CheckCircle2 size={16} /> Request started</> : <><ShieldCheck size={16} /> One access point</>}</div>
+      <div className="workspace-unlock-status">{statusQuery.data?.status === "approved" ? <><CheckCircle2 size={16} /> Approved</> : <><ShieldCheck size={16} /> {access ? "Awaiting approval" : "Admin approval"}</>}</div>
     </div>
   );
 }

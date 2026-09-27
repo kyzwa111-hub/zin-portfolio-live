@@ -4,6 +4,8 @@ import { AccessRequest, FormTemplate, InsertUser, LinkedInUpdate, TelegramMessag
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+const memoryAccessRequests = new Map<string, AccessRequest>();
+const memoryTelegramSettings = new Map<string, string>();
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
@@ -78,52 +80,70 @@ export async function getUserByOpenId(openId: string) {
 
 export async function createAccessRequest(input: { requestId: string; requesterName: string; tokenHash: string; expiresAt: Date }) {
   const db = await getDb();
-  if (!db) throw new Error("Database is not available");
+  if (!db) {
+    const now = new Date();
+    memoryAccessRequests.set(input.requestId, { id: Date.now(), ...input, status: "pending", telegramUserId: null, telegramUsername: null, approvedAt: null, revokedAt: null, createdAt: now, updatedAt: now });
+    return;
+  }
   return db.insert(accessRequests).values(input);
 }
 
 export async function getAccessRequest(requestId: string, tokenHash: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) {
+    const request = memoryAccessRequests.get(requestId);
+    return request?.tokenHash === tokenHash ? request : undefined;
+  }
   const result = await db.select().from(accessRequests).where(and(eq(accessRequests.requestId, requestId), eq(accessRequests.tokenHash, tokenHash))).limit(1);
   return result[0];
 }
 
 export async function getAccessRequestByRequestId(requestId: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return memoryAccessRequests.get(requestId);
   const result = await db.select().from(accessRequests).where(eq(accessRequests.requestId, requestId)).limit(1);
   return result[0];
 }
 
 export async function updateAccessRequest(requestId: string, update: Partial<Pick<AccessRequest, "status" | "telegramUserId" | "telegramUsername" | "approvedAt">>) {
   const db = await getDb();
-  if (!db) throw new Error("Database is not available");
+  if (!db) {
+    const request = memoryAccessRequests.get(requestId);
+    if (request) memoryAccessRequests.set(requestId, { ...request, ...update, updatedAt: new Date() });
+    return;
+  }
   await db.update(accessRequests).set({ ...update, updatedAt: new Date() }).where(eq(accessRequests.requestId, requestId));
 }
 
 export async function listAccessRequests(limit = 100) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return Array.from(memoryAccessRequests.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, limit);
   return db.select().from(accessRequests).orderBy(desc(accessRequests.createdAt)).limit(limit);
 }
 
 export async function revokeAccessRequest(requestId: string) {
   const db = await getDb();
-  if (!db) throw new Error("Database is not available");
+  if (!db) {
+    const request = memoryAccessRequests.get(requestId);
+    if (request) memoryAccessRequests.set(requestId, { ...request, status: "revoked", revokedAt: new Date(), updatedAt: new Date() });
+    return;
+  }
   await db.update(accessRequests).set({ status: "revoked", revokedAt: new Date(), updatedAt: new Date() }).where(eq(accessRequests.requestId, requestId));
 }
 
 export async function getTelegramSetting(settingKey: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return memoryTelegramSettings.get(settingKey);
   const result = await db.select().from(telegramSettings).where(eq(telegramSettings.settingKey, settingKey)).limit(1);
   return result[0]?.settingValue;
 }
 
 export async function upsertTelegramSetting(settingKey: string, settingValue: string) {
   const db = await getDb();
-  if (!db) throw new Error("Database is not available");
+  if (!db) {
+    memoryTelegramSettings.set(settingKey, settingValue);
+    return;
+  }
   await db.insert(telegramSettings).values({ settingKey, settingValue }).onDuplicateKeyUpdate({ set: { settingValue, updatedAt: new Date() } });
 }
 

@@ -281,6 +281,53 @@ async function handleTrpc(request: Request, env: Env): Promise<Response> {
   }
 }
 
+const accessRecoveryScript = `<script id="access-session-recovery">
+(() => {
+  const key = "zin-portfolio-access";
+  const terminal = new Set(["denied", "expired", "revoked", "invalid"]);
+  let checking = false;
+  async function checkAccessStatus() {
+    if (checking) return;
+    let session;
+    try { session = JSON.parse(localStorage.getItem(key) || "null"); } catch { return; }
+    if (!session?.requestId || !session?.token) return;
+    checking = true;
+    try {
+      const response = await fetch("/api/trpc/calculatorAccess.status", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ json: { requestId: session.requestId, token: session.token } }),
+        cache: "no-store",
+        credentials: "same-origin"
+      });
+      if (!response.ok) return;
+      const result = await response.json();
+      const status = result?.[0]?.result?.data?.json?.status;
+      if (terminal.has(status)) {
+        localStorage.removeItem(key);
+        location.reload();
+      }
+    } catch {} finally { checking = false; }
+  }
+  void checkAccessStatus();
+  window.setInterval(checkAccessStatus, 2500);
+})();
+</script>`;
+
+async function serveAssetsWithAccessRecovery(request: Request, env: Env): Promise<Response> {
+  const response = await env.ASSETS.fetch(request);
+  if (request.method !== "GET" || !response.headers.get("content-type")?.toLowerCase().includes("text/html")) return response;
+  const html = await response.text();
+  if (html.includes('id="access-session-recovery"')) return new Response(html, response);
+  const body = /<\/body>/i.test(html)
+    ? html.replace(/<\/body>/i, `${accessRecoveryScript}</body>`)
+    : `${html}${accessRecoveryScript}`;
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  headers.set("cache-control", "no-store");
+  return new Response(body, { status: response.status, statusText: response.statusText, headers });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -294,6 +341,6 @@ export default {
       }
       return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady });
     }
-    return env.ASSETS.fetch(request);
+    return serveAssetsWithAccessRecovery(request, env);
   },
 };

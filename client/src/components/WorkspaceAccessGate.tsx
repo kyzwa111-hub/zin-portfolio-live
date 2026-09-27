@@ -1,25 +1,36 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, ExternalLink, LockKeyhole, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { readAccessSession, writeAccessSession } from "@/lib/accessSession";
+import { clearAccessSession, isTerminalAccessStatus, readAccessSession, writeAccessSession } from "@/lib/accessSession";
 
 export default function WorkspaceAccessGate({ onApprovedChange }: { onApprovedChange?: (approved: boolean) => void }) {
   const [requesterName, setRequesterName] = useState("");
   const [paymentRequested, setPaymentRequested] = useState(false);
+  const [accessNotice, setAccessNotice] = useState("");
   const [access, setAccess] = useState(() => readAccessSession());
   const accessRequest = trpc.calculatorAccess.request.useMutation({
-    onSuccess: (data) => { setPaymentRequested(true); const session = { requestId: data.requestId, token: data.token }; setAccess(session); writeAccessSession(session); },
+    onSuccess: (data) => { setPaymentRequested(true); setAccessNotice(""); const session = { requestId: data.requestId, token: data.token }; setAccess(session); writeAccessSession(session); },
     onError: () => setPaymentRequested(false),
   });
   const statusQuery = trpc.calculatorAccess.status.useQuery(
     access ? { requestId: access.requestId, token: access.token } : { requestId: "pending-request", token: "pending-request-token" },
     { enabled: Boolean(access), refetchInterval: access ? 2500 : false },
   );
+  const accessStatus = statusQuery.data?.status;
   useEffect(() => {
     const syncSession = () => setAccess(readAccessSession());
     window.addEventListener("access-session-updated", syncSession);
     return () => window.removeEventListener("access-session-updated", syncSession);
   }, []);
+  useEffect(() => {
+    if (!access || statusQuery.isFetching || !isTerminalAccessStatus(accessStatus)) return;
+    clearAccessSession();
+    setAccess(null);
+    setPaymentRequested(false);
+    setAccessNotice(accessStatus === "revoked"
+      ? "Your previous access was revoked. You can request access again below."
+      : "Your previous access request is no longer active. You can submit a new request below.");
+  }, [access, accessStatus, statusQuery.isFetching]);
   const approved = statusQuery.data?.status === "approved";
   useEffect(() => { onApprovedChange?.(approved); }, [approved, onApprovedChange]);
   const botUsername = accessRequest.data?.botUsername ?? "Payroll_Officer_bot";
@@ -33,6 +44,7 @@ export default function WorkspaceAccessGate({ onApprovedChange }: { onApprovedCh
         <h3>Unlock the complete HR workspace.</h3>
         {!access ? (
           <>
+            {accessNotice && <p role="status">{accessNotice}</p>}
             <p>Request access once for the HR, payroll, bulk export, and C&amp;B workspace. The admin will review your request before payment instructions appear.</p>
             <label className="calculator-requester-field">
               <span>Your name</span>

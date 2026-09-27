@@ -21,7 +21,7 @@ import { useState } from "react";
 import "../workspace.css";
 import WorkspaceAccessGate from "@/components/WorkspaceAccessGate";
 import PayrollCalculator from "@/components/PayrollCalculator";
-import BulkPayroll, { BulkPayrollTemplateDownload } from "@/components/BulkPayroll";
+import BulkPayroll, { BulkPayrollSection } from "@/components/BulkPayroll";
 import CBResourceCenter from "@/components/CBResourceCenter";
 
 const experience = [
@@ -187,20 +187,21 @@ export default function Home() {
           </div>
 
           <div className="section-pad"><WorkspaceAccessGate onApprovedChange={setWorkspaceApproved} /></div>
+          <BulkPayrollSection approved={workspaceApproved} selected={selectedWorkspace === "bulk"} onOpen={() => setSelectedWorkspace("bulk")} />
 
           <div className="service-cards section-pad" aria-label="Available services">
             {[
               { id: "payroll", number: "01", title: "Payroll tool", description: "See the number behind the payslip: PIT, SSB, net pay, and employer cost." },
-              { id: "bulk", number: "02", title: "Bulk payroll", description: "Import once, calculate locally, and export calculation, SSB, and PAYE-A files." },
+              { id: "bulk", number: "02", title: "Bulk payroll file pack", description: "Import once, calculate locally, and export calculation, SSB, and PAYE-A files." },
               { id: "cb", number: "03", title: "C&B resources", description: "Official monthly PIT, annual IRD, and SSB guidance and source links." },
             ].map((service) => {
               const locked = !workspaceApproved && service.id !== "bulk";
-              return <button type="button" className={"service-card service-card-button " + (selectedWorkspace === service.id ? "selected" : "")} key={service.id} onClick={() => setSelectedWorkspace(service.id)} disabled={locked} aria-disabled={locked}><span className="service-card-number">{service.number}</span><div><strong>{service.title}</strong><p>{service.description}</p></div><span className="service-card-status">{workspaceApproved ? "Open workspace" : service.id === "bulk" ? "Template available" : "Telegram unlock"}</span></button>;
+              return <button type="button" className={"service-card service-card-button " + (selectedWorkspace === service.id ? "selected" : "")} key={service.id} onClick={() => { setSelectedWorkspace(service.id); if (service.id === "bulk") document.getElementById("bulk-payroll")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} disabled={locked} aria-disabled={locked}><span className="service-card-number">{service.number}</span><div><strong>{service.title}</strong><p>{service.description}</p></div><span className="service-card-status">{workspaceApproved ? "Open workspace" : "Telegram unlock"}</span></button>;
             })}
           </div>
           <div className="hr-sector-heading section-pad"><div><p className="section-kicker"><UsersRound size={15} /> HR sector</p><h3>People work, held together.</h3><p>Choose a sector to open its related working form. Forms are local preparation templates, not government submissions.</p></div></div>
           <div className="hr-sector-grid section-pad">{hrSectorItems.map((item, index) => <button type="button" className={"hr-sector-card " + (selectedWorkspace === item.id ? "selected" : "")} key={item.id} onClick={() => setSelectedWorkspace(item.id)} disabled={!workspaceApproved} aria-disabled={!workspaceApproved}><span>0{index + 1}</span><strong>{item.title}</strong><small>{workspaceApproved ? "Open related form" : "Unlock with Telegram"}</small></button>)}</div>
-          {(workspaceApproved || selectedWorkspace === "bulk") && <div className="workspace-active-panel section-pad" aria-live="polite">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "bulk" && (workspaceApproved ? <BulkPayroll /> : <BulkPayrollTemplateDownload />)}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm id={selectedWorkspace as HRSectorId} />}</div>}
+          {workspaceApproved && selectedWorkspace !== "bulk" && <div className="workspace-active-panel section-pad" aria-live="polite">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm id={selectedWorkspace as HRSectorId} />}</div>}
         </section>
       </main>
 

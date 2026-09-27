@@ -155,8 +155,43 @@ export default function BulkPayroll() {
   return <section className="bulk-section section-pad" id="bulk-payroll"><div className="bulk-intro"><div><p className="section-kicker"><FileSpreadsheet size={15} /> Bulk payroll</p><h2>One upload,<br /><i>three outputs.</i></h2></div><p className="section-description">Upload an employee list and calculate the same PIT/SSB rules as the single payroll calculator. Files stay in this browser and are never sent to the server.</p></div>{!accessGranted ? <><div className="bulk-panel bulk-gate"><div className="bulk-step"><span className="bulk-step-num"><LockKeyhole size={16} /></span><div><strong>Unlock bulk payroll tools</strong><p>Request Telegram admin approval before uploading employee salary data or downloading payroll files.</p><label className="calculator-requester-field"><span>Your name</span><input value={requesterName} onChange={(event) => setRequesterName(event.target.value)} placeholder="Enter your name" autoComplete="name" maxLength={160} /><small>Shared with the administrator for this request.</small></label><div className="calculator-gate-actions"><button className="button-primary" onClick={() => { setPaymentRequested(false); accessRequest.mutate({ requesterName: requesterName.trim() }); }} disabled={accessRequest.isPending || requesterName.trim().length < 2}>{accessRequest.isPending ? "Sending request…" : "Request access"}</button><a className="text-link" href={`https://t.me/${botUsername}?start=admin`} target="_blank" rel="noreferrer">Open Telegram bot</a></div></div></div><div className="calculator-gate-status">{statusQuery.data?.status === "approved" ? <><CheckCircle2 size={16} /> Approved</> : <><ShieldCheck size={16} /> Approval required</>}</div></div>{paymentRequested && accessRequest.data && <div className="payment-request-panel" aria-live="polite"><div><p className="section-kicker">Requester-only payment instructions</p><h3>Pay 50,000 MMK via KBZPay</h3><p>Send the payment screenshot and request ID to the Telegram bot. Bulk payroll tools unlock only after admin approval.</p><strong>Request ID: {accessRequest.data.requestId.slice(-8)}</strong></div><img src="/manus-storage/pasted_file_kNMX4R_image_1509cee3.png" alt="KBZPay QR code for the 50,000 MMK access payment" /></div>}</> : <div className="bulk-panel"><div className="bulk-step"><span className="bulk-step-num">1</span><div><strong>Download template</strong><p>One row per employee. Use the same columns as the single calculator.</p><button type="button" className="button-print" onClick={downloadTemplate}><Download size={14} /> Download .xlsx template</button></div></div><div className="bulk-step"><span className="bulk-step-num">2</span><div><strong>Upload and calculate</strong><p>{summary}</p><label className="bulk-upload"><Upload size={15} /> Choose .xlsx file<input type="file" accept=".xlsx,.xls" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleFile(file); }} /></label></div></div><div className="bulk-step"><span className="bulk-step-num">3</span><div><strong>Download three files</strong><p>Calculation, SSB contribution list, and PAYE-A schedule.</p><button type="button" className="button-print" disabled={!rows.length} onClick={() => exportRows(rows)}><Download size={14} /> Download all three</button></div></div></div>}<div className="bulk-notes"><details><summary>Plain-language notes</summary><p>PIT uses the same current progressive brackets, reliefs, employee SSB deduction, and employer gross-up logic as the single calculator. Annual income up to MMK 4.8M is exempt; bonuses are included in annual income; SSB is calculated separately at employee 2% and employer 3% on a 300,000 MMK monthly ceiling. Foreign-staff residency and contractor WHT require separate review.</p></details></div></section>;
 }
 
-export function BulkPayrollTemplateDownload() {
-  return <section className="bulk-section section-pad" id="bulk-payroll"><div className="bulk-intro"><div><p className="section-kicker"><FileSpreadsheet size={15} /> Bulk payroll</p><h2>Bulk payroll<br /><i>input file.</i></h2></div><p className="section-description">Download the blank spreadsheet for one row per employee. Uploading salary data and running calculations still requires Telegram admin approval.</p></div><div className="bulk-panel"><div className="bulk-step"><span className="bulk-step-num">1</span><div><strong>Download blank template</strong><p>Includes the columns needed for payroll, PIT, and SSB calculations. The template is blank; your file stays on your device.</p><button type="button" className="button-print" onClick={downloadTemplate}><Download size={14} /> Download .xlsx template</button></div></div></div></section>;
+export function BulkPayrollSection({
+  approved,
+  selected,
+  onOpen,
+}: {
+  approved: boolean;
+  selected: boolean;
+  onOpen: () => void;
+}) {
+  if (approved && selected) return <BulkPayroll />;
+
+  return (
+    <section className="bulk-section section-pad" id="bulk-payroll" aria-live="polite">
+      <div className="bulk-intro">
+        <div>
+          <p className="section-kicker"><FileSpreadsheet size={15} /> Bulk payroll</p>
+          <h2>Import once,<br /><i>export three files.</i></h2>
+        </div>
+        <p className="section-description">
+          Prepare one employee list and produce calculation, SSB contribution, and PAYE-A output files from the same input.
+        </p>
+      </div>
+      <div className="bulk-panel bulk-gate">
+        <div className="bulk-step">
+          <span className="bulk-step-num">{approved ? <CheckCircle2 size={16} /> : <LockKeyhole size={16} />}</span>
+          <div>
+            <strong>{approved ? "Bulk payroll is ready" : "Available after Telegram approval"}</strong>
+            <p>{approved ? "Your shared Telegram approval is active. Open the tools to import, calculate, and export locally." : "Use the Unlock Telegram gate above to request access. Bulk payroll import and the three output files unlock after administrator approval."}</p>
+            {approved && <button type="button" className="button-primary" onClick={onOpen}>Open Bulk payroll</button>}
+          </div>
+        </div>
+        <div className="calculator-gate-status">
+          {approved ? <><CheckCircle2 size={16} /> Approved</> : <><ShieldCheck size={16} /> Telegram approval required</>}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export const bulkPayrollPrivacyNote = "Bulk processing is client-side; salary rows are not uploaded to the server.";

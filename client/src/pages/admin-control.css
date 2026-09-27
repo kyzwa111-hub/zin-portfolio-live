@@ -3,7 +3,7 @@
 .admin-control-header h1 { margin: 7px 0; font-size: clamp(30px,5vw,48px); }
 .admin-control-header p:last-child { color: #69776f; }
 .admin-control-actions { display: flex; gap: 10px; }
-.admin-control-actions button, .admin-revoke-button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #d9e1db; border-radius: 9px; background: #fff; padding: 10px 13px; color: #2f463b; cursor: pointer; font: inherit; }
+.admin-control-actions button, .admin-revoke-button, .admin-restore-button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #d9e1db; border-radius: 9px; background: #fff; padding: 10px 13px; color: #2f463b; cursor: pointer; font: inherit; }
 .admin-control-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin: 20px 0; }
 .admin-control-stats article, .admin-control-card, .admin-control-login { border: 1px solid #e1e7e2; border-radius: 16px; background: #fff; box-shadow: 0 8px 24px rgba(24,45,35,.04); }
 .admin-control-stats article { display: grid; gap: 8px; padding: 20px; }
@@ -17,13 +17,16 @@
 .admin-control-table th, .admin-control-table td { text-align: left; vertical-align: middle; padding: 12px 10px; border-bottom: 1px solid #edf0ed; white-space: nowrap; }
 .admin-control-table th { color: #748078; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
 .admin-control-table td:first-child { white-space: normal; min-width: 160px; }
+.admin-origin-cell { white-space: normal; min-width: 110px; }
 .admin-control-table small { display: block; margin-top: 4px; color: #78857e; }
 .admin-control-table code { font-size: 11px; overflow-wrap: anywhere; }
 .admin-status-pill { display: inline-flex; border-radius: 999px; padding: 5px 9px; background: #eef2ef; color: #52645a; text-transform: capitalize; }
 .admin-status-pill.approved, .admin-status-pill.confirmed { background: #e5f4eb; color: #237046; }
 .admin-status-pill.pending { background: #fff4dc; color: #8b6519; }
 .admin-status-pill.denied, .admin-status-pill.revoked, .admin-status-pill.rejected, .admin-status-pill.expired { background: #fdebe7; color: #a44737; }
-.admin-revoke-button { color: #a34736; padding: 7px 9px; font-size: 12px; }
+.admin-revoke-button, .admin-restore-button { padding: 7px 9px; font-size: 12px; }
+.admin-revoke-button { color: #a34736; }
+.admin-restore-button { color: #237046; margin-left: 6px; }
 .admin-payment-form { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; padding: 16px; margin: 18px 0; border: 1px solid #e8ece8; border-radius: 12px; background: #f9fbf9; }
 .admin-payment-form label { display: grid; gap: 6px; color: #506158; font-size: 12px; }
 .admin-payment-form input, .admin-payment-form select, .admin-control-table select { width: 100%; min-height: 40px; box-sizing: border-box; border: 1px solid #d9e1db; border-radius: 8px; background: #fff; padding: 8px 10px; color: #26372f; font: inherit; }

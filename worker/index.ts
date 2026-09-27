@@ -175,7 +175,7 @@ async function handleAdminApi(request: Request, env: Env): Promise<Response> {
     return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json", "cache-control": "no-store", "set-cookie": "admin_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0" } });
   }
   if (url.pathname === "/api/admin/overview" && request.method === "GET") {
-    const requests = await env.DB.prepare("SELECT request_id, requester_name, status, telegram_username, expires_at, approved_at, created_at, updated_at FROM access_requests ORDER BY created_at DESC LIMIT 200").all();
+    const requests = await env.DB.prepare("SELECT request_id, requester_name, status, telegram_username, expires_at, approved_at, created_at, updated_at, ip_address, country, city FROM access_requests ORDER BY created_at DESC LIMIT 200").all();
     const payments = await env.DB.prepare("SELECT id, request_id, requester_name, amount, currency, method, reference, status, note, recorded_at, updated_at FROM payment_records ORDER BY recorded_at DESC LIMIT 200").all();
     return json({ requests: requests.results || [], payments: payments.results || [] });
   }
@@ -184,6 +184,16 @@ async function handleAdminApi(request: Request, env: Env): Promise<Response> {
     const requestId = String(body.requestId || "");
     if (requestId.length < 8) return json({ error: "Invalid request ID." }, 400);
     await env.DB.prepare("UPDATE access_requests SET status = 'revoked', updated_at = ? WHERE request_id = ? AND status IN ('pending','approved')").bind(Date.now(), requestId).run();
+    return json({ ok: true });
+  }
+  if (url.pathname === "/api/admin/requests/restore" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { requestId?: string };
+    const requestId = String(body.requestId || "");
+    if (requestId.length < 8) return json({ error: "Invalid request ID." }, 400);
+    const now = Date.now();
+    const result = await env.DB.prepare("UPDATE access_requests SET status = 'approved', approved_at = ?, expires_at = ?, updated_at = ? WHERE request_id = ? AND status IN ('revoked','denied','expired')")
+      .bind(now, now + 24 * 60 * 60 * 1000, now, requestId).run() as { meta?: { changes?: number } };
+    if (result.meta?.changes === 0) return json({ error: "Only revoked, denied, or expired requests can be restored." }, 400);
     return json({ ok: true });
   }
   if (url.pathname === "/api/admin/payments" && request.method === "POST") {
@@ -239,12 +249,17 @@ async function handleTrpc(request: Request, env: Env): Promise<Response> {
       const token = randomToken(32);
       const now = Date.now();
       const expiresAt = now + 10 * 60 * 1000;
-      await env.DB.prepare("INSERT INTO access_requests (request_id, requester_name, token_hash, status, expires_at, created_at, updated_at) VALUES (?, ?, ?, 'pending', ?, ?, ?)")
-        .bind(requestId, requesterName, await sha256(token), expiresAt, now, now).run();
+      const cf = (request as Request & { cf?: { country?: string; city?: string } }).cf;
+      const ipAddress = (request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "").split(",")[0].trim().slice(0, 64) || null;
+      const country = (cf?.country || "").slice(0, 8) || null;
+      const city = (cf?.city || "").slice(0, 120) || null;
+      await env.DB.prepare("INSERT INTO access_requests (request_id, requester_name, token_hash, status, expires_at, created_at, updated_at, ip_address, country, city) VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)")
+        .bind(requestId, requesterName, await sha256(token), expiresAt, now, now, ipAddress, country, city).run();
       const adminChat = await getSetting(env, ADMIN_CHAT_KEY);
       let adminNotified = false;
       if (adminChat) {
-        await sendText(env, adminChat, `Payroll access request\n\nName: ${requesterName}\nRequest ID: ${requestId}\nExpires in 10 minutes.`, { inline_keyboard: [[{ text: "Approve", callback_data: `approve:${requestId}` }, { text: "Deny", callback_data: `deny:${requestId}` }]] });
+        const originLabel = [city, country].filter(Boolean).join(", ") || ipAddress || "Unknown origin";
+        await sendText(env, adminChat, `Payroll access request\n\nName: ${requesterName}\nOrigin: ${originLabel}\nRequest ID: ${requestId}\nExpires in 10 minutes.`, { inline_keyboard: [[{ text: "Approve", callback_data: `approve:${requestId}` }, { text: "Deny", callback_data: `deny:${requestId}` }]] });
         adminNotified = true;
       }
       const botUsername = await getSetting(env, "bot_username") || "";

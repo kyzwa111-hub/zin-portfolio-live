@@ -1,48 +1,23 @@
-# Telegram admin-approval setup
+# Cloudflare Telegram approval setup
 
-This project includes a Telegram approval gate for the payroll calculator. The calculator stays locked until an access request is approved from the configured Telegram admin chat.
+The Cloudflare Worker now handles payroll access requests and status checks directly. Request state is stored in the Cloudflare D1 database `DB`, and Telegram approvals are processed by the Worker webhook. The Telegram unlock path no longer depends on the Manus backend.
 
-## Required server secrets
+## Required Worker settings
 
-Set these as server-side environment variables. Never use the `VITE_` prefix for them.
+In Cloudflare Dashboard, open Workers & Pages → zin-portfolio-live → Settings → Variables and Secrets. Add the bot token as a **Secret** named `TELEGRAM_BOT_TOKEN`. Never add it to GitHub, frontend variables, or this chat. The public admin username variable is configured as `TELEGRAM_ADMIN_USERNAME=zinmin2244`; change it in `wrangler.jsonc` if the Telegram username differs.
 
-```text
-TELEGRAM_BOT_TOKEN=<token from BotFather>
-TELEGRAM_ADMIN_USERNAME=<admin username without the @, for example zzzinmin>
-```
+The token shared in chat was exposed. Revoke it in BotFather and generate a new token before adding the replacement secret in Cloudflare.
 
-The admin must open the bot and send `/start` once. The webhook stores the admin chat ID only after the incoming Telegram username matches `TELEGRAM_ADMIN_USERNAME`.
+## Connect the administrator
 
-## Admin control room
+After saving the secret and deploying the Worker, open `https://zin-portfolio-live.kyzwa111.workers.dev/api/health`. The Worker automatically registers its webhook at `/api/telegram/webhook` using a secret derived from the bot token. Then open the bot in Telegram and send `/start` from the configured admin account. The username must match `TELEGRAM_ADMIN_USERNAME`.
 
-Open `/admin/updates` while signed in as an administrator. The control room now includes the original LinkedIn post URL field, Telegram access request history, and a **Revoke** action for pending or approved requests. Revoking a request changes its status to `revoked`; the calculator's browser status check sees that state and locks the calculator again.
+Visitors submit their name on the portfolio page. The Worker creates a 10-minute request, sends Approve/Deny buttons to the admin chat, stores only a SHA-256 hash of the browser token, and returns status to the page until approved or expired. No payroll data is sent in the access request.
 
-The Telegram inbox in the same control room stores bot messages for review. A user can message the bot directly. The bot forwards the message to the connected admin chat; the administrator can reply in Telegram by replying to that forwarded message, or send a reply from the admin control room. The user receives the administrator's reply through the bot.
+## Database
 
-## Webhook
+Cloudflare D1 database `zin-portfolio-telegram` is bound to the Worker as `DB`. The migration `migrations/0001_telegram_access.sql` has been applied. Requests and admin-chat settings stay in D1; no Manus database is used by the Worker.
 
-Register the current public HTTPS endpoint below after deployment:
+## Scope note
 
-```text
-POST https://zinportfolio-ghrs3ies.manus.space/api/telegram/webhook
-```
-
-If the public domain changes, update this endpoint and register the new URL with Telegram.
-
-The application derives a webhook secret from `TELEGRAM_BOT_TOKEN` and verifies Telegram's `x-telegram-bot-api-secret-token` header. Use Telegram's `setWebhook` method with the same derived secret when deploying to a new domain.
-
-## Security notes
-
-The bot token must not be committed to GitHub or placed in client-side code. The token used during the original setup was exposed in chat and should be revoked and regenerated in BotFather before production use. Access requests use random one-time browser tokens, store only SHA-256 hashes in the database, and expire after 10 minutes.
-
-## Local development
-
-Install dependencies, configure the database and server secrets, apply the Drizzle migration, then run:
-
-```bash
-pnpm install
-pnpm check
-pnpm test
-pnpm build
-pnpm dev
-```
+The Cloudflare Worker currently supports the Telegram unlock request/status flow and Approve/Deny callbacks. The old web admin control room, Telegram inbox/replies, and LinkedIn content APIs have not been migrated to Cloudflare yet.

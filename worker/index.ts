@@ -1,6 +1,7 @@
 interface D1Statement {
   bind(...values: unknown[]): D1Statement;
   first<T = Record<string, unknown>>(): Promise<T | null>;
+  all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
   run(): Promise<unknown>;
 }
 interface D1Database {
@@ -94,7 +95,21 @@ async function handleWebhook(request: Request, env: Env): Promise<Response> {
       return json({ ok: true });
     }
     await saveSetting(env, ADMIN_CHAT_KEY, String(message.chat.id));
-    await sendText(env, String(message.chat.id), "Telegram admin approval is connected. You will receive access requests here.");
+    await sendText(env, String(message.chat.id), "Telegram admin approval is connected. Use /admin to get a secure Control Center link. Access requests will appear here.");
+    return json({ ok: true });
+  }
+  if (message?.text?.trim().split(/\s+/)[0] === "/admin") {
+    const configuredChat = await getSetting(env, ADMIN_CHAT_KEY);
+    const isAdmin = configuredChat === String(message.chat.id) && String(message.from?.username || "").toLowerCase() === adminUsername(env);
+    if (!isAdmin) {
+      await sendText(env, String(message.chat.id), "This command is restricted to the configured administrator.");
+      return json({ ok: true });
+    }
+    const loginToken = randomToken(32);
+    const now = Date.now();
+    await env.DB.prepare("INSERT INTO admin_link_tokens (token_hash, expires_at, used_at, created_at) VALUES (?, ?, NULL, ?)").bind(await sha256(loginToken), now + 10 * 60 * 1000, now).run();
+    const link = new URL("/admin?login=" + encodeURIComponent(loginToken), request.url).toString();
+    await sendText(env, String(message.chat.id), "Secure Admin Control Center link (one use, expires in 10 minutes):\n" + link);
     return json({ ok: true });
   }
   if (callback) {
@@ -120,6 +135,82 @@ async function handleWebhook(request: Request, env: Env): Promise<Response> {
   }
   return json({ ok: true });
 }
+function cookieValue(request: Request, name: string): string | null {
+  const cookie = request.headers.get("cookie") || "";
+  for (const part of cookie.split(";")) {
+    const [key, ...value] = part.trim().split("=");
+    if (key === name) return value.join("=") || null;
+  }
+  return null;
+}
+async function adminSession(request: Request, env: Env): Promise<{ hash: string } | null> {
+  const token = cookieValue(request, "admin_session");
+  if (!token) return null;
+  const hash = await sha256(token);
+  const row = await env.DB.prepare("SELECT expires_at FROM admin_sessions WHERE session_hash = ?").bind(hash).first<{ expires_at: number }>();
+  if (!row || row.expires_at <= Date.now()) return null;
+  return { hash };
+}
+async function handleAdminApi(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  if (url.pathname === "/api/admin/session" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { token?: string };
+    const token = String(body.token || "");
+    if (token.length < 24) return json({ error: "Invalid or expired admin link." }, 401);
+    const hash = await sha256(token);
+    const row = await env.DB.prepare("SELECT expires_at, used_at FROM admin_link_tokens WHERE token_hash = ?").bind(hash).first<{ expires_at: number; used_at: number | null }>();
+    if (!row || row.used_at !== null || row.expires_at <= Date.now()) return json({ error: "Admin link expired or already used. Send /admin to the bot again." }, 401);
+    const now = Date.now();
+    const consumed = await env.DB.prepare("UPDATE admin_link_tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?").bind(now, hash, now).run() as { meta?: { changes?: number } };
+    if (consumed.meta?.changes === 0) return json({ error: "Admin link already used." }, 401);
+    const sessionToken = randomToken(32);
+    const sessionHash = await sha256(sessionToken);
+    await env.DB.prepare("INSERT INTO admin_sessions (session_hash, expires_at, created_at) VALUES (?, ?, ?)").bind(sessionHash, now + 60 * 60 * 1000, now).run();
+    return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json", "cache-control": "no-store", "set-cookie": "admin_session=" + sessionToken + "; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=3600" } });
+  }
+  const session = await adminSession(request, env);
+  if (!session) return json({ error: "Admin sign-in required. Open the bot and send /admin." }, 401);
+  if (url.pathname === "/api/admin/logout" && request.method === "POST") {
+    await env.DB.prepare("DELETE FROM admin_sessions WHERE session_hash = ?").bind(session.hash).run();
+    return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json", "cache-control": "no-store", "set-cookie": "admin_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0" } });
+  }
+  if (url.pathname === "/api/admin/overview" && request.method === "GET") {
+    const requests = await env.DB.prepare("SELECT request_id, requester_name, status, telegram_username, expires_at, approved_at, created_at, updated_at FROM access_requests ORDER BY created_at DESC LIMIT 200").all();
+    const payments = await env.DB.prepare("SELECT id, request_id, requester_name, amount, currency, method, reference, status, note, recorded_at, updated_at FROM payment_records ORDER BY recorded_at DESC LIMIT 200").all();
+    return json({ requests: requests.results || [], payments: payments.results || [] });
+  }
+  if (url.pathname === "/api/admin/requests/revoke" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { requestId?: string };
+    const requestId = String(body.requestId || "");
+    if (requestId.length < 8) return json({ error: "Invalid request ID." }, 400);
+    await env.DB.prepare("UPDATE access_requests SET status = 'revoked', updated_at = ? WHERE request_id = ? AND status IN ('pending','approved')").bind(Date.now(), requestId).run();
+    return json({ ok: true });
+  }
+  if (url.pathname === "/api/admin/payments" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { requestId?: string; amount?: number; method?: string; reference?: string; note?: string; status?: string };
+    const requestId = String(body.requestId || "");
+    const amount = Math.floor(Number(body.amount));
+    const method = String(body.method || "");
+    const allowedMethods = ["KBZPay", "Bank transfer", "Cash", "Other"];
+    const status = String(body.status || "pending");
+    if (requestId.length < 8 || !Number.isFinite(amount) || amount <= 0 || amount > 100000000 || !allowedMethods.includes(method) || !["pending","confirmed","rejected"].includes(status)) return json({ error: "Check the payment fields and try again." }, 400);
+    const requestRow = await env.DB.prepare("SELECT requester_name FROM access_requests WHERE request_id = ?").bind(requestId).first<{ requester_name: string }>();
+    if (!requestRow) return json({ error: "Access request not found." }, 404);
+    const now = Date.now();
+    await env.DB.prepare("INSERT INTO payment_records (request_id, requester_name, amount, currency, method, reference, status, note, recorded_at, updated_at) VALUES (?, ?, ?, 'MMK', ?, ?, ?, ?, ?, ?)").bind(requestId, requestRow.requester_name, amount, method, String(body.reference || "").slice(0, 160) || null, status, String(body.note || "").slice(0, 500) || null, now, now).run();
+    return json({ ok: true });
+  }
+  if (url.pathname === "/api/admin/payments/update" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { id?: number; status?: string; reference?: string; note?: string };
+    const id = Math.floor(Number(body.id));
+    const status = String(body.status || "");
+    if (!Number.isInteger(id) || id < 1 || !["pending","confirmed","rejected"].includes(status)) return json({ error: "Invalid payment update." }, 400);
+    await env.DB.prepare("UPDATE payment_records SET status = ?, reference = ?, note = ?, updated_at = ? WHERE id = ?").bind(status, String(body.reference || "").slice(0, 160) || null, String(body.note || "").slice(0, 500) || null, Date.now(), id).run();
+    return json({ ok: true });
+  }
+  return json({ error: "Admin endpoint not found." }, 404);
+}
+
 function unwrapInput(value: any): any {
   if (value && typeof value === "object" && value["0"] !== undefined) return value["0"]?.json ?? value["0"];
   if (value && typeof value === "object" && value.json !== undefined) return value.json;
@@ -179,6 +270,7 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/api/telegram/webhook" && request.method === "POST") return handleWebhook(request, env);
+    if (url.pathname.startsWith("/api/admin/")) return handleAdminApi(request, env);
     if (url.pathname.startsWith("/api/trpc/")) return handleTrpc(request, env);
     if (url.pathname === "/api/health") {
       let telegramWebhookReady = false;

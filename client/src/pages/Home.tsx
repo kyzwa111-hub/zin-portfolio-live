@@ -131,7 +131,7 @@ export default function Home() {
               </div>
               <div className="personal-contact-row">
                 <a href="mailto:fzinmin11@gmail.com"><Mail size={15} /> fzinmin11@gmail.com</a>
-                <a href="https://www.linkedin.com/in/zin-min-htet-39b0a7243/details/featured/" target="_blank" rel="noreferrer"><Linkedin size={15} /> LinkedIn</a>
+                <a href="https://www.linkedin.com/in/zin-min-htet-39b0a7243/" target="_blank" rel="noreferrer"><Linkedin size={15} /> LinkedIn</a>
               </div>
             </div>
 
@@ -169,7 +169,7 @@ export default function Home() {
         </section>
 
         <section className="recommendations-section section-pad" id="recommendations">
-          <div className="recommendations-head"><div><p className="section-kicker">LinkedIn recommendations</p><h2>Good work is<br /><i>remembered by people.</i></h2></div><a className="recommendations-link" href="https://www.linkedin.com/in/zin-min-htet-39b0a7243/details/featured/" target="_blank" rel="noreferrer">View on LinkedIn <ExternalLink size={15} /></a></div>
+          <div className="recommendations-head"><div><p className="section-kicker">LinkedIn recommendations</p><h2>Good work is<br /><i>remembered by people.</i></h2></div><a className="recommendations-link" href="https://www.linkedin.com/in/zin-min-htet-39b0a7243/" target="_blank" rel="noreferrer">View on LinkedIn <ExternalLink size={15} /></a></div>
           <div className="recommendations-grid">{recommendations.map((recommendation) => <article className="recommendation-card" key={recommendation.name}><div className="quote-mark">“</div><p className="recommendation-quote">{recommendation.quote}</p><div className="recommendation-author"><span className="author-avatar">{recommendation.name.split(" ").map((part) => part[0]).join("")}</span><div><strong>{recommendation.name}</strong><span>{recommendation.relationship}</span></div></div></article>)}</div>
         </section>
 

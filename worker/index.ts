@@ -22,6 +22,8 @@ import { runDailyYouTubeDiscovery } from "./videoDiscovery";
 type AccessStatus = "pending" | "approved" | "denied" | "expired" | "revoked";
 const ADMIN_CHAT_KEY = "admin_chat_id";
 const WEBHOOK_URL_KEY = "webhook_url";
+const TARGET_TELEGRAM_BOT_USERNAME = "ayechanmoe123";
+const TELEGRAM_WEBHOOK_URL = "https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook";
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -76,19 +78,22 @@ async function getSetting(env: Env, key: string): Promise<string | null> {
   const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key = ?").bind(key).first<{ value: string }>();
   return row?.value ?? null;
 }
-async function ensureWebhook(request: Request, env: Env): Promise<void> {
-  const desiredUrl = new URL("/api/telegram/webhook", request.url).toString();
+async function ensureWebhook(env: Env): Promise<void> {
+  if (!env.TELEGRAM_BOT_TOKEN) throw new Error("Telegram bot secret is not configured");
   const secret = (await sha256(env.TELEGRAM_BOT_TOKEN)).slice(0, 32);
-  const marker = desiredUrl + "|" + secret;
-  if (await getSetting(env, WEBHOOK_URL_KEY) === marker) return;
-  await telegram(env, "setWebhook", { url: desiredUrl, secret_token: secret, allowed_updates: ["message", "callback_query"] });
-  await saveSetting(env, WEBHOOK_URL_KEY, marker);
+  const marker = TELEGRAM_WEBHOOK_URL + "|" + secret;
+  const existingMarker = await getSetting(env, WEBHOOK_URL_KEY);
+  const existingUsername = (await getSetting(env, "bot_username") || "").replace(/^@/, "").toLowerCase();
+  if (existingMarker === marker) {
+    if (existingUsername !== TARGET_TELEGRAM_BOT_USERNAME) throw new Error("Telegram token is not for the target bot");
+    return;
+  }
   const bot = await telegram(env, "getMe", {});
-  if (bot?.username) await saveSetting(env, "bot_username", String(bot.username));
-}
-async function removeWebhook(env: Env): Promise<void> {
-  await telegram(env, "deleteWebhook", { drop_pending_updates: false });
-  await saveSetting(env, WEBHOOK_URL_KEY, "");
+  const botUsername = String(bot?.username || "").replace(/^@/, "").toLowerCase();
+  if (botUsername !== TARGET_TELEGRAM_BOT_USERNAME) throw new Error("Telegram token is not for the target bot");
+  await telegram(env, "setWebhook", { url: TELEGRAM_WEBHOOK_URL, secret_token: secret, allowed_updates: ["message", "callback_query"] });
+  await saveSetting(env, WEBHOOK_URL_KEY, marker);
+  await saveSetting(env, "bot_username", botUsername);
 }
 async function sendText(env: Env, chatId: string, text: string, replyMarkup?: unknown): Promise<any> {
   return telegram(env, "sendMessage", { chat_id: chatId, text, ...(replyMarkup ? { reply_markup: replyMarkup } : {}) });
@@ -109,7 +114,12 @@ async function handleWebhook(request: Request, env: Env): Promise<Response> {
       await sendText(env, String(message.chat.id), "This bot is restricted to the configured administrator.");
       return json({ ok: true });
     }
-    await saveSetting(env, ADMIN_CHAT_KEY, String(message.chat.id));
+    const configuredChat = await getSetting(env, ADMIN_CHAT_KEY);
+    if (configuredChat && configuredChat !== String(message.chat.id)) {
+      await sendText(env, String(message.chat.id), "This bot is already bound to a different administrator account.");
+      return json({ ok: true });
+    }
+    if (!configuredChat) await saveSetting(env, ADMIN_CHAT_KEY, String(message.chat.id));
     await sendText(env, String(message.chat.id), "Telegram admin approval is connected. Use /admin to get a secure Control Center link. Access requests will appear here.");
     return json({ ok: true });
   }
@@ -280,6 +290,8 @@ async function handleTrpc(request: Request, env: Env): Promise<Response> {
       const requesterName = String(input?.requesterName ?? "").trim();
       if (request.method !== "POST" || requesterName.length < 2 || requesterName.length > 160) return trpcError("Enter your name to request access.");
       if (!env.TELEGRAM_BOT_TOKEN || !adminUsername(env)) return trpcError("Telegram approval is not configured yet.", 503);
+      try { await ensureWebhook(env); }
+      catch { return trpcError("Telegram is not connected to @ayechanmoe123 yet. Please contact the administrator.", 503); }
       const requestId = randomToken(18);
       const token = randomToken(32);
       const now = Date.now();
@@ -367,14 +379,22 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/api/telegram/webhook" && request.method === "POST") return handleWebhook(request, env);
+    if (url.pathname === "/api/telegram/bootstrap") {
+      if (request.method !== "GET") return json({ error: "Method not allowed." }, 405);
+      try {
+        await ensureWebhook(env);
+        return json({ ok: true, botUsername: await getSetting(env, "bot_username") });
+      } catch {
+        return json({ ok: false, error: "Telegram is not connected to @ayechanmoe123. Set TELEGRAM_BOT_TOKEN to the token for that bot, then reload this page." }, 503);
+      }
+    }
     if (url.pathname.startsWith("/api/admin/")) return handleAdminApi(request, env);
     if (url.pathname.startsWith("/api/trpc/")) return handleTrpc(request, env);
     if (url.pathname === "/api/health") {
-      let telegramWebhookRemoved = false;
-      if (env.TELEGRAM_BOT_TOKEN && adminUsername(env)) {
-        try { await removeWebhook(env); telegramWebhookRemoved = true; } catch { telegramWebhookRemoved = false; }
-      }
-      return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady: false, telegramWebhookRemoved });
+      const marker = await getSetting(env, WEBHOOK_URL_KEY);
+      const botUsername = (await getSetting(env, "bot_username") || "").replace(/^@/, "").toLowerCase();
+      const expectedMarker = env.TELEGRAM_BOT_TOKEN ? `${TELEGRAM_WEBHOOK_URL}|${(await sha256(env.TELEGRAM_BOT_TOKEN)).slice(0, 32)}` : "";
+      return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady: Boolean(expectedMarker) && marker === expectedMarker && botUsername === TARGET_TELEGRAM_BOT_USERNAME });
     }
     return serveAssetsWithAccessRecovery(request, env);
   },

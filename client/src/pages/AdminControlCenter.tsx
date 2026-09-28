@@ -28,6 +28,7 @@ export default function AdminControlCenter() {
   const [method, setMethod] = useState("KBZPay");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
+  const [telegramBotStatus, setTelegramBotStatus] = useState("Checking @ayechanmoe123 connection…");
 
   useEffect(() => {
     let meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
@@ -43,6 +44,22 @@ export default function AdminControlCenter() {
       if (created) meta?.remove();
       else if (meta) meta.content = previous;
     };
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/telegram/bootstrap", { cache: "no-store", credentials: "same-origin" })
+      .then(async (response) => {
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok || String(result.botUsername || "").replace(/^@/, "").toLowerCase() !== "ayechanmoe123") {
+          throw new Error(result.error || "Telegram bot connection could not be verified.");
+        }
+        if (alive) setTelegramBotStatus("Connected to @ayechanmoe123. Send /start, then /admin.");
+      })
+      .catch((error) => {
+        if (alive) setTelegramBotStatus(error instanceof Error ? error.message : "Telegram bot connection could not be verified.");
+      });
+    return () => { alive = false; };
   }, []);
 
   const refresh = async () => {
@@ -76,7 +93,7 @@ export default function AdminControlCenter() {
   const logout = () => void run(async () => { await api("/api/admin/logout", {}); setAuthorized(false); });
 
   if (loading) return <main className="admin-control-shell"><p><Loader2 className="spin" /> Checking secure access…</p></main>;
-  if (!authorized) return <main className="admin-control-shell"><PWAInstallCard /><section className="admin-control-login"><ShieldCheck size={30} /><p className="section-kicker">Private workspace</p><h1>Admin Control Center</h1><p>{error || "Open the Telegram bot from your admin account and send /admin. The bot will reply with a one-time secure sign-in link."}</p><a className="button-primary" href="https://t.me/Payroll_Officer_bot" target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a><small>Sign-in links expire after 10 minutes and can be used once.</small><Link href="/">Back to portfolio</Link><Link href="/webinars">Events</Link></section></main>;
+  if (!authorized) return <main className="admin-control-shell"><PWAInstallCard /><section className="admin-control-login"><ShieldCheck size={30} /><p className="section-kicker">Private workspace</p><h1>Admin Control Center</h1><p>{error || "Open the Telegram bot from your admin account and send /admin. The bot will reply with a one-time secure sign-in link."}</p><small role="status">{telegramBotStatus}</small><a className="button-primary" href="https://t.me/ayechanmoe123" target="_blank" rel="noreferrer">Open @ayechanmoe123 <ExternalLink size={14} /></a><small>Sign-in links expire after 10 minutes and can be used once.</small><Link href="/">Back to portfolio</Link><Link href="/webinars">Events</Link></section></main>;
 
   const approved = data.requests.filter((r) => r.status === "approved");
   return <main className="admin-control-shell">

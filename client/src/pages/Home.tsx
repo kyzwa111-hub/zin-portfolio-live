@@ -4,14 +4,11 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   Check,
-  ClipboardCheck,
-  Download,
   ExternalLink,
   Linkedin,
   Mail,
   MapPin,
   Menu,
-  ShieldCheck,
   Sparkles,
   UserRound,
   UsersRound,
@@ -23,6 +20,7 @@ import WorkspaceAccessGate from "@/components/WorkspaceAccessGate";
 import PayrollCalculator from "@/components/PayrollCalculator";
 import BulkPayroll, { BulkPayrollSection } from "@/components/BulkPayroll";
 import CBResourceCenter from "@/components/CBResourceCenter";
+import HRSectorForm, { hrSectorItems, type HRSectorId } from "@/components/HRTemplateCatalog";
 
 const experience = [
   {
@@ -67,27 +65,6 @@ const strengths = [
   "HR operations & documentation",
   "Client and employee communication",
 ];
-
-type HRSectorId = "recruitment" | "attendance" | "relations" | "performance" | "compliance" | "people-data";
-const hrSectorItems: Array<{ id: HRSectorId; title: string; description: string; fields: string[] }> = [
-  { id: "recruitment", title: "Recruitment & onboarding", description: "A working checklist for a clear, documented employee joining process.", fields: ["Candidate / employee name", "Role / department", "Start date", "Documents received", "Orientation owner", "Next action"] },
-  { id: "attendance", title: "Attendance & leave", description: "Record attendance exceptions, leave dates, and payroll cut-off follow-up.", fields: ["Employee name", "Month", "Leave type / attendance issue", "Start date", "End date", "Approver", "Payroll cut-off note"] },
-  { id: "relations", title: "Employee relations", description: "A confidential working note template for employee queries and follow-up ownership.", fields: ["Case reference", "Employee name", "Date received", "Issue category", "Action owner", "Follow-up date", "Next step"] },
-  { id: "performance", title: "Performance operations", description: "Organise review-period goals, feedback, and agreed next steps.", fields: ["Employee name", "Review period", "Role", "Goal / outcome", "Support needed", "Manager follow-up", "Next review date"] },
-  { id: "compliance", title: "HR policies & compliance", description: "Track policy reviews and official payroll/SSB source checks. Preparation aid, not legal advice.", fields: ["Policy / record", "Owner", "Last reviewed", "Review due", "Official source checked", "Action required"] },
-  { id: "people-data", title: "People data & reporting", description: "A minimal working form for recurring headcount and employee-data reporting.", fields: ["Report name", "Reporting period", "Headcount", "Joiners", "Leavers", "Data owner", "Notes"] },
-];
-function HRSectorForm({ id }: { id: HRSectorId }) {
-  const item = hrSectorItems.find((entry) => entry.id === id)!;
-  const [values, setValues] = useState<Record<string, string>>({});
-  const exportCsv = () => {
-    const escape = (value: string) => "\"" + value.replace(/\"/g, "\"\"") + "\"";
-    const csv = [item.fields, item.fields.map((field) => values[field] ?? "")].map((row) => row.map(escape).join(",")).join("\r\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-    const link = document.createElement("a"); link.href = url; link.download = id + "-working-template.csv"; link.click(); URL.revokeObjectURL(url);
-  };
-  return <section className="workspace-detail-panel"><div className="workspace-detail-heading"><p className="section-kicker"><ClipboardCheck size={15} /> Working template</p><h3>{item.title}</h3><p>{item.description}</p></div><div className="workspace-form-grid">{item.fields.map((field) => <label key={field}><span>{field}</span><input value={values[field] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field]: event.target.value }))} placeholder={field} /></label>)}</div><div className="workspace-form-actions"><button type="button" className="button-primary" onClick={exportCsv}><Download size={15} /> Download completed CSV</button><span><ShieldCheck size={14} /> Data stays in this browser; this is a working template, not an official government form.</span></div></section>;
-}
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -200,8 +177,8 @@ export default function Home() {
             })}
           </div>
           <div className="hr-sector-heading section-pad"><div><p className="section-kicker"><UsersRound size={15} /> HR sector</p><h3>People work, held together.</h3><p>Choose a sector to open its related working form. Forms are local preparation templates, not government submissions.</p></div></div>
-          <div className="hr-sector-grid section-pad">{hrSectorItems.map((item, index) => <button type="button" className={"hr-sector-card " + (selectedWorkspace === item.id ? "selected" : "")} key={item.id} onClick={() => setSelectedWorkspace(item.id)} disabled={!workspaceApproved} aria-disabled={!workspaceApproved}><span>0{index + 1}</span><strong>{item.title}</strong><small>{workspaceApproved ? "Open related form" : "Unlock with Telegram"}</small></button>)}</div>
-          {workspaceApproved && selectedWorkspace !== "bulk" && <div className="workspace-active-panel section-pad" aria-live="polite">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm id={selectedWorkspace as HRSectorId} />}</div>}
+          <div className="hr-sector-grid section-pad">{hrSectorItems.map((item, index) => <button type="button" className={"hr-sector-card " + (selectedWorkspace === item.id ? "selected" : "")} key={item.id} onClick={() => setSelectedWorkspace(item.id)} disabled={!workspaceApproved} aria-disabled={!workspaceApproved}><span>0{index + 1}</span><div><strong>{item.title}</strong><p>{item.description}</p></div><small>{workspaceApproved ? "Open related forms" : "Unlock with Telegram"}</small></button>)}</div>
+          {workspaceApproved && selectedWorkspace !== "bulk" && <div className="workspace-active-panel section-pad" aria-live="polite">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm key={selectedWorkspace} id={selectedWorkspace as HRSectorId} />}</div>}
         </section>
       </main>
 

@@ -6,3 +6,19 @@
 .testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:1100px;margin:auto}.testimonial-card{background:#fff;border:1px solid #e7e2da;border-radius:16px;padding:24px;display:flex;flex-direction:column;min-height:170px;box-shadow:0 4px 12px #00000008}.quote{line-height:1.7;flex:1;margin:0 0 20px}.quote:before{content:'“';font-size:2rem;color:#b9aa99}.testimonial-footer{border-top:1px solid #eae5da;padding-top:14px}.author,.role{margin:0}.author{font-weight:700}.role{margin-top:4px;font-size:.85rem;color:#777}
 .webinars-hero{padding:80px 6vw;text-align:center;background:linear-gradient(135deg,#f5f3ee,#fff);border-bottom:1px solid #eee}.webinars-hero h1{font-size:clamp(2rem,5vw,4rem);margin:0 0 16px}.webinars-hero p:last-child{max-width:600px;margin:auto;color:#555;line-height:1.7}.webinars-list{max-width:900px;margin:auto;padding:60px 6vw}.webinar-card{border:1px solid #e5e1da;border-radius:20px;padding:32px;margin-bottom:24px;box-shadow:0 6px 18px #00000008}.webinar-badge{display:inline-block;background:#e7dfd4;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:700;letter-spacing:.06em}.webinar-card h2{margin:16px 0 10px}.webinar-card p{line-height:1.7;color:#444}.webinar-meta{display:flex;align-items:center;gap:8px;border-bottom:1px solid #eee;padding:16px 0;color:#666}.webinar-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}.webinar-actions a,.webinar-unavailable{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:8px;font-size:.9rem}.webinar-actions a{background:#1f1f1f;color:#fff;text-decoration:none}.webinar-unavailable{background:#f0ece7;color:#666}
 @media(max-width:600px){.recommendations-section,.webinars-list{padding:48px 5vw}.webinars-hero{padding:56px 5vw}.webinar-card{padding:20px}.webinar-actions{flex-direction:column}.webinar-actions a,.webinar-unavailable{justify-content:center}}
+
+
+/* Curated external HR/workplace videos */
+.recommended-videos { padding: 64px 6vw 76px; background: #f5f3ee; border-top: 1px solid #eee9df; }
+.recommended-videos-heading { max-width: 900px; margin: 0 auto 28px; }
+.recommended-videos-heading h2 { margin: 6px 0 10px; font-size: clamp(1.7rem,4vw,2.6rem); }
+.recommended-videos-heading > p:last-child { max-width: 650px; color: #666; line-height: 1.7; }
+.recommended-videos-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 16px; max-width: 1100px; margin: 0 auto; }
+.recommended-video-card { display: flex; flex-direction: column; align-items: flex-start; min-height: 250px; padding: 22px; border: 1px solid #e7e2da; border-radius: 16px; background: #fff; box-shadow: 0 5px 16px #00000008; }
+.recommended-video-number { color: #8a5c43; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.recommended-video-card h3 { margin: 13px 0 8px; font-size: 1.12rem; line-height: 1.55; overflow-wrap: anywhere; }
+.recommended-video-topic { margin: 0; color: #555; font-size: .9rem; line-height: 1.6; }
+.recommended-video-creator { margin: 12px 0 18px; color: #7a7168; font-size: .82rem; }
+.recommended-video-card a { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding: 10px 13px; border-radius: 8px; background: #1f1f1f; color: #fff; font-size: .87rem; font-weight: 700; text-decoration: none; }
+.recommended-video-card a:hover { background: #8a4e3c; }
+@media(max-width:600px) { .recommended-videos { padding: 48px 5vw 56px; } .recommended-video-card { min-height: 0; } }

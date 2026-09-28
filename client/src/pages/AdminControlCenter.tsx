@@ -4,6 +4,7 @@ import "./admin-control.css";
 import { ExternalLink, Loader2, LogOut, Plus, RefreshCw, RotateCcw, ShieldCheck, UserX } from "lucide-react";
 import { Link } from "wouter";
 import AdminVideoLinks from "../components/AdminVideoLinks";
+import PWAInstallCard from "../components/PWAInstallCard";
 
 type RequestRow = { request_id: string; requester_name: string; status: string; telegram_username: string | null; expires_at: number; created_at: number; ip_address: string | null; country: string | null; city: string | null };
 type PaymentRow = { id: number; request_id: string; requester_name: string; amount: number; currency: string; method: string; reference: string | null; status: string; note: string | null; recorded_at: number };
@@ -75,10 +76,11 @@ export default function AdminControlCenter() {
   const logout = () => void run(async () => { await api("/api/admin/logout", {}); setAuthorized(false); });
 
   if (loading) return <main className="admin-control-shell"><p><Loader2 className="spin" /> Checking secure access…</p></main>;
-  if (!authorized) return <main className="admin-control-shell"><section className="admin-control-login"><ShieldCheck size={30} /><p className="section-kicker">Private workspace</p><h1>Admin Control Center</h1><p>{error || "Open the Telegram bot from your admin account and send /admin. The bot will reply with a one-time secure sign-in link."}</p><a className="button-primary" href="https://t.me/Payroll_Officer_bot" target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a><small>Sign-in links expire after 10 minutes and can be used once.</small><Link href="/">Back to portfolio</Link><Link href="/webinars">Events</Link></section></main>;
+  if (!authorized) return <main className="admin-control-shell"><PWAInstallCard /><section className="admin-control-login"><ShieldCheck size={30} /><p className="section-kicker">Private workspace</p><h1>Admin Control Center</h1><p>{error || "Open the Telegram bot from your admin account and send /admin. The bot will reply with a one-time secure sign-in link."}</p><a className="button-primary" href="https://t.me/Payroll_Officer_bot" target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a><small>Sign-in links expire after 10 minutes and can be used once.</small><Link href="/">Back to portfolio</Link><Link href="/webinars">Events</Link></section></main>;
 
   const approved = data.requests.filter((r) => r.status === "approved");
   return <main className="admin-control-shell">
+    <PWAInstallCard />
     <header className="admin-control-header"><div><p className="section-kicker"><ShieldCheck size={14} /> Private workspace</p><h1>Admin Control Center</h1><p>Review Telegram access requests and record verified payments.</p></div><div className="admin-control-actions"><Link className="admin-nav-link" href="/webinars">Events</Link><Link className="admin-nav-link" href="/">Portfolio</Link><button onClick={() => void run(refresh)} disabled={busy}><RefreshCw size={14} /> Refresh</button><button onClick={logout} disabled={busy}><LogOut size={14} /> Sign out</button></div></header>
     {error && <p className="admin-control-error" role="alert">{error}</p>}
     <section className="admin-control-stats"><article><span>Pending requests</span><strong>{data.requests.filter((r) => r.status === "pending").length}</strong></article><article><span>Approved</span><strong>{approved.length}</strong></article><article><span>Payment records</span><strong>{data.payments.length}</strong></article></section>

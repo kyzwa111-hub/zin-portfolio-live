@@ -13,6 +13,14 @@ const webinars = [
   },
 ];
 
+const recommendedVideos = [
+  { title: "အလုပ်ရှင် အလုပ်သမား ဆက်ဆံရေး (Employer & Employee Relations)", creator: "Life and Thought", topic: "အလုပ်ရှင်–ဝန်ထမ်း ဆက်ဆံရေး", platform: "YouTube", url: "https://www.youtube.com/watch?v=eOeefaAltAs" },
+  { title: "Time Management ကောင်းတဲ့သူတွေ လိုက်နာတဲ့ Rule (5) ခု", creator: "Work Mindset Program", topic: "အချိန်စီမံခန့်ခွဲမှု၊ အလုပ်ဦးစားပေးခြင်းနှင့် အာရုံစူးစိုက်မှု", platform: "Facebook Reel", url: "https://www.facebook.com/reel/1467610001753466/" },
+  { title: "HR တွေ မဖြစ်မနေ အမြဲလုပ်ပေးရတဲ့ လုပ်ငန်းစဉ်ကြီး (၄) ခုက ဘာလဲ?", creator: "HR Country", topic: "HR ၏ အဓိကလုပ်ငန်းစဉ်များ", platform: "YouTube", url: "https://www.youtube.com/watch?v=JVSeXpc4RyY" },
+  { title: "ကျွမ်းကျင် HR Professional တစ်ယောက်ဖြစ်လာဖို့ သိထားသင့်တဲ့အချက်များ", creator: "Panellist Business Services", topic: "HR ပညာရှင်တစ်ဦးအတွက် လိုအပ်သော အချက်များ", platform: "YouTube", url: "https://www.youtube.com/watch?v=BUdauu8yvqc" },
+  { title: "ခေါင်းဆောင်လုပ်မည့်သူတိုင်း သိထားသင့်သော အခြေခံကျတဲ့ ခေါင်းဆောင်မှု (၅) မျိုး", creator: "Pyay Khaing", topic: "ခေါင်းဆောင်မှုပုံစံများနှင့် လူအဖွဲ့ကို စီမံခန့်ခွဲခြင်း", platform: "YouTube", url: "https://www.youtube.com/watch?v=umV_lQuzXOk" },
+];
+
 export default function FreeWebinars() {
   return (
     <main className="webinars-page">
@@ -40,6 +48,24 @@ export default function FreeWebinars() {
             </div>
           </article>
         ))}
+      </section>
+      <section className="recommended-videos" aria-labelledby="recommended-videos-title">
+        <div className="recommended-videos-heading">
+          <p className="section-kicker">Myanmar HR &amp; workplace learning</p>
+          <h2 id="recommended-videos-title">Recommended videos</h2>
+          <p>These links open the original YouTube or Facebook pages. Videos are not downloaded or re-uploaded here.</p>
+        </div>
+        <div className="recommended-videos-grid">
+          {recommendedVideos.map((video, index) => (
+            <article className="recommended-video-card" key={video.url}>
+              <span className="recommended-video-number">0{index + 1} · {video.platform}</span>
+              <h3>{video.title}</h3>
+              <p className="recommended-video-topic">{video.topic}</p>
+              <p className="recommended-video-creator">Channel: {video.creator}</p>
+              <a href={video.url} target="_blank" rel="noopener noreferrer"><PlayCircle size={16} /> Watch original <ExternalLink size={13} /></a>
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   );

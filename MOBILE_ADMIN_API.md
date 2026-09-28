@@ -4,7 +4,7 @@ This API is designed for a native mobile client. It uses a short-lived, one-use 
 
 ## Current deployment status
 
-The routes described here are being added to the `feature/mobile-admin-api-auth` branch. They are **not live yet**. Before release, apply `migrations/0004_mobile_admin_auth.sql`, deploy the Worker, and create a Cloudflare Access bypass only for `/api/mobile/*`. Keep `/admin` and `/api/admin/*` protected by Cloudflare Access.
+The mobile API and Telegram fixes are implemented in the Worker source but are **not live until the pending release is deployed**. Before release, apply `migrations/0004_mobile_admin_auth.sql` and route `/api/mobile/*` through Cloudflare Access to the Worker. The Worker enforces one-use-code/Bearer authentication on those routes; do not expose mobile admin data without that Worker check. The `/admin` login/PWA shell and `/api/admin/*` must also reach the Worker, where the one-use Telegram link and HttpOnly admin session enforce browser-admin access.
 
 Current API host: `https://zin-portfolio-live.kyzwa111.workers.dev`
 
@@ -44,6 +44,8 @@ Refresh tokens rotate on each successful refresh; discard the old refresh token 
 
 6. End the session with `POST /api/mobile/auth/logout` and the current Bearer token.
 
+The installable browser/PWA Control Center is served at `/admin`. Its browser session is separate from the native-client Bearer API session.
+
 Access tokens last 15 minutes; refresh tokens last 30 days. Only token hashes are stored in D1. One-time login codes are consumed atomically and cannot be reused.
 
 ## Admin endpoints
@@ -77,6 +79,10 @@ The Worker is being updated to support:
 
 Commands are accepted only in the configured admin's private chat. Access-request decisions still require a request code and reject expired or already-processed requests.
 
+## Public website access requests
+
+The public access-request endpoint saves the request to D1 independently of Telegram notifications. A successful response with `adminNotified: false` means the request is saved and remains visible in the admin panel, but the bot could not notify the administrator; the page shows that status instead of falsely reporting a failed submission. Notification delivery becomes active after the configured token is verified as `@ayechanmoe123` and its webhook is installed.
+
 ## CORS and app origin
 
 Native HTTP clients generally do not rely on browser CORS. For a web/PWA client, set the Worker variable `MOBILE_APP_ORIGINS` to a comma-separated list of exact HTTPS origins (for example, `https://zhte.com`) after the domain is active. The Worker accepts same-origin requests by default and does not enable wildcard credentialed CORS.
@@ -91,7 +97,7 @@ To switch from the current `@Payroll_Officer_bot` to `@ayechanmoe123`, the Worke
 The Worker secret currently points to the existing bot. Keep it unchanged until the updated Worker is deployed. Then:
 
 1. In Cloudflare Worker **Settings → Variables and Secrets**, replace the secret `TELEGRAM_BOT_TOKEN` with the new bot's BotFather token. Do not put the token in GitHub or chat.
-2. Use an authenticated admin session to call `POST /api/admin/telegram/setup` (browser cookie) or `POST /api/mobile/admin/telegram/setup` (Bearer token). The endpoint registers the Worker webhook with Telegram, updates the stored bot username, and returns only the public webhook URL and username. It does not discard pending Telegram updates.
+2. Open `/admin`. Its public bootstrap check calls `GET /api/telegram/bootstrap`, verifies the secret with Telegram `getMe`, rejects any token that is not for `@ayechanmoe123`, then idempotently registers the webhook. Alternatively, use `POST /api/admin/telegram/setup` (browser session) or `POST /api/mobile/admin/telegram/setup` (Bearer token). Setup returns only the public webhook URL and username; it does not discard pending Telegram updates.
 3. Message `/start` to `@ayechanmoe123` from the configured admin's private Telegram account. The existing D1 admin-chat binding is used as the numeric identity allow-list; do not replace it with a guessed ID.
 4. Send `/mobilecode` in that private chat to sign in to the mobile client.
 

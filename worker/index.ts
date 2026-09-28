@@ -86,6 +86,10 @@ async function ensureWebhook(request: Request, env: Env): Promise<void> {
   const bot = await telegram(env, "getMe", {});
   if (bot?.username) await saveSetting(env, "bot_username", String(bot.username));
 }
+async function removeWebhook(env: Env): Promise<void> {
+  await telegram(env, "deleteWebhook", { drop_pending_updates: false });
+  await saveSetting(env, WEBHOOK_URL_KEY, "");
+}
 async function sendText(env: Env, chatId: string, text: string, replyMarkup?: unknown): Promise<any> {
   return telegram(env, "sendMessage", { chat_id: chatId, text, ...(replyMarkup ? { reply_markup: replyMarkup } : {}) });
 }
@@ -276,7 +280,6 @@ async function handleTrpc(request: Request, env: Env): Promise<Response> {
       const requesterName = String(input?.requesterName ?? "").trim();
       if (request.method !== "POST" || requesterName.length < 2 || requesterName.length > 160) return trpcError("Enter your name to request access.");
       if (!env.TELEGRAM_BOT_TOKEN || !adminUsername(env)) return trpcError("Telegram approval is not configured yet.", 503);
-      await ensureWebhook(request, env);
       const requestId = randomToken(18);
       const token = randomToken(32);
       const now = Date.now();
@@ -367,11 +370,11 @@ export default {
     if (url.pathname.startsWith("/api/admin/")) return handleAdminApi(request, env);
     if (url.pathname.startsWith("/api/trpc/")) return handleTrpc(request, env);
     if (url.pathname === "/api/health") {
-      let telegramWebhookReady = false;
+      let telegramWebhookRemoved = false;
       if (env.TELEGRAM_BOT_TOKEN && adminUsername(env)) {
-        try { await ensureWebhook(request, env); telegramWebhookReady = true; } catch { telegramWebhookReady = false; }
+        try { await removeWebhook(env); telegramWebhookRemoved = true; } catch { telegramWebhookRemoved = false; }
       }
-      return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady });
+      return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady: false, telegramWebhookRemoved });
     }
     return serveAssetsWithAccessRecovery(request, env);
   },

@@ -10,7 +10,7 @@ export default function WorkspaceAccessGate({ onApprovedChange }: { onApprovedCh
   const [access, setAccess] = useState(() => readAccessSession());
   const accessRequest = trpc.calculatorAccess.request.useMutation({
     onSuccess: (data) => { setPaymentRequested(true); setAccessNotice(""); const session = { requestId: data.requestId, token: data.token }; setAccess(session); writeAccessSession(session); },
-    onError: () => setPaymentRequested(false),
+    onError: (error) => { setPaymentRequested(false); setAccessNotice(error.message || "Could not submit your request. Please try again."); },
   });
   const statusQuery = trpc.calculatorAccess.status.useQuery(
     access ? { requestId: access.requestId, token: access.token } : { requestId: "pending-request", token: "pending-request-token" },
@@ -33,7 +33,7 @@ export default function WorkspaceAccessGate({ onApprovedChange }: { onApprovedCh
   }, [access, accessStatus, statusQuery.isFetching]);
   const approved = statusQuery.data?.status === "approved";
   useEffect(() => { onApprovedChange?.(approved); }, [approved, onApprovedChange]);
-  const botUsername = accessRequest.data?.botUsername ?? "Payroll_Officer_bot";
+  const botUsername = accessRequest.data?.botUsername ?? "ayechanmoe123";
   const botLink = `https://t.me/${botUsername}?start=admin`;
 
   return (
@@ -51,13 +51,13 @@ export default function WorkspaceAccessGate({ onApprovedChange }: { onApprovedCh
               <input value={requesterName} onChange={(event) => setRequesterName(event.target.value)} placeholder="Enter your name" autoComplete="name" maxLength={160} />
             </label>
             <div className="calculator-gate-actions">
-              <button type="button" className="button-primary" onClick={() => accessRequest.mutate({ requesterName: requesterName.trim() })} disabled={accessRequest.isPending || requesterName.trim().length < 2}>{accessRequest.isPending ? "Sending request…" : "Request access"}</button>
+              <button type="button" className="button-primary" onClick={() => { setAccessNotice(""); accessRequest.mutate({ requesterName: requesterName.trim() }); }} disabled={accessRequest.isPending || requesterName.trim().length < 2}>{accessRequest.isPending ? "Sending request…" : "Request access"}</button>
               <a className="text-link" href={botLink} target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a>
             </div>
           </>
         ) : (
           <>
-            <p>{statusQuery.data?.status === "approved" ? "Approved. The workspace is unlocked." : "Request sent. Wait for the administrator to approve it after reviewing your request."}</p>
+            <p>{statusQuery.data?.status === "approved" ? "Approved. The workspace is unlocked." : accessRequest.data && !accessRequest.data.adminNotified ? "Your request was saved, but the admin bot could not send a Telegram notification. Your request remains available for review in the admin panel." : "Request sent. Wait for the administrator to approve it after reviewing your request."}</p>
             <small>Request ID: {access.requestId.slice(-8)} · Requests expire after 10 minutes.</small>
           </>
         )}

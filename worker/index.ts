@@ -12,6 +12,8 @@ interface Env {
   DB: D1Database;
   TELEGRAM_BOT_TOKEN: string;
   TELEGRAM_ADMIN_USERNAME: string;
+  TELEGRAM_ADMIN_USER_ID?: string;
+  MOBILE_APP_ORIGINS?: string;
   TIDB_DATABASE_URL?: string;
   YOUTUBE_DATA_API_KEY?: string;
 }
@@ -22,6 +24,8 @@ import { runDailyYouTubeDiscovery } from "./videoDiscovery";
 type AccessStatus = "pending" | "approved" | "denied" | "expired" | "revoked";
 const ADMIN_CHAT_KEY = "admin_chat_id";
 const WEBHOOK_URL_KEY = "webhook_url";
+const TARGET_TELEGRAM_BOT_USERNAME = "ayechanmoe123";
+const TELEGRAM_WEBHOOK_URL = "https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook";
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -76,25 +80,130 @@ async function getSetting(env: Env, key: string): Promise<string | null> {
   const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key = ?").bind(key).first<{ value: string }>();
   return row?.value ?? null;
 }
-async function ensureWebhook(request: Request, env: Env): Promise<void> {
-  const desiredUrl = new URL("/api/telegram/webhook", request.url).toString();
-  const secret = (await sha256(env.TELEGRAM_BOT_TOKEN)).slice(0, 32);
-  const marker = desiredUrl + "|" + secret;
-  if (await getSetting(env, WEBHOOK_URL_KEY) === marker) return;
-  await telegram(env, "setWebhook", { url: desiredUrl, secret_token: secret, allowed_updates: ["message", "callback_query"] });
-  await saveSetting(env, WEBHOOK_URL_KEY, marker);
-  const bot = await telegram(env, "getMe", {});
-  if (bot?.username) await saveSetting(env, "bot_username", String(bot.username));
+async function targetWebhookReady(env: Env): Promise<boolean> {
+  if (!env.TELEGRAM_BOT_TOKEN) return false;
+  const expectedMarker = `${TELEGRAM_WEBHOOK_URL}|${(await sha256(env.TELEGRAM_BOT_TOKEN)).slice(0, 32)}`;
+  const marker = await getSetting(env, WEBHOOK_URL_KEY);
+  const username = (await getSetting(env, "bot_username") || "").replace(/^@/, "").toLowerCase();
+  return marker === expectedMarker && username === TARGET_TELEGRAM_BOT_USERNAME;
 }
-async function removeWebhook(env: Env): Promise<void> {
-  await telegram(env, "deleteWebhook", { drop_pending_updates: false });
-  await saveSetting(env, WEBHOOK_URL_KEY, "");
+async function ensureWebhook(env: Env): Promise<void> {
+  if (!env.TELEGRAM_BOT_TOKEN) throw new Error("Telegram bot secret is not configured");
+  const secret = (await sha256(env.TELEGRAM_BOT_TOKEN)).slice(0, 32);
+  const marker = TELEGRAM_WEBHOOK_URL + "|" + secret;
+  const existingMarker = await getSetting(env, WEBHOOK_URL_KEY);
+  const existingUsername = (await getSetting(env, "bot_username") || "").replace(/^@/, "").toLowerCase();
+  if (existingMarker === marker) {
+    if (existingUsername !== TARGET_TELEGRAM_BOT_USERNAME) throw new Error("Telegram token is not for the target bot");
+    return;
+  }
+  const bot = await telegram(env, "getMe", {});
+  const botUsername = String(bot?.username || "").replace(/^@/, "").toLowerCase();
+  if (botUsername !== TARGET_TELEGRAM_BOT_USERNAME) throw new Error("Telegram token is not for the target bot");
+  await telegram(env, "setWebhook", { url: TELEGRAM_WEBHOOK_URL, secret_token: secret, allowed_updates: ["message", "callback_query"] });
+  await saveSetting(env, WEBHOOK_URL_KEY, marker);
+  await saveSetting(env, "bot_username", botUsername);
 }
 async function sendText(env: Env, chatId: string, text: string, replyMarkup?: unknown): Promise<any> {
   return telegram(env, "sendMessage", { chat_id: chatId, text, ...(replyMarkup ? { reply_markup: replyMarkup } : {}) });
 }
 function adminUsername(env: Env): string {
   return (env.TELEGRAM_ADMIN_USERNAME || "").replace(/^@/, "").toLowerCase();
+}
+async function isAdminTelegramMessage(message: any, env: Env): Promise<boolean> {
+  const username = String(message?.from?.username || "").toLowerCase();
+  const senderId = String(message?.from?.id ?? "");
+  const chatId = String(message?.chat?.id ?? "");
+  const storedAdminChatId = await getSetting(env, ADMIN_CHAT_KEY);
+  const allowedAdminId = String(env.TELEGRAM_ADMIN_USER_ID || "").trim() || storedAdminChatId || "";
+  return Boolean(allowedAdminId && senderId === allowedAdminId && chatId === allowedAdminId && username === adminUsername(env));
+}
+async function handleAdminBotCommand(message: any, env: Env): Promise<boolean> {
+  const text = String(message?.text || "").trim();
+  const [rawCommand, ...args] = text.split(/\s+/);
+  const command = String(rawCommand || "").split("@")[0].toLowerCase();
+  const supported = ["/pending", "/status", "/approve", "/deny", "/revoke", "/restore", "/update", "/mobilecode"];
+  if (!supported.includes(command)) return false;
+  const chatId = String(message.chat.id);
+  if (!(await isAdminTelegramMessage(message, env))) {
+    await sendText(env, chatId, "This command is restricted to the configured administrator.");
+    return true;
+  }
+
+  if (command === "/pending") {
+    const rows = await env.DB.prepare("SELECT request_id, requester_name, expires_at FROM access_requests WHERE status = 'pending' AND expires_at > ? ORDER BY created_at DESC LIMIT 20")
+      .bind(Date.now()).all<{ request_id: string; requester_name: string; expires_at: number }>();
+    const requests = rows.results || [];
+    const summary = requests.length
+      ? requests.map((row) => `${row.request_id} — ${row.requester_name} (expires ${new Date(row.expires_at).toISOString()})`).join("\n")
+      : "No pending requests.";
+    await sendText(env, chatId, `Pending request codes:\n\n${summary}\n\nUse /approve CODE, /deny CODE, /revoke CODE, or /restore CODE.`);
+    return true;
+  }
+
+  if (command === "/mobilecode") {
+    const code = randomToken(32);
+    const now = Date.now();
+    await env.DB.prepare("DELETE FROM mobile_login_codes WHERE expires_at <= ? OR used_at IS NOT NULL").bind(now).run();
+    await env.DB.prepare("INSERT INTO mobile_login_codes (code_hash, expires_at, used_at, created_at) VALUES (?, ?, NULL, ?)")
+      .bind(await sha256(code), now + 5 * 60 * 1000, now).run();
+    await sendText(env, chatId, `One-time mobile admin login code (expires in 5 minutes):\n\n${code}\n\nEnter it only in your admin app. Do not forward or share it.`);
+    return true;
+  }
+
+  const requestId = command === "/update" ? String(args[0] || "") : String(args[0] || "");
+  const action = command === "/update" ? String(args[1] || "").toLowerCase() : command.slice(1);
+  if (command === "/status") {
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(requestId)) {
+      await sendText(env, chatId, "Usage: /status REQUEST_CODE");
+      return true;
+    }
+    const row = await env.DB.prepare("SELECT requester_name, status, expires_at FROM access_requests WHERE request_id = ?")
+      .bind(requestId).first<{ requester_name: string; status: AccessStatus; expires_at: number }>();
+    await sendText(env, chatId, row ? `Request ${requestId}\nName: ${row.requester_name}\nStatus: ${row.status}\nExpires: ${new Date(row.expires_at).toISOString()}` : "Request code not found.");
+    return true;
+  }
+  if (!/^[A-Za-z0-9_-]{8,64}$/.test(requestId) || !["approve", "deny", "revoke", "restore"].includes(action)) {
+    await sendText(env, chatId, command === "/update" ? "Usage: /update REQUEST_CODE approve|deny|revoke|restore" : `Usage: ${command} REQUEST_CODE`);
+    return true;
+  }
+  const current = await env.DB.prepare("SELECT status, expires_at FROM access_requests WHERE request_id = ?")
+    .bind(requestId).first<{ status: AccessStatus; expires_at: number }>();
+  if (!current) {
+    await sendText(env, chatId, "Request code not found.");
+    return true;
+  }
+  const now = Date.now();
+  let result: unknown;
+  let nextStatus: AccessStatus;
+  if (action === "approve" || action === "deny") {
+    if (current.status !== "pending" || current.expires_at <= now) {
+      await sendText(env, chatId, `Request is ${current.expires_at <= now && current.status === "pending" ? "expired" : current.status}; no change made.`);
+      return true;
+    }
+    nextStatus = action === "approve" ? "approved" : "denied";
+    result = await env.DB.prepare("UPDATE access_requests SET status = ?, telegram_user_id = ?, telegram_username = ?, approved_at = ?, updated_at = ? WHERE request_id = ? AND status = 'pending' AND expires_at > ?")
+      .bind(nextStatus, String(message.from.id), message.from.username ?? null, nextStatus === "approved" ? now : null, now, requestId, now).run();
+  } else if (action === "revoke") {
+    if (current.status !== "pending" && current.status !== "approved") {
+      await sendText(env, chatId, `Request is ${current.status}; it cannot be revoked.`);
+      return true;
+    }
+    nextStatus = "revoked";
+    result = await env.DB.prepare("UPDATE access_requests SET status = 'revoked', updated_at = ? WHERE request_id = ? AND status IN ('pending','approved')")
+      .bind(now, requestId).run();
+  } else {
+    if (!["revoked", "denied", "expired"].includes(current.status)) {
+      await sendText(env, chatId, `Request is ${current.status}; it cannot be restored.`);
+      return true;
+    }
+    nextStatus = "approved";
+    result = await env.DB.prepare("UPDATE access_requests SET status = 'approved', approved_at = ?, expires_at = ?, updated_at = ? WHERE request_id = ? AND status IN ('revoked','denied','expired')")
+      .bind(now, now + 24 * 60 * 60 * 1000, now, requestId).run();
+  }
+  const changes = (result as { meta?: { changes?: number } }).meta?.changes;
+  await sendText(env, chatId, changes === 0 ? "Request changed in another action; refresh /status before retrying." : `Request ${requestId} updated to ${nextStatus}.`);
+  return true;
 }
 async function handleWebhook(request: Request, env: Env): Promise<Response> {
   const expected = (await sha256(env.TELEGRAM_BOT_TOKEN)).slice(0, 32);
@@ -104,18 +213,24 @@ async function handleWebhook(request: Request, env: Env): Promise<Response> {
   const message = update.message;
   const callback = update.callback_query;
   if (message?.text?.startsWith("/start")) {
-    const username = String(message.from?.username || "").toLowerCase();
-    if (!adminUsername(env) || username !== adminUsername(env)) {
+    if (!(await isAdminTelegramMessage(message, env))) {
       await sendText(env, String(message.chat.id), "This bot is restricted to the configured administrator.");
       return json({ ok: true });
     }
-    await saveSetting(env, ADMIN_CHAT_KEY, String(message.chat.id));
-    await sendText(env, String(message.chat.id), "Telegram admin approval is connected. Use /admin to get a secure Control Center link. Access requests will appear here.");
+    const configuredChat = await getSetting(env, ADMIN_CHAT_KEY);
+    if (configuredChat && configuredChat !== String(message.chat.id)) {
+      await sendText(env, String(message.chat.id), "This bot is already bound to a different administrator account.");
+      return json({ ok: true });
+    }
+    if (!configuredChat) await saveSetting(env, ADMIN_CHAT_KEY, String(message.chat.id));
+    const bot = await telegram(env, "getMe", {}).catch(() => null);
+    if (bot?.username) await saveSetting(env, "bot_username", String(bot.username));
+    await sendText(env, String(message.chat.id), "Admin bot connected. Use /admin for the web control center, /mobilecode for a one-time mobile API login code, /pending to list request codes, and /approve, /deny, /revoke, /restore, /status, or /update to manage a request.");
     return json({ ok: true });
   }
+  if (message && await handleAdminBotCommand(message, env)) return json({ ok: true });
   if (message?.text?.trim().split(/\s+/)[0] === "/admin") {
-    const configuredChat = await getSetting(env, ADMIN_CHAT_KEY);
-    const isAdmin = configuredChat === String(message.chat.id) && String(message.from?.username || "").toLowerCase() === adminUsername(env);
+    const isAdmin = await isAdminTelegramMessage(message, env);
     if (!isAdmin) {
       await sendText(env, String(message.chat.id), "This command is restricted to the configured administrator.");
       return json({ ok: true });
@@ -185,6 +300,14 @@ async function handleAdminApi(request: Request, env: Env): Promise<Response> {
   }
   const session = await adminSession(request, env);
   if (!session) return json({ error: "Admin sign-in required. Open the bot and send /admin." }, 401);
+  if (url.pathname === "/api/admin/telegram/setup" && request.method === "POST") {
+    try {
+      await ensureWebhook(env);
+      return json({ ok: true, botUsername: await getSetting(env, "bot_username"), webhookUrl: new URL("/api/telegram/webhook", request.url).toString() });
+    } catch {
+      return json({ error: "Telegram setup failed. Verify the Worker bot-token secret and try again." }, 503);
+    }
+  }
   if (url.pathname === "/api/admin/logout" && request.method === "POST") {
     await env.DB.prepare("DELETE FROM admin_sessions WHERE session_hash = ?").bind(session.hash).run();
     return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json", "cache-control": "no-store", "set-cookie": "admin_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0" } });
@@ -257,6 +380,172 @@ async function handleAdminApi(request: Request, env: Env): Promise<Response> {
   return json({ error: "Admin endpoint not found." }, 404);
 }
 
+const MOBILE_ACCESS_TTL_MS = 15 * 60 * 1000;
+const MOBILE_REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+function mobileCorsHeaders(request: Request, url: URL, env: Env): Headers | null | false {
+  const origin = request.headers.get("origin");
+  if (!origin) return null;
+  const configured = (env.MOBILE_APP_ORIGINS || "").split(",").map((value) => value.trim()).filter(Boolean);
+  if (origin !== url.origin && !configured.includes(origin)) return false;
+  return new Headers({
+    "access-control-allow-origin": origin,
+    "access-control-allow-methods": "GET, POST, OPTIONS",
+    "access-control-allow-headers": "Authorization, Content-Type",
+    "access-control-max-age": "600",
+    "vary": "Origin",
+  });
+}
+
+async function mobileSessionForAccessToken(request: Request, env: Env): Promise<{ sessionId: string } | null> {
+  const authorization = request.headers.get("authorization") || "";
+  const match = /^Bearer\s+([A-Za-z0-9_-]{32,256})$/i.exec(authorization);
+  if (!match) return null;
+  const now = Date.now();
+  const tokenHash = await sha256(match[1]);
+  const row = await env.DB.prepare("SELECT session_id FROM mobile_sessions WHERE access_token_hash = ? AND access_expires_at > ? AND revoked_at IS NULL LIMIT 1")
+    .bind(tokenHash, now).first<{ session_id: string }>();
+  if (!row) return null;
+  await env.DB.prepare("UPDATE mobile_sessions SET last_used_at = ? WHERE session_id = ? AND revoked_at IS NULL").bind(now, row.session_id).run();
+  return { sessionId: row.session_id };
+}
+
+async function handleMobileApi(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const path = url.pathname;
+  if (path === "/api/mobile/auth/exchange" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { code?: string };
+    const code = String(body.code || "");
+    if (code.length < 32 || code.length > 128) return json({ error: "Invalid or expired login code." }, 401);
+    const now = Date.now();
+    const codeHash = await sha256(code);
+    const codeRow = await env.DB.prepare("SELECT expires_at, used_at FROM mobile_login_codes WHERE code_hash = ? LIMIT 1")
+      .bind(codeHash).first<{ expires_at: number; used_at: number | null }>();
+    if (!codeRow || codeRow.used_at !== null || codeRow.expires_at <= now) return json({ error: "Invalid or expired login code." }, 401);
+    const consumed = await env.DB.prepare("UPDATE mobile_login_codes SET used_at = ? WHERE code_hash = ? AND used_at IS NULL AND expires_at > ?")
+      .bind(now, codeHash, now).run() as { meta?: { changes?: number } };
+    if (consumed.meta?.changes !== 1) return json({ error: "Invalid or expired login code." }, 401);
+
+    const sessionId = randomToken(18);
+    const accessToken = randomToken(32);
+    const refreshToken = randomToken(48);
+    const accessExpiresAt = now + MOBILE_ACCESS_TTL_MS;
+    const refreshExpiresAt = now + MOBILE_REFRESH_TTL_MS;
+    await env.DB.prepare("DELETE FROM mobile_sessions WHERE refresh_expires_at <= ? OR revoked_at IS NOT NULL").bind(now).run();
+    await env.DB.prepare("INSERT INTO mobile_sessions (session_id, access_token_hash, access_expires_at, refresh_token_hash, refresh_expires_at, revoked_at, created_at, last_used_at) VALUES (?, ?, ?, ?, ?, NULL, ?, ?)")
+      .bind(sessionId, await sha256(accessToken), accessExpiresAt, await sha256(refreshToken), refreshExpiresAt, now, now).run();
+    return json({ tokenType: "Bearer", accessToken, refreshToken, accessExpiresAt: new Date(accessExpiresAt).toISOString(), refreshExpiresAt: new Date(refreshExpiresAt).toISOString() });
+  }
+
+  if (path === "/api/mobile/auth/refresh" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { refreshToken?: string };
+    const refreshToken = String(body.refreshToken || "");
+    if (refreshToken.length < 32 || refreshToken.length > 256) return json({ error: "Invalid or expired refresh token." }, 401);
+    const now = Date.now();
+    const oldHash = await sha256(refreshToken);
+    const row = await env.DB.prepare("SELECT session_id FROM mobile_sessions WHERE refresh_token_hash = ? AND refresh_expires_at > ? AND revoked_at IS NULL LIMIT 1")
+      .bind(oldHash, now).first<{ session_id: string }>();
+    if (!row) return json({ error: "Invalid or expired refresh token." }, 401);
+    const accessToken = randomToken(32);
+    const nextRefreshToken = randomToken(48);
+    const accessExpiresAt = now + MOBILE_ACCESS_TTL_MS;
+    const refreshExpiresAt = now + MOBILE_REFRESH_TTL_MS;
+    const rotated = await env.DB.prepare("UPDATE mobile_sessions SET access_token_hash = ?, access_expires_at = ?, refresh_token_hash = ?, refresh_expires_at = ?, last_used_at = ? WHERE session_id = ? AND refresh_token_hash = ? AND refresh_expires_at > ? AND revoked_at IS NULL")
+      .bind(await sha256(accessToken), accessExpiresAt, await sha256(nextRefreshToken), refreshExpiresAt, now, row.session_id, oldHash, now).run() as { meta?: { changes?: number } };
+    if (rotated.meta?.changes !== 1) return json({ error: "Invalid or expired refresh token." }, 401);
+    return json({ tokenType: "Bearer", accessToken, refreshToken: nextRefreshToken, accessExpiresAt: new Date(accessExpiresAt).toISOString(), refreshExpiresAt: new Date(refreshExpiresAt).toISOString() });
+  }
+
+  const isMobileAdminPath = path.startsWith("/api/mobile/admin/");
+  const isLogout = path === "/api/mobile/auth/logout" && request.method === "POST";
+  if (!isMobileAdminPath && !isLogout) return json({ error: "Mobile endpoint not found." }, 404);
+  const session = await mobileSessionForAccessToken(request, env);
+  if (!session) return json({ error: "Bearer authentication required." }, 401);
+  if (isLogout) {
+    await env.DB.prepare("UPDATE mobile_sessions SET revoked_at = ? WHERE session_id = ? AND revoked_at IS NULL").bind(Date.now(), session.sessionId).run();
+    return json({ ok: true });
+  }
+  if (path === "/api/mobile/admin/telegram/setup" && request.method === "POST") {
+    try {
+      await ensureWebhook(env);
+      return json({ ok: true, botUsername: await getSetting(env, "bot_username"), webhookUrl: new URL("/api/telegram/webhook", request.url).toString() });
+    } catch {
+      return json({ error: "Telegram setup failed. Verify the Worker bot-token secret and try again." }, 503);
+    }
+  }
+
+  if (path === "/api/mobile/admin/overview" && request.method === "GET") {
+    const requests = await env.DB.prepare("SELECT request_id, requester_name, status, telegram_username, expires_at, approved_at, created_at, updated_at, ip_address, country, city FROM access_requests ORDER BY created_at DESC LIMIT 200").all();
+    const payments = await env.DB.prepare("SELECT id, request_id, requester_name, amount, currency, method, reference, status, note, recorded_at, updated_at FROM payment_records ORDER BY recorded_at DESC LIMIT 200").all();
+    return json({ requests: requests.results || [], payments: payments.results || [] });
+  }
+  if (path === "/api/mobile/admin/requests/revoke" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { requestId?: string };
+    const requestId = String(body.requestId || "");
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(requestId)) return json({ error: "Invalid request ID." }, 400);
+    const result = await env.DB.prepare("UPDATE access_requests SET status = 'revoked', updated_at = ? WHERE request_id = ? AND status IN ('pending','approved')").bind(Date.now(), requestId).run() as { meta?: { changes?: number } };
+    return result.meta?.changes === 0 ? json({ error: "Request not found or cannot be revoked." }, 404) : json({ ok: true });
+  }
+  if (path === "/api/mobile/admin/requests/restore" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { requestId?: string };
+    const requestId = String(body.requestId || "");
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(requestId)) return json({ error: "Invalid request ID." }, 400);
+    const now = Date.now();
+    const result = await env.DB.prepare("UPDATE access_requests SET status = 'approved', approved_at = ?, expires_at = ?, updated_at = ? WHERE request_id = ? AND status IN ('revoked','denied','expired')")
+      .bind(now, now + 24 * 60 * 60 * 1000, now, requestId).run() as { meta?: { changes?: number } };
+    return result.meta?.changes === 0 ? json({ error: "Only revoked, denied, or expired requests can be restored." }, 400) : json({ ok: true });
+  }
+  if (path === "/api/mobile/admin/payments" && request.method === "GET") {
+    const payments = await env.DB.prepare("SELECT id, request_id, requester_name, amount, currency, method, reference, status, note, recorded_at, updated_at FROM payment_records ORDER BY recorded_at DESC LIMIT 200").all();
+    return json({ payments: payments.results || [] });
+  }
+  if (path === "/api/mobile/admin/payments" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { requestId?: string; amount?: number; method?: string; reference?: string; note?: string; status?: string };
+    const requestId = String(body.requestId || "");
+    const amount = Math.floor(Number(body.amount));
+    const method = String(body.method || "");
+    const status = String(body.status || "pending");
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(requestId) || !Number.isFinite(amount) || amount <= 0 || amount > 100000000 || !["KBZPay", "Bank transfer", "Cash", "Other"].includes(method) || !["pending", "confirmed", "rejected"].includes(status)) return json({ error: "Check the payment fields and try again." }, 400);
+    const requestRow = await env.DB.prepare("SELECT requester_name FROM access_requests WHERE request_id = ?").bind(requestId).first<{ requester_name: string }>();
+    if (!requestRow) return json({ error: "Access request not found." }, 404);
+    const now = Date.now();
+    await env.DB.prepare("INSERT INTO payment_records (request_id, requester_name, amount, currency, method, reference, status, note, recorded_at, updated_at) VALUES (?, ?, ?, 'MMK', ?, ?, ?, ?, ?, ?)")
+      .bind(requestId, requestRow.requester_name, amount, method, String(body.reference || "").slice(0, 160) || null, status, String(body.note || "").slice(0, 500) || null, now, now).run();
+    return json({ ok: true }, 201);
+  }
+  if (path === "/api/mobile/admin/payments/update" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { id?: number; status?: string; reference?: string; note?: string };
+    const id = Math.floor(Number(body.id));
+    const status = String(body.status || "");
+    if (!Number.isInteger(id) || id < 1 || !["pending", "confirmed", "rejected"].includes(status)) return json({ error: "Invalid payment update." }, 400);
+    await env.DB.prepare("UPDATE payment_records SET status = ?, reference = ?, note = ?, updated_at = ? WHERE id = ?")
+      .bind(status, String(body.reference || "").slice(0, 160) || null, String(body.note || "").slice(0, 500) || null, Date.now(), id).run();
+    return json({ ok: true });
+  }
+  if (path === "/api/mobile/admin/video-links" && request.method === "GET") {
+    const status = url.searchParams.get("status");
+    if (status && !["pending", "approved", "rejected"].includes(status)) return json({ error: "Invalid review status." }, 400);
+    try { return json({ links: await listVideoLinks(env, status as "pending" | "approved" | "rejected" | undefined) }); }
+    catch (error) { return videoLinkErrorResponse(error); }
+  }
+  if (path === "/api/mobile/admin/video-links" && request.method === "POST") {
+    const body = await request.json().catch(() => ({}));
+    try { return json({ ok: true, link: await addVideoLink(env, body as Parameters<typeof addVideoLink>[1], "manual") }, 201); }
+    catch (error) { return videoLinkErrorResponse(error); }
+  }
+  if (path === "/api/mobile/admin/video-links/review" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { id?: string | number; status?: string };
+    const id = String(body.id ?? "");
+    const status = String(body.status ?? "");
+    if (!/^\d{1,20}$/.test(id) || !["pending", "approved", "rejected"].includes(status)) return json({ error: "Invalid video review update." }, 400);
+    try {
+      const updated = await updateVideoReviewStatus(env, id, status as "pending" | "approved" | "rejected");
+      return updated ? json({ ok: true }) : json({ error: "Video link not found." }, 404);
+    } catch (error) { return videoLinkErrorResponse(error); }
+  }
+  return json({ error: "Mobile admin endpoint not found." }, 404);
+}
+
 function unwrapInput(value: any): any {
   if (value && typeof value === "object" && value["0"] !== undefined) return value["0"]?.json ?? value["0"];
   if (value && typeof value === "object" && value.json !== undefined) return value.json;
@@ -279,7 +568,6 @@ async function handleTrpc(request: Request, env: Env): Promise<Response> {
     if (route === "calculatorAccess.request") {
       const requesterName = String(input?.requesterName ?? "").trim();
       if (request.method !== "POST" || requesterName.length < 2 || requesterName.length > 160) return trpcError("Enter your name to request access.");
-      if (!env.TELEGRAM_BOT_TOKEN || !adminUsername(env)) return trpcError("Telegram approval is not configured yet.", 503);
       const requestId = randomToken(18);
       const token = randomToken(32);
       const now = Date.now();
@@ -292,12 +580,16 @@ async function handleTrpc(request: Request, env: Env): Promise<Response> {
         .bind(requestId, requesterName, await sha256(token), expiresAt, now, now, ipAddress, country, city).run();
       const adminChat = await getSetting(env, ADMIN_CHAT_KEY);
       let adminNotified = false;
-      if (adminChat) {
+      let webhookReady = false;
+      try { webhookReady = await targetWebhookReady(env); } catch { /* Keep the saved request even if bot status cannot be checked. */ }
+      if (adminChat && webhookReady) {
         const originLabel = [city, country].filter(Boolean).join(", ") || ipAddress || "Unknown origin";
-        await sendText(env, adminChat, `Payroll access request\n\nName: ${requesterName}\nOrigin: ${originLabel}\nRequest ID: ${requestId}\nExpires in 10 minutes.`, { inline_keyboard: [[{ text: "Approve", callback_data: `approve:${requestId}` }, { text: "Deny", callback_data: `deny:${requestId}` }]] });
-        adminNotified = true;
+        try {
+          await sendText(env, adminChat, `Payroll access request\n\nName: ${requesterName}\nOrigin: ${originLabel}\nRequest ID: ${requestId}\nExpires in 10 minutes.`, { inline_keyboard: [[{ text: "Approve", callback_data: `approve:${requestId}` }, { text: "Deny", callback_data: `deny:${requestId}` }]] });
+          adminNotified = true;
+        } catch { /* Notification failure must not discard or hide the saved request. */ }
       }
-      const botUsername = await getSetting(env, "bot_username") || "";
+      const botUsername = TARGET_TELEGRAM_BOT_USERNAME;
       return trpcResult({ requestId, token, expiresAt: new Date(expiresAt).toISOString(), botUsername, adminNotified });
     }
     const requestId = String(input?.requestId ?? "");
@@ -312,6 +604,7 @@ async function handleTrpc(request: Request, env: Env): Promise<Response> {
     }
     return trpcResult({ status: row.status, expiresAt: new Date(row.expires_at).toISOString() });
   } catch (error) {
+    if (route === "calculatorAccess.request") return trpcError("Your request could not be saved. Please try again.", 503);
     return trpcError(error instanceof Error ? error.message : "Request failed", 500);
   }
 }
@@ -367,14 +660,31 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/api/telegram/webhook" && request.method === "POST") return handleWebhook(request, env);
+    if (url.pathname === "/api/telegram/bootstrap") {
+      if (request.method !== "GET") return json({ error: "Method not allowed." }, 405);
+      try {
+        await ensureWebhook(env);
+        return json({ ok: true, botUsername: await getSetting(env, "bot_username") });
+      } catch {
+        return json({ ok: false, error: "Telegram is not connected to @ayechanmoe123. Set TELEGRAM_BOT_TOKEN to the token for that bot, then reload this page." }, 503);
+      }
+    }
+    if (url.pathname.startsWith("/api/mobile/")) {
+      const cors = mobileCorsHeaders(request, url, env);
+      if (cors === false) return json({ error: "Origin not allowed." }, 403);
+      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors || undefined });
+      const response = await handleMobileApi(request, env);
+      if (!cors) return response;
+      const headers = new Headers(response.headers);
+      cors.forEach((value, key) => headers.set(key, value));
+      return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+    }
     if (url.pathname.startsWith("/api/admin/")) return handleAdminApi(request, env);
     if (url.pathname.startsWith("/api/trpc/")) return handleTrpc(request, env);
     if (url.pathname === "/api/health") {
-      let telegramWebhookRemoved = false;
-      if (env.TELEGRAM_BOT_TOKEN && adminUsername(env)) {
-        try { await removeWebhook(env); telegramWebhookRemoved = true; } catch { telegramWebhookRemoved = false; }
-      }
-      return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady: false, telegramWebhookRemoved });
+      let telegramWebhookReady = false;
+      try { telegramWebhookReady = await targetWebhookReady(env); } catch { /* Health remains available while D1 is unavailable. */ }
+      return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady });
     }
     return serveAssetsWithAccessRecovery(request, env);
   },

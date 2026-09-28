@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "zin-portfolio-live",
   "main": "./worker/index.ts",
+  "keep_vars": true,
   "compatibility_date": "2026-09-25",
   "triggers": { "crons": ["30 2 * * *"] },
   "observability": { "enabled": true },

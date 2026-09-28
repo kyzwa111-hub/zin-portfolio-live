@@ -3,7 +3,7 @@ import worker from "./index";
 
 class FakeD1Statement {
   private values: unknown[] = [];
-  constructor(private sql: string, private settings: Map<string, string>) {}
+  constructor(private sql: string, private settings: Map<string, string>, private requests: unknown[][]) {}
   bind(...values: unknown[]) { this.values = values; return this; }
   async first<T>() {
     if (this.sql.includes("SELECT value FROM app_settings WHERE key = ?")) {
@@ -15,13 +15,14 @@ class FakeD1Statement {
   async all<T>() { return { results: [] as T[] }; }
   async run() {
     if (this.sql.includes("INSERT INTO app_settings")) this.settings.set(String(this.values[0]), String(this.values[1]));
+    if (this.sql.includes("INSERT INTO access_requests")) this.requests.push(this.values);
     return { meta: { changes: 1 } };
   }
 }
 
-function fakeEnv(settings = new Map<string, string>(), token = "new-bot-token") {
+function fakeEnv(settings = new Map<string, string>(), token = "new-bot-token", requests: unknown[][] = []) {
   return {
-    DB: { prepare: (sql: string) => new FakeD1Statement(sql, settings) },
+    DB: { prepare: (sql: string) => new FakeD1Statement(sql, settings, requests) },
     TELEGRAM_BOT_TOKEN: token,
     TELEGRAM_ADMIN_USERNAME: "zinmin2244",
     ASSETS: { fetch: vi.fn(async () => new Response("not found", { status: 404 })) },
@@ -111,5 +112,28 @@ describe("Telegram bot bootstrap", () => {
     expect(settings.get("admin_chat_id")).toBe("111111");
     expect(telegramFetch).toHaveBeenCalledTimes(1);
     expect(String(telegramFetch.mock.calls[0][0])).toContain("/sendMessage");
+  });
+
+  it("saves a public access request even when Telegram notification fails", async () => {
+    const token = "new-bot-token";
+    const marker = `https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook|${await webhookSecret(token)}`;
+    const settings = new Map([["admin_chat_id", "111111"], ["bot_username", "ayechanmoe123"], ["webhook_url", marker]]);
+    const requests: unknown[][] = [];
+    const env = fakeEnv(settings, token, requests);
+    const telegramFetch = vi.fn(async () => new Response(JSON.stringify({ ok: false, description: "Forbidden" }), { status: 403 }));
+    vi.stubGlobal("fetch", telegramFetch);
+
+    const response = await worker.fetch(new Request("https://zin-portfolio-live.kyzwa111.workers.dev/api/trpc/calculatorAccess.request", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ json: { requesterName: "Test Requester" } }),
+    }), env as never);
+
+    expect(response.status).toBe(200);
+    const body = await response.json() as Array<{ result: { data: { json: { requestId: string; adminNotified: boolean; botUsername: string } } } }>;
+    expect(body[0].result.data.json).toMatchObject({ adminNotified: false, botUsername: "ayechanmoe123" });
+    expect(body[0].result.data.json.requestId).toMatch(/^[A-Za-z0-9_-]{20,}$/);
+    expect(requests).toHaveLength(1);
+    expect(telegramFetch).toHaveBeenCalledTimes(1);
   });
 });

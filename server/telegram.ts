@@ -2,7 +2,8 @@ import { createHash } from "crypto";
 import { createTelegramMessage, getAccessRequest, getAccessRequestByRequestId, getTelegramMessageByExternalId, getTelegramSetting, updateAccessRequest, upsertTelegramSetting } from "./db";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
-const ADMIN_USERNAME = (process.env.TELEGRAM_ADMIN_USERNAME ?? "zzzinmin").replace(/^@/, "").toLowerCase();
+const ADMIN_USERNAME = (process.env.TELEGRAM_ADMIN_USERNAME ?? "").replace(/^@/, "").toLowerCase();
+const ADMIN_USER_ID = (process.env.TELEGRAM_ADMIN_USER_ID ?? "").trim();
 const ADMIN_CHAT_SETTING = "admin_chat_id";
 
 type TelegramUser = { id: number; username?: string; first_name?: string };
@@ -16,6 +17,15 @@ type TelegramMessage = {
 type TelegramCallback = { id: string; from: TelegramUser; data?: string; message?: { chat: { id: number }; message_id: number } };
 type TelegramUpdate = { message?: TelegramMessage; callback_query?: TelegramCallback };
 type TelegramSentMessage = { message_id: number };
+
+function isConfiguredAdmin(user?: TelegramUser) {
+  const username = user?.username?.replace(/^@/, "").toLowerCase();
+  return Boolean(ADMIN_USERNAME && username === ADMIN_USERNAME && (!ADMIN_USER_ID || String(user?.id) === ADMIN_USER_ID));
+}
+
+export function isTelegramBotConfigured() {
+  return Boolean(BOT_TOKEN);
+}
 
 async function telegramApi<T>(method: string, body: Record<string, unknown>) {
   if (!BOT_TOKEN) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
@@ -39,7 +49,7 @@ export function getTelegramWebhookSecret() {
 
 export async function getTelegramBotUsername() {
   const bot = await telegramApi<{ username?: string }>("getMe", {});
-  return bot?.username ?? "Payroll_Officer_bot";
+  return bot?.username ?? "ayechanmoe123";
 }
 
 export async function configureTelegramWebhook(publicBaseUrl: string) {
@@ -90,8 +100,7 @@ async function sendAdminMessage(requestId: string, requesterName: string) {
 }
 
 async function handleStart(message: TelegramMessage) {
-  const username = message.from?.username?.toLowerCase();
-  if (!username || username !== ADMIN_USERNAME) {
+  if (!isConfiguredAdmin(message.from)) {
     await sendText(String(message.chat.id), "This bot is restricted to the configured administrator.", String(message.chat.id), message.from);
     return;
   }
@@ -111,23 +120,12 @@ async function handleConversationMessage(message: TelegramMessage) {
   if (!message.text) return;
   const adminChatId = await getTelegramSetting(ADMIN_CHAT_SETTING);
   const currentChatId = String(message.chat.id);
-  const isAdmin = Boolean(adminChatId && currentChatId === adminChatId && message.from?.username?.toLowerCase() === ADMIN_USERNAME);
-  if (isAdmin) {
-    if (await handleAdminReply(message, adminChatId!)) return;
-    await sendText(currentChatId, "To reply to a user, reply directly to the forwarded user message. Use the website admin panel to review the full history.", currentChatId, message.from);
+  if (!adminChatId || currentChatId !== adminChatId || !isConfiguredAdmin(message.from)) {
+    await sendText(currentChatId, "This bot is restricted to the configured administrator.", currentChatId, message.from);
     return;
   }
-
-  await storeMessage({ chatId: currentChatId, telegramUserId: message.from ? String(message.from.id) : null, telegramUsername: message.from?.username ?? null, direction: "inbound", messageText: message.text, telegramMessageId: String(message.message_id), replyToTelegramMessageId: message.reply_to_message ? String(message.reply_to_message.message_id) : null });
-  if (!adminChatId) {
-    await sendText(currentChatId, "Your message was received, but the administrator has not connected the bot yet.", currentChatId, message.from);
-    return;
-  }
-  const sender = message.from?.username ? `@${message.from.username}` : message.from?.first_name ?? "Telegram user";
-  const adminText = `New message from ${sender}\n\n${message.text}\n\nReply to this message to respond directly to the user.`;
-  const forwarded = await telegramApi<TelegramSentMessage>("sendMessage", { chat_id: adminChatId, text: adminText });
-  await storeMessage({ chatId: currentChatId, telegramUserId: message.from ? String(message.from.id) : null, telegramUsername: message.from?.username ?? null, direction: "outbound", messageText: adminText, telegramMessageId: String(forwarded.message_id), replyToTelegramMessageId: null });
-  await sendText(currentChatId, "Your message has been sent to the administrator. You will receive a reply here.", currentChatId, message.from);
+  if (await handleAdminReply(message, adminChatId)) return;
+  await sendText(currentChatId, "Admin bot connected. Use the website admin panel to review and manage access requests.", currentChatId, message.from);
 }
 
 async function handleCallback(callback: TelegramCallback) {
@@ -135,7 +133,7 @@ async function handleCallback(callback: TelegramCallback) {
   const [action, requestId] = data.split(":");
   const configuredAdminChatId = await getTelegramSetting(ADMIN_CHAT_SETTING);
   const callbackChatId = callback.message?.chat.id;
-  const isAdmin = configuredAdminChatId && callback.from.id === Number(configuredAdminChatId) && callbackChatId === Number(configuredAdminChatId);
+  const isAdmin = Boolean(configuredAdminChatId && String(callback.from.id) === configuredAdminChatId && callbackChatId === Number(configuredAdminChatId) && isConfiguredAdmin(callback.from));
   if (!isAdmin || !requestId || (action !== "approve" && action !== "deny")) {
     await answerCallbackSafely(callback.id, "Not authorized", true);
     return;

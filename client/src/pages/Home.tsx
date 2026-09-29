@@ -86,7 +86,7 @@ export default function Home() {
           <a href="#personal" onClick={closeMenu}>Personal info</a>
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="/webinars" onClick={closeMenu}>Events</a>
-          <a className="nav-cta" href="https://t.me/Payroll_Officer_bot" target="_blank" rel="noreferrer" onClick={closeMenu}>Unlock Telegram <ArrowUpRight size={14} /></a>
+          <a className="nav-cta" href="https://t.me/ayechanmoe123" target="_blank" rel="noreferrer" onClick={closeMenu}>Unlock Telegram <ArrowUpRight size={14} /></a>
         </nav>
       </header>
 

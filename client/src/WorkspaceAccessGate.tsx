@@ -22,7 +22,7 @@ export default function WorkspaceAccessGate({ onApprovedChange }: { onApprovedCh
   }, []);
   const approved = statusQuery.data?.status === "approved";
   useEffect(() => { onApprovedChange?.(approved); }, [approved, onApprovedChange]);
-  const botUsername = accessRequest.data?.botUsername ?? "Payroll_Officer_bot";
+  const botUsername = accessRequest.data?.botUsername ?? "ayechanmoe123";
   const botLink = `https://t.me/${botUsername}?start=admin`;
 
   return (

@@ -139,7 +139,7 @@ export default function BulkPayroll({ sharedApprovalActive = false }: { sharedAp
   const accessRequest = trpc.calculatorAccess.request.useMutation({ onSuccess: (data) => { setPaymentRequested(true); setAccess({ requestId: data.requestId, token: data.token }); }, onError: () => setPaymentRequested(false) });
   const statusQuery = trpc.calculatorAccess.status.useQuery(access ?? emptyStatusInput, { enabled: Boolean(access), refetchInterval: access ? 2500 : false });
   const accessGranted = sharedApprovalActive || statusQuery.data?.status === "approved";
-  const botUsername = accessRequest.data?.botUsername ?? "Payroll_Officer_bot";
+  const botUsername = accessRequest.data?.botUsername ?? "ayechanmoe123";
 
   useEffect(() => {
     const syncAccess = () => setAccess(readAccessSession());

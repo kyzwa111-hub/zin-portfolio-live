@@ -8,7 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { configureTelegramWebhook, getTelegramWebhookSecret, handleTelegramWebhook } from "../telegram";
+import { configureTelegramWebhook, getTelegramWebhookSecret, handleTelegramWebhook, isTelegramBotConfigured } from "../telegram";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -38,7 +38,7 @@ async function startServer() {
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   app.post("/api/telegram/webhook", async (req, res) => {
-    if (req.header("x-telegram-bot-api-secret-token") !== getTelegramWebhookSecret()) {
+    if (!isTelegramBotConfigured() || req.header("x-telegram-bot-api-secret-token") !== getTelegramWebhookSecret()) {
       res.status(401).json({ ok: false });
       return;
     }

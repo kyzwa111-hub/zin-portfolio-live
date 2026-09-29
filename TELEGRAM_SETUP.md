@@ -12,7 +12,7 @@ Any token previously pasted into chat or stored as a plain Variable must be revo
 
 Open `https://zin-portfolio-live.kyzwa111.workers.dev/api/health`. When the secret is configured, it registers the Worker webhook at `/api/telegram/webhook`; the response should show `telegramWebhookReady: true`.
 
-From the configured admin Telegram account, open `@Payroll_Officer_bot` and send `/start` once. The Telegram username must match `TELEGRAM_ADMIN_USERNAME`. Visitors can then request access on the portfolio and the admin receives Approve/Deny buttons in Telegram.
+From the configured admin Telegram account, open `@ayelay_bot` and send `/start` once. The Telegram username must match `TELEGRAM_ADMIN_USERNAME`. Visitors can then request access on the portfolio and the admin receives Approve/Deny buttons in Telegram.
 
 ## Admin Control Center
 

@@ -26,7 +26,7 @@ export const appRouter = router({
       await createAccessRequest({ requestId, requesterName: input.requesterName, tokenHash: hashAccessToken(token), expiresAt });
       let adminNotified = false;
       try { adminNotified = await requestAdminApproval(requestId, input.requesterName); } catch (error) { console.warn("[Telegram] Could not notify admin:", error); }
-      let botUsername = "Payroll_Officer_bot";
+      let botUsername = "ayelay_bot";
       try { botUsername = await getTelegramBotUsername(); } catch (error) { console.warn("[Telegram] Could not read bot username:", error); }
       return { requestId, token, expiresAt: expiresAt.toISOString(), botUsername, adminNotified } as const;
     }),

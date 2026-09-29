@@ -200,7 +200,7 @@ export default function PayrollCalculator() {
     <label key={key} className="calculator-field"><span>{label}</span><input inputMode="numeric" value={value} onChange={(event) => setValue(event.target.value)} /><small>{hint}</small></label>
   );
   const setFyIncomeValue = (month: string, value: string) => setFyIncome((current) => ({ ...current, [month]: value }));
-  const botUsername = accessRequest.data?.botUsername ?? "ayechanmoe123";
+  const botUsername = accessRequest.data?.botUsername ?? "ayelay_bot";
   const botLink = `https://t.me/${botUsername}?start=admin`;
   const statusMessage = !access ? "Request access to send an approval notice to the administrator." : accessRequest.data?.adminNotified ? "Approval request sent. Waiting for the administrator." : "Admin bot setup is needed: open the bot and send /start from the admin account.";
   const requestAccess = () => {

@@ -47,17 +47,17 @@ async function webhookSecret(token: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Telegram bot bootstrap", () => {
-  it("accepts only @ayechanmoe123, installs the canonical webhook, and is idempotent", async () => {
-    const settings = new Map([["bot_username", "Payroll_Officer_bot"], ["webhook_url", "previous-token-marker"]]);
+  it("accepts only @ayelay_bot, installs the canonical webhook, and is idempotent", async () => {
+    const settings = new Map([["bot_username", "ayelay_bot"], ["webhook_url", "previous-token-marker"]]);
     const env = fakeEnv(settings);
-    const telegramFetch = telegramResponse("ayechanmoe123");
+    const telegramFetch = telegramResponse("ayelay_bot");
     vi.stubGlobal("fetch", telegramFetch);
 
     const request = () => worker.fetch(new Request("https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/bootstrap"), env as never);
     const response = await request();
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ ok: true, botUsername: "ayechanmoe123" });
-    expect(settings.get("bot_username")).toBe("ayechanmoe123");
+    expect(await response.json()).toEqual({ ok: true, botUsername: "ayelay_bot" });
+    expect(settings.get("bot_username")).toBe("ayelay_bot");
     expect(settings.get("webhook_url")).toContain("https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook|");
     expect(telegramFetch).toHaveBeenCalledTimes(2);
     expect(JSON.parse(String(telegramFetch.mock.calls[1][1]?.body))).toMatchObject({
@@ -71,7 +71,7 @@ describe("Telegram bot bootstrap", () => {
   });
 
   it("does not register a webhook for a token belonging to another bot", async () => {
-    const settings = new Map([["bot_username", "Payroll_Officer_bot"], ["webhook_url", "previous-token-marker"]]);
+    const settings = new Map([["bot_username", "ayelay_bot"], ["webhook_url", "previous-token-marker"]]);
     const env = fakeEnv(settings, "wrong-bot-token");
     const telegramFetch = telegramResponse("some_other_bot");
     vi.stubGlobal("fetch", telegramFetch);
@@ -80,14 +80,14 @@ describe("Telegram bot bootstrap", () => {
     expect(response.status).toBe(503);
     expect(await response.json()).toMatchObject({ ok: false });
     expect(telegramFetch).toHaveBeenCalledTimes(1);
-    expect(settings.get("bot_username")).toBe("Payroll_Officer_bot");
+    expect(settings.get("bot_username")).toBe("ayelay_bot");
   });
 
   it("keeps health checks read-only and never deletes the Telegram webhook", async () => {
     const marker = `https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook|${await webhookSecret("new-bot-token")}`;
-    const settings = new Map([["bot_username", "ayechanmoe123"], ["webhook_url", marker]]);
+    const settings = new Map([["bot_username", "ayelay_bot"], ["webhook_url", marker]]);
     const env = fakeEnv(settings);
-    const telegramFetch = telegramResponse("ayechanmoe123");
+    const telegramFetch = telegramResponse("ayelay_bot");
     vi.stubGlobal("fetch", telegramFetch);
 
     const response = await worker.fetch(new Request("https://zin-portfolio-live.kyzwa111.workers.dev/api/health"), env as never);
@@ -100,7 +100,7 @@ describe("Telegram bot bootstrap", () => {
   it("does not let a repeated /start rebind the existing admin chat", async () => {
     const settings = new Map([["admin_chat_id", "111111"]]);
     const env = fakeEnv(settings);
-    const telegramFetch = telegramResponse("ayechanmoe123");
+    const telegramFetch = telegramResponse("ayelay_bot");
     vi.stubGlobal("fetch", telegramFetch);
     const update = { message: { text: "/start", chat: { id: 222222 }, from: { id: 222222, username: "zinmin2244" } } };
     const response = await worker.fetch(new Request("https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook", {
@@ -117,7 +117,7 @@ describe("Telegram bot bootstrap", () => {
   it("saves a public access request even when Telegram notification fails", async () => {
     const token = "new-bot-token";
     const marker = `https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook|${await webhookSecret(token)}`;
-    const settings = new Map([["admin_chat_id", "111111"], ["bot_username", "ayechanmoe123"], ["webhook_url", marker]]);
+    const settings = new Map([["admin_chat_id", "111111"], ["bot_username", "ayelay_bot"], ["webhook_url", marker]]);
     const requests: unknown[][] = [];
     const env = fakeEnv(settings, token, requests);
     const telegramFetch = vi.fn(async () => new Response(JSON.stringify({ ok: false, description: "Forbidden" }), { status: 403 }));
@@ -131,7 +131,7 @@ describe("Telegram bot bootstrap", () => {
 
     expect(response.status).toBe(200);
     const body = await response.json() as Array<{ result: { data: { json: { requestId: string; adminNotified: boolean; botUsername: string } } } }>;
-    expect(body[0].result.data.json).toMatchObject({ adminNotified: false, botUsername: "ayechanmoe123" });
+    expect(body[0].result.data.json).toMatchObject({ adminNotified: false, botUsername: "ayelay_bot" });
     expect(body[0].result.data.json.requestId).toMatch(/^[A-Za-z0-9_-]{20,}$/);
     expect(requests).toHaveLength(1);
     expect(telegramFetch).toHaveBeenCalledTimes(1);

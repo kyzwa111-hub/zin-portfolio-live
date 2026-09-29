@@ -81,7 +81,7 @@ Commands are accepted only in the configured admin's private chat. Access-reques
 
 ## Public website access requests
 
-The public access-request endpoint saves the request to D1 independently of Telegram notifications. A successful response with `adminNotified: false` means the request is saved and remains visible in the admin panel, but the bot could not notify the administrator; the page shows that status instead of falsely reporting a failed submission. Notification delivery becomes active after the configured token is verified as `@ayechanmoe123` and its webhook is installed.
+The public access-request endpoint saves the request to D1 independently of Telegram notifications. A successful response with `adminNotified: false` means the request is saved and remains visible in the admin panel, but the bot could not notify the administrator; the page shows that status instead of falsely reporting a failed submission. Notification delivery becomes active after the configured token is verified as `@ayelay_bot` and its webhook is installed.
 
 ## CORS and app origin
 
@@ -89,16 +89,16 @@ Native HTTP clients generally do not rely on browser CORS. For a web/PWA client,
 
 ## Bot credential
 
-To switch from the current `@Payroll_Officer_bot` to `@ayechanmoe123`, the Worker secret `TELEGRAM_BOT_TOKEN` must be updated to the new bot's BotFather token, then the webhook must be registered again. **Do not paste the token into chat or commit it to GitHub.** The old bot remains configured until this secret is changed.
+To switch from the current `@ayelay_bot` to `@ayelay_bot`, the Worker secret `TELEGRAM_BOT_TOKEN` must be updated to the new bot's BotFather token, then the webhook must be registered again. **Do not paste the token into chat or commit it to GitHub.** The old bot remains configured until this secret is changed.
 
 
-## Switch to `@ayechanmoe123`
+## Switch to `@ayelay_bot`
 
 The Worker secret currently points to the existing bot. Keep it unchanged until the updated Worker is deployed. Then:
 
 1. In Cloudflare Worker **Settings → Variables and Secrets**, replace the secret `TELEGRAM_BOT_TOKEN` with the new bot's BotFather token. Do not put the token in GitHub or chat.
-2. Open `/admin`. Its public bootstrap check calls `GET /api/telegram/bootstrap`, verifies the secret with Telegram `getMe`, rejects any token that is not for `@ayechanmoe123`, then idempotently registers the webhook. Alternatively, use `POST /api/admin/telegram/setup` (browser session) or `POST /api/mobile/admin/telegram/setup` (Bearer token). Setup returns only the public webhook URL and username; it does not discard pending Telegram updates.
-3. Message `/start` to `@ayechanmoe123` from the configured admin's private Telegram account. The existing D1 admin-chat binding is used as the numeric identity allow-list; do not replace it with a guessed ID.
+2. Open `/admin`. Its public bootstrap check calls `GET /api/telegram/bootstrap`, verifies the secret with Telegram `getMe`, rejects any token that is not for `@ayelay_bot`, then idempotently registers the webhook. Alternatively, use `POST /api/admin/telegram/setup` (browser session) or `POST /api/mobile/admin/telegram/setup` (Bearer token). Setup returns only the public webhook URL and username; it does not discard pending Telegram updates.
+3. Message `/start` to `@ayelay_bot` from the configured admin's private Telegram account. The existing D1 admin-chat binding is used as the numeric identity allow-list; do not replace it with a guessed ID.
 4. Send `/mobilecode` in that private chat to sign in to the mobile client.
 
 `GET /api/health` is now read-only; it must never remove or change the Telegram webhook.
@@ -106,7 +106,7 @@ The Worker secret currently points to the existing bot. Keep it unchanged until 
 
 ## Live site verification (2026-09-29)
 
-- Public homepage responds: https://zin-portfolio-live.kyzwa111.workers.dev/ . It still links to the old `@Payroll_Officer_bot` because the source-branch changes have not been deployed.
+- Public homepage responds: https://zin-portfolio-live.kyzwa111.workers.dev/ . It still links to the old `@ayelay_bot` because the source-branch changes have not been deployed.
 - Public events page responds: https://zin-portfolio-live.kyzwa111.workers.dev/webinars . It currently lists “Business KPIs Awareness” dated 26 September 2026, but its recording and slides still say “pending”; no event video has been published there yet.
 - The mobile API, new bot username, and custom domain are not live. `zhte.com` still needs its Cloudflare zone activated before it can be attached as a Worker custom domain.
 
@@ -131,4 +131,4 @@ curl --fail --silent --show-error \\
 unset TELEGRAM_BOT_TOKEN TG_SECRET
 ```
 
-After that, send `/start` to `@ayechanmoe123` from the configured admin account. The Worker will save the bot's actual username via Telegram `getMe`; then `/mobilecode` can issue the first app login code.
+After that, send `/start` to `@ayelay_bot` from the configured admin account. The Worker will save the bot's actual username via Telegram `getMe`; then `/mobilecode` can issue the first app login code.

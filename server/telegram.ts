@@ -39,7 +39,7 @@ export function getTelegramWebhookSecret() {
 
 export async function getTelegramBotUsername() {
   const bot = await telegramApi<{ username?: string }>("getMe", {});
-  return bot?.username ?? "Payroll_Officer_bot";
+  return bot?.username ?? "ayelay_bot";
 }
 
 export async function configureTelegramWebhook(publicBaseUrl: string) {

@@ -58,7 +58,7 @@ export default function AdminControlCenter() {
   const logout = () => void run(async () => { await api("/api/admin/logout", {}); setAuthorized(false); });
 
   if (loading) return <main className="admin-control-shell"><p><Loader2 className="spin" /> Checking secure access…</p></main>;
-  if (!authorized) return <main className="admin-control-shell"><section className="admin-control-login"><ShieldCheck size={30} /><p className="section-kicker">Private workspace</p><h1>Admin Control Center</h1><p>{error || "Open the Telegram bot from your admin account and send /admin. The bot will reply with a one-time secure sign-in link."}</p><a className="button-primary" href="https://t.me/Payroll_Officer_bot" target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a><small>Sign-in links expire after 10 minutes and can be used once.</small><Link href="/">Back to portfolio</Link></section></main>;
+  if (!authorized) return <main className="admin-control-shell"><section className="admin-control-login"><ShieldCheck size={30} /><p className="section-kicker">Private workspace</p><h1>Admin Control Center</h1><p>{error || "Open the Telegram bot from your admin account and send /admin. The bot will reply with a one-time secure sign-in link."}</p><a className="button-primary" href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a><small>Sign-in links expire after 10 minutes and can be used once.</small><Link href="/">Back to portfolio</Link></section></main>;
 
   const approved = data.requests.filter((r) => r.status === "approved");
   return <main className="admin-control-shell">

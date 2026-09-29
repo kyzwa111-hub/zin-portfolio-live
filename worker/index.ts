@@ -24,7 +24,7 @@ import { runDailyYouTubeDiscovery } from "./videoDiscovery";
 type AccessStatus = "pending" | "approved" | "denied" | "expired" | "revoked";
 const ADMIN_CHAT_KEY = "admin_chat_id";
 const WEBHOOK_URL_KEY = "webhook_url";
-const TARGET_TELEGRAM_BOT_USERNAME = "ayechanmoe123";
+const TARGET_TELEGRAM_BOT_USERNAME = "ayelay_bot";
 const TELEGRAM_WEBHOOK_URL = "https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook";
 
 function json(data: unknown, status = 200): Response {
@@ -666,7 +666,7 @@ export default {
         await ensureWebhook(env);
         return json({ ok: true, botUsername: await getSetting(env, "bot_username") });
       } catch {
-        return json({ ok: false, error: "Telegram is not connected to @ayechanmoe123. Set TELEGRAM_BOT_TOKEN to the token for that bot, then reload this page." }, 503);
+        return json({ ok: false, error: "Telegram is not connected to @ayelay_bot. Set TELEGRAM_BOT_TOKEN to the token for that bot, then reload this page." }, 503);
       }
     }
     if (url.pathname.startsWith("/api/mobile/")) {

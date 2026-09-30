@@ -47,7 +47,7 @@ async function webhookSecret(token: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Telegram bot bootstrap", () => {
-  it("accepts only @ayelay_bot, installs the canonical webhook, and is idempotent", async () => {
+  it("accepts only @ayelay_bot and restores the canonical webhook on each bootstrap", async () => {
     const settings = new Map([["bot_username", "ayelay_bot"], ["webhook_url", "previous-token-marker"]]);
     const env = fakeEnv(settings);
     const telegramFetch = telegramResponse("ayelay_bot");
@@ -67,7 +67,7 @@ describe("Telegram bot bootstrap", () => {
 
     const secondResponse = await request();
     expect(secondResponse.status).toBe(200);
-    expect(telegramFetch).toHaveBeenCalledTimes(2);
+    expect(telegramFetch).toHaveBeenCalledTimes(4);
   });
 
   it("does not register a webhook for a token belonging to another bot", async () => {

@@ -91,15 +91,10 @@ async function ensureWebhook(env: Env): Promise<void> {
   if (!env.TELEGRAM_BOT_TOKEN) throw new Error("Telegram bot secret is not configured");
   const secret = (await sha256(env.TELEGRAM_BOT_TOKEN)).slice(0, 32);
   const marker = TELEGRAM_WEBHOOK_URL + "|" + secret;
-  const existingMarker = await getSetting(env, WEBHOOK_URL_KEY);
-  const existingUsername = (await getSetting(env, "bot_username") || "").replace(/^@/, "").toLowerCase();
-  if (existingMarker === marker) {
-    if (existingUsername !== TARGET_TELEGRAM_BOT_USERNAME) throw new Error("Telegram token is not for the target bot");
-    return;
-  }
   const bot = await telegram(env, "getMe", {});
   const botUsername = String(bot?.username || "").replace(/^@/, "").toLowerCase();
   if (botUsername !== TARGET_TELEGRAM_BOT_USERNAME) throw new Error("Telegram token is not for the target bot");
+  // Re-register on every bootstrap so a deleted/stale Telegram webhook cannot silently stop replies.
   await telegram(env, "setWebhook", { url: TELEGRAM_WEBHOOK_URL, secret_token: secret, allowed_updates: ["message", "callback_query"] });
   await saveSetting(env, WEBHOOK_URL_KEY, marker);
   await saveSetting(env, "bot_username", botUsername);

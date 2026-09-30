@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import worker from "./index";
+import worker, { ZEKE_DEFAULT_MODEL } from "./index";
 
 type TestEnv = {
   ASSETS: { fetch: typeof fetch };
@@ -35,9 +35,22 @@ describe("Zeke AI chat endpoint", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       reply: "Payroll guidance from AI",
-      model: "@cf/meta/llama-3.1-8b-instruct",
+      model: ZEKE_DEFAULT_MODEL,
     });
     expect(testEnv.AI.run).toHaveBeenCalledOnce();
+  });
+
+  it("accepts an OpenAI-compatible chat completion response", async () => {
+    const testEnv = env({ choices: [{ message: { content: "Payroll guidance from chat completion" } }] });
+    const response = await worker.fetch(
+      new Request("https://example.com/api/zeke/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "user", content: "How does payroll work?" }] }),
+      }),
+      testEnv as never
+    );
+    expect(await response.json()).toMatchObject({ reply: "Payroll guidance from chat completion", model: ZEKE_DEFAULT_MODEL });
   });
 
   it("falls back to a useful response when Cloudflare AI is unavailable", async () => {

@@ -114,6 +114,20 @@ describe("Telegram bot bootstrap", () => {
     expect(String(telegramFetch.mock.calls[0][0])).toContain("/sendMessage");
   });
 
+  it("replies to /ping without requiring admin identity", async () => {
+    const env = fakeEnv();
+    const telegramFetch = telegramResponse("ayelay_bot");
+    vi.stubGlobal("fetch", telegramFetch);
+    const update = { message: { text: "/ping", chat: { id: 222222 }, from: { id: 222222, username: "test-user" } } };
+    const response = await worker.fetch(new Request("https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-telegram-bot-api-secret-token": await webhookSecret("new-bot-token") },
+      body: JSON.stringify(update),
+    }), env as never);
+    expect(response.status).toBe(200);
+    expect(String(telegramFetch.mock.calls[0][1]?.body)).toContain("Pong");
+  });
+
   it("saves a public access request even when Telegram notification fails", async () => {
     const token = "new-bot-token";
     const marker = `https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook|${await webhookSecret(token)}`;

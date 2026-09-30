@@ -200,6 +200,23 @@ async function handleAdminBotCommand(message: any, env: Env): Promise<boolean> {
   await sendText(env, chatId, changes === 0 ? "Request changed in another action; refresh /status before retrying." : `Request ${requestId} updated to ${nextStatus}.`);
   return true;
 }
+async function handleDiagnosticBotCommand(message: any, env: Env): Promise<boolean> {
+  const text = String(message?.text || "").trim();
+  const command = String(text.split(/\s+/)[0] || "").split("@")[0].toLowerCase();
+  const chatId = String(message?.chat?.id ?? "");
+  if (!chatId || !["/ping", "/help", "/id", "/webhook"].includes(command)) return false;
+  if (command === "/ping") {
+    await sendText(env, chatId, "Pong — AyeLayBot webhook is responding.");
+  } else if (command === "/help") {
+    await sendText(env, chatId, "Test commands:\n/ping — test a live reply\n/id — show Telegram chat and user IDs\n/webhook — show webhook status\n/start — connect admin\n/admin — receive the secure admin link");
+  } else if (command === "/id") {
+    await sendText(env, chatId, `chat_id: ${chatId}\nuser_id: ${String(message?.from?.id ?? "unknown")}\nusername: ${message?.from?.username ? "@" + message.from.username : "(none)"}`);
+  } else {
+    const info = await telegram(env, "getWebhookInfo", {});
+    await sendText(env, chatId, `Webhook URL: ${info?.url || "(not set)"}\nPending updates: ${info?.pending_update_count ?? 0}\nLast error: ${info?.last_error_message || "none"}`);
+  }
+  return true;
+}
 async function handleWebhook(request: Request, env: Env): Promise<Response> {
   const expected = (await sha256(env.TELEGRAM_BOT_TOKEN)).slice(0, 32);
   const received = request.headers.get("x-telegram-bot-api-secret-token") || "";
@@ -207,6 +224,7 @@ async function handleWebhook(request: Request, env: Env): Promise<Response> {
   const update = await request.json() as any;
   const message = update.message;
   const callback = update.callback_query;
+  if (message && await handleDiagnosticBotCommand(message, env)) return json({ ok: true });
   if (message?.text?.startsWith("/start")) {
     if (!(await isAdminTelegramMessage(message, env))) {
       await sendText(env, String(message.chat.id), "This bot is restricted to the configured administrator.");

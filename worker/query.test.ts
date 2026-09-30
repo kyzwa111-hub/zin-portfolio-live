@@ -7,6 +7,12 @@ describe("Worker toolkit query contract", () => {
     expect(result).toEqual({ enabled: true, version: "final", section: "game" });
   });
 
+  it("normalizes friendly direct-link aliases", () => {
+    expect(parseToolkitQuery(new Request("https://example.workers.dev/?hr-toolkit=1&section=practice")).section).toBe("game");
+    expect(parseToolkitQuery(new Request("https://example.workers.dev/?hr-toolkit=1&section=calculator")).section).toBe("payroll");
+    expect(parseToolkitQuery(new Request("https://example.workers.dev/?hr-toolkit=1&section=payroll-testing")).section).toBe("payroll");
+  });
+
   it("keeps the legacy marker compatible without optional parameters", () => {
     expect(parseToolkitQuery(new Request("https://example.workers.dev/?hr-toolkit=1"))).toEqual({ enabled: true, version: null, section: null });
   });

@@ -39,8 +39,9 @@ export function parseToolkitQuery(request: Request): { enabled: boolean; version
   const version = url.searchParams.get("v");
   if (version !== null && version !== "final") return { enabled: false, version: null, section: null, error: "Unsupported toolkit version." };
   const sectionValue = url.searchParams.get("section");
-  if (sectionValue !== null && !["toolkit", "game", "payroll"].includes(sectionValue)) return { enabled: false, version: version as "final" | null, section: null, error: "Unsupported toolkit section." };
-  return { enabled: true, version: version as "final" | null, section: (sectionValue as ToolkitSection | null) || null };
+  const aliases: Record<string, ToolkitSection> = { toolkit: "toolkit", home: "toolkit", game: "game", practice: "game", payroll: "payroll", "payroll-testing": "payroll", calculator: "payroll" };
+  if (sectionValue !== null && !aliases[sectionValue]) return { enabled: false, version: version as "final" | null, section: null, error: "Unsupported toolkit section." };
+  return { enabled: true, version: version as "final" | null, section: sectionValue ? aliases[sectionValue] : null };
 }
 
 function json(data: unknown, status = 200): Response {

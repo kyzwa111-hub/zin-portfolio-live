@@ -100,7 +100,7 @@ export default function Home() {
           <a href="#toolkit" onClick={closeMenu}>Toolkit</a>
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="/webinars" onClick={closeMenu}>Events</a>
-          <a href="#game" onClick={closeMenu}>Game</a>
+          <a href="/?hr-toolkit=1&v=final&section=game" onClick={closeMenu}>Game</a>
           <a href="#opportunities" onClick={closeMenu}>Jobs</a>
           <a className="nav-cta" href="#contact" onClick={closeMenu}>Start a conversation <ArrowUpRight size={14} /></a>
         </nav>
@@ -242,14 +242,14 @@ export default function Home() {
                 View event feed <ArrowUpRight size={15} />
               </span>
             </a>
-            <a className="toolkit-card toolkit-card-game" href="#game">
+            <a className="toolkit-card toolkit-card-game" href="/?hr-toolkit=1&v=final&section=game">
               <span className="toolkit-card-icon"><Gamepad2 size={18} /></span>
               <span className="toolkit-card-index">05 · Practice</span>
               <strong>Workplace scenario lab</strong>
               <p>Practise calm, fair next steps for attendance, payroll variance, and employee concerns.</p>
               <span className="toolkit-card-link">Play a case <ArrowUpRight size={15} /></span>
             </a>
-            <a className="toolkit-card toolkit-card-wide toolkit-card-payroll" href="#services" onClick={() => setSelectedWorkspace("payroll")}>
+            <a className="toolkit-card toolkit-card-wide toolkit-card-payroll" href="/?hr-toolkit=1&v=final&section=payroll" onClick={() => setSelectedWorkspace("payroll")}>
               <span className="toolkit-card-icon"><Calculator size={18} /></span>
               <span className="toolkit-card-index">06 · Test &amp; calculate</span>
               <strong>Payroll testing workspace</strong>

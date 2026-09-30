@@ -285,6 +285,29 @@ export default function Home() {
             </div>
           </div>
 
+          <div className="services-explainer section-pad">
+            <div className="services-explainer-heading">
+              <div>
+                <p className="section-kicker"><span className="eyebrow-dot" /> Zeke explains</p>
+                <h3>Unlock the workflow,<br /><i>then make it useful.</i></h3>
+              </div>
+              <p>See what Telegram unlock gives you, which payroll tools are included, and what forms you can prepare inside the workspace.</p>
+            </div>
+            <div className="services-video-shell">
+              <video className="services-explainer-video" controls preload="metadata" poster="/videos/telegram-unlock-explainer-poster.png">
+                <source src="/videos/telegram-unlock-explainer.mp4" type="video/mp4" />
+                Your browser does not support the video element.
+              </video>
+            </div>
+            <div className="services-explainer-footer">
+              <span>58 sec · Burmese narration · English UI labels</span>
+              <div className="services-explainer-actions">
+                <a className="button-primary" href="#contact">Request access <ArrowUpRight size={15} /></a>
+                <a className="telegram-button" href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a>
+              </div>
+            </div>
+          </div>
+
           <div className="section-pad"><WorkspaceAccessGate onApprovedChange={setWorkspaceApproved} /></div>
           <BulkPayrollSection approved={workspaceApproved} />
 

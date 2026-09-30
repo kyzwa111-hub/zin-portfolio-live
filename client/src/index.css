@@ -721,6 +721,17 @@ body { background: var(--cream); }
 .services-hero { padding-bottom: 76px; padding-top: 132px; }
 .services-hero h2 { font-size: clamp(58px, 7.2vw, 102px); }
 .services-hero-copy { background: rgba(255,255,255,.58); border: 1px solid var(--line); border-left: 3px solid var(--coral); border-radius: 0 18px 18px 0; box-shadow: 0 18px 40px rgba(23,43,61,.06); padding: 27px 28px; }
+.services-explainer { padding-bottom: 76px; }
+.services-explainer-heading { align-items: end; display: grid; gap: 50px; grid-template-columns: 1fr .7fr; margin-bottom: 28px; }
+.services-explainer-heading h3 { color: #172d42; font-size: clamp(32px, 4vw, 54px); letter-spacing: -.07em; line-height: .95; margin: 0; }
+.services-explainer-heading h3 i { color: var(--coral); font-family: "Playfair Display", Georgia, serif; font-style: italic; font-weight: 500; }
+.services-explainer-heading > p { color: var(--muted-copy); font-size: 12px; line-height: 1.65; margin: 0; max-width: 390px; }
+.services-video-shell { background: #172d42; border: 1px solid rgba(23,43,66,.14); border-radius: 20px; box-shadow: 0 20px 48px rgba(23,43,61,.12); overflow: hidden; }
+.services-explainer-video { aspect-ratio: 16 / 9; background: #172d42; display: block; width: 100%; }
+.services-explainer-footer { align-items: center; display: flex; gap: 20px; justify-content: space-between; padding-top: 18px; }
+.services-explainer-footer > span { color: var(--muted-copy); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.services-explainer-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+.services-explainer-actions .button-primary, .services-explainer-actions .telegram-button { border-radius: 999px; margin: 0; padding: 12px 16px; }
 .telegram-button { border-radius: 999px; box-shadow: 0 10px 20px rgba(23,43,61,.14); }
 .service-cards, .hr-sector-grid { gap: 18px; }
 .service-card { border-radius: 18px; box-shadow: 0 8px 20px rgba(23,43,61,.045); min-height: 228px; padding: 27px; position: relative; overflow: hidden; }
@@ -737,7 +748,7 @@ body { background: var(--cream); }
 @media (max-width: 850px) {
   .personal-panel { padding-left: clamp(20px, 6vw, 54px); padding-right: clamp(20px, 6vw, 54px); }
   .personal-details-grid, .experience-strip { margin-left: auto; margin-right: auto; }
-  .services-hero, .service-cards, .hr-sector-block { padding-left: clamp(20px, 6vw, 54px); padding-right: clamp(20px, 6vw, 54px); }
+  .services-hero, .services-explainer, .service-cards, .hr-sector-block { padding-left: clamp(20px, 6vw, 54px); padding-right: clamp(20px, 6vw, 54px); }
 }
 @media (max-width: 700px) {
   .portfolio-header { padding-bottom: 17px; padding-top: 17px; }
@@ -752,6 +763,8 @@ body { background: var(--cream); }
   .personal-details-grid { margin-top: 70px; padding-bottom: 64px; padding-top: 58px; }
   .strengths-card { padding-left: 16px; padding-right: 16px; }
   .services-hero { gap: 30px; padding-bottom: 55px; padding-top: 82px; }
+  .services-explainer-heading { gap: 22px; grid-template-columns: 1fr; }
+  .services-explainer-footer { align-items: flex-start; flex-direction: column; }
   .services-hero-copy { padding: 22px; }
   .service-card, .hr-sector-card { border-radius: 14px; padding: 22px; }
   .site-footer { align-items: flex-start; flex-direction: column; gap: 14px; }

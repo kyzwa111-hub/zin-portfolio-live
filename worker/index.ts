@@ -682,6 +682,16 @@ export default {
         return json({ ok: false, error: "Telegram is not connected to @ayelay_bot. Set TELEGRAM_BOT_TOKEN to the token for that bot, then reload this page." }, 503);
       }
     }
+    if (url.pathname === "/api/telegram/status") {
+      if (request.method !== "GET") return json({ error: "Method not allowed." }, 405);
+      try {
+        await ensureWebhook(env);
+        const info = await telegram(env, "getWebhookInfo", {});
+        return json({ ok: true, botUsername: await getSetting(env, "bot_username"), webhookUrl: info?.url || null, pendingUpdates: info?.pending_update_count ?? 0, lastError: info?.last_error_message || null });
+      } catch (error) {
+        return json({ ok: false, error: error instanceof Error ? error.message : "Telegram status check failed." }, 503);
+      }
+    }
     if (url.pathname.startsWith("/api/mobile/")) {
       const cors = mobileCorsHeaders(request, url, env);
       if (cors === false) return json({ error: "Origin not allowed." }, 403);

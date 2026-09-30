@@ -17,7 +17,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../workspace.css";
 import WorkspaceAccessGate from "@/components/WorkspaceAccessGate";
 import PayrollCalculator from "@/components/PayrollCalculator";
@@ -76,6 +76,14 @@ export default function Home() {
   const [workspaceApproved, setWorkspaceApproved] = useState(false);
   const [selectedWorkspace, setSelectedWorkspace] = useState("payroll");
   const closeMenu = () => setMenuOpen(false);
+
+  useEffect(() => {
+    const section = new URLSearchParams(window.location.search).get("section");
+    const target = section === "game" ? "game" : section === "payroll" ? "services" : section === "toolkit" ? "toolkit" : null;
+    if (!target) return;
+    if (section === "payroll") setSelectedWorkspace("payroll");
+    window.requestAnimationFrame(() => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }, []);
 
   return (
     <div className="site-shell two-part-portfolio">

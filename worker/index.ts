@@ -30,6 +30,18 @@ const ADMIN_CHAT_KEY = "admin_chat_id";
 const WEBHOOK_URL_KEY = "webhook_url";
 const TARGET_TELEGRAM_BOT_USERNAME = "ayelay_bot";
 const TELEGRAM_WEBHOOK_URL = "https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook";
+export type ToolkitSection = "toolkit" | "game" | "payroll";
+export function parseToolkitQuery(request: Request): { enabled: boolean; version: "final" | null; section: ToolkitSection | null; error?: string } {
+  const url = new URL(request.url);
+  const marker = url.searchParams.get("hr-toolkit");
+  if (marker === null) return { enabled: false, version: null, section: null };
+  if (marker !== "1") return { enabled: false, version: null, section: null, error: "hr-toolkit must be 1." };
+  const version = url.searchParams.get("v");
+  if (version !== null && version !== "final") return { enabled: false, version: null, section: null, error: "Unsupported toolkit version." };
+  const sectionValue = url.searchParams.get("section");
+  if (sectionValue !== null && !["toolkit", "game", "payroll"].includes(sectionValue)) return { enabled: false, version: version as "final" | null, section: null, error: "Unsupported toolkit section." };
+  return { enabled: true, version: version as "final" | null, section: (sectionValue as ToolkitSection | null) || null };
+}
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -758,7 +770,9 @@ async function serveIntegratedPortfolio(request: Request): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.searchParams.get("hr-toolkit") === "1") {
+    const toolkitQuery = parseToolkitQuery(request);
+    if (toolkitQuery.error) return json({ error: toolkitQuery.error }, 400);
+    if (toolkitQuery.enabled) {
       return serveIntegratedPortfolio(request);
     }
     if (url.pathname === "/api/telegram/webhook" && request.method === "POST") return handleWebhook(request, env);

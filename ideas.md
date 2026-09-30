@@ -20,7 +20,7 @@ A clean editorial portfolio with a practical HR toolkit layer. The public profil
 - Dark navy personal hero for confidence and identity.
 - A compact toolkit index immediately after the profile so visitors can choose their path.
 - Services and protected payroll tools remain below the public profile and keep their existing access controls.
-- The Zeke workplace scenario game is surfaced as a first-class practice card and remains browser-private.
+- The Zeke HR assistant is surfaced as a first-class assistant card. It accepts direct HR, payroll, workplace, career, event, and website questions with browser-local replies.
 - Event content stays on the existing `/webinars` route and opens original public sources.
 
 ## Typography and voice

@@ -1,64 +1,224 @@
 import { useMemo, useState } from "react";
-import { Gamepad2, HeartHandshake, MessageCircle, Quote, Send, Sparkles, Volume2, VolumeX, X } from "lucide-react";
+import {
+  ArrowUpRight,
+  Bot,
+  Send,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 
-declare global { interface Window { __ZEKE_SETTINGS__?: { quotes?: string[]; voiceDefault?: string } } }
+type ChatMessage = { role: "assistant" | "user"; content: string };
 
-type Mood = "tired" | "stuck" | "proud" | "need";
-type GameCase = { title: string; prompt: string; options: { label: string; outcome: string }[] };
+const welcomeMessage =
+  "မင်္ဂလာပါ — Zeke ပါ။ HR, payroll, workplace process, career, event တွေနဲ့ ဒီ website ထဲက service တွေအကြောင်း မေးနိုင်ပါတယ်။ မေးခွန်းကို တိုက်ရိုက်ရေးပါ။";
 
-const quotes = [
-  "အလုပ်ကောင်းတစ်ခုဟာ အမြန်ဆုံးလုပ်တာမဟုတ်ဘဲ မှန်ကန်တဲ့အရာကို တည်ငြိမ်စွာလုပ်တာပါ။",
-  "မင်းရဲ့ voice ကို လျှော့မတွက်ပါနဲ့။ Respectful clarity က leadership ရဲ့အစပါ။",
-  "ဒီနေ့ perfect ဖြစ်ဖို့မလိုပါဘူး။ မနေ့ကထက် တစ်ဆင့်ကောင်းရင် လုံလောက်ပါတယ်။",
-  "အလုပ်များတဲ့နေ့မှာ အရေးကြီးတာကို ရွေးနိုင်ခြင်းက productivity ထက် ပိုတန်ဖိုးရှိပါတယ်။",
-  "နားယူတာဟာ အလုပ်ထွက်တာမဟုတ်ပါဘူး။ ကိုယ့် energy ကို ပြန်ဖြည့်တာပါ။",
-  "လူတွေကို နားထောင်ပေးနိုင်တဲ့သူက team ကို ပိုကောင်းအောင် ဦးဆောင်နိုင်ပါတယ်။",
-  "Small wins တွေကို မှတ်ထားပါ။ Career confidence က အဲ့ဒီအရာလေးတွေကနေ တည်ဆောက်ပါတယ်။",
+const quickPrompts = [
+  "Payroll calculator ကို ဘယ်လိုသုံးမလဲ?",
+  "HR service တွေက ဘာတွေလဲ?",
+  "ဒီနေ့ HR events တွေဘယ်မှာကြည့်မလဲ?",
 ];
 
-const moodReplies: Record<Mood, string> = {
-  tired: "အခု low battery ဖြစ်နေရင် ကိုယ့်ကို အပြစ်မတင်ပါနဲ့။ အရေးကြီးဆုံး task တစ်ခုကိုပဲ 15 မိနစ်စလုပ်ကြည့်ပါ။",
-  stuck: "မရှင်းသေးတဲ့ကိစ္စကို facts, people, next step ဆိုပြီး သုံးပိုင်းခွဲကြည့်ပါ။",
-  proud: "ဒီနေ့ကောင်းကောင်းလုပ်နိုင်ခဲ့တာကို မှတ်ထားပါ။ မင်းရဲ့ progress က တန်ဖိုးရှိပါတယ်။",
-  need: "နားထောင်ပေးမယ်။ ပြဿနာကို တစ်ကြောင်းနဲ့ရေးပြီး နောက်တစ်ဆင့်သေးသေးလေးကို ရွေးကြည့်ရအောင်။",
-};
+function answerQuestion(question: string): string {
+  const text = question.toLowerCase();
 
-const cases: Record<Mood, GameCase> = {
-  tired: { title: "The overloaded teammate", prompt: "Team member တစ်ယောက်က workload များလွန်းလို့ deadline လွတ်တော့မယ်လို့ ပြောလာပါတယ်။ HR အနေနဲ့ ဘာစလုပ်မလဲ?", options: [{ label: "အရင်နားထောင်ပြီး priority ပြန်စီမယ်", outcome: "ကောင်းပါတယ်။ Psychological safety ရှိမှ real issue ကို သိနိုင်ပါတယ်။" }, { label: "ချက်ချင်း overtime တောင်းမယ်", outcome: "Risk ရှိပါတယ်။ Burnout ကို ပိုတိုးစေနိုင်လို့ facts နဲ့ capacity ကို အရင်စစ်ပါ။" }] },
-  stuck: { title: "The unclear handover", prompt: "Handover မှာ owner မရှင်းလို့ task နှစ်ခုထပ်နေပါတယ်။ ဘာကိုရွေးမလဲ?", options: [{ label: "Owner, deadline, next action သုံးခုရေးမယ်", outcome: "မှန်ပါတယ်။ Clarity က conflict ကို လျှော့ချပေးပါတယ်။" }, { label: "ဘယ်သူ့အပြစ်လဲ အရင်ရှာမယ်", outcome: "အပြစ်ရှာတာထက် workflow ကို ပြန်ရှင်းတာက ပိုထိရောက်ပါတယ်။" }] },
-  proud: { title: "The fair recognition", prompt: "Team member နှစ်ယောက်က project ကောင်းကောင်းလုပ်ထားပါတယ်။ Recognition ကို ဘယ်လိုပေးမလဲ?", options: [{ label: "Contribution တစ်ခုချင်းစီကို တိတိကျကျ အသိအမှတ်ပြုမယ်", outcome: "ကောင်းပါတယ်။ Fair recognition က trust ကို တည်ဆောက်ပါတယ်။" }, { label: "အကြီးဆုံးအသံရှိသူကိုပဲ ချီးကျူးမယ်", outcome: "မမျှတနိုင်ပါဘူး။ Evidence နဲ့ contribution ကို အခြေခံပါ။" }] },
-  need: { title: "The difficult conversation", prompt: "Performance feedback ပေးရမယ့်သူက စိတ်မကောင်းဖြစ်လွယ်သူပါ။ ဘာကို အရင်လုပ်မလဲ?", options: [{ label: "Specific example + impact + support plan နဲ့ပြောမယ်", outcome: "အကောင်းဆုံးပါ။ Clear feedback နဲ့ support နှစ်ခုလုံးလိုပါတယ်။" }, { label: "မပြောဘဲ နောက်တစ်ခါစောင့်မယ်", outcome: "ကြာလေလေ issue ကြီးလေလေပါ။ Respectfully ပြောတာက ပိုကောင်းပါတယ်။" }] },
-};
+  if (/^(hi|hello|hey|မင်္ဂလာ|မေးချင်)/i.test(question.trim())) {
+    return "မင်္ဂလာပါ။ Zeke က နားထောင်ဖို့ ready ပါ။ Payroll, HR service, workplace issue, career, event ဒါမှမဟုတ် ဒီ website ကို ဘယ်လိုသုံးရမလဲဆိုတာ မေးနိုင်ပါတယ်။";
+  }
+  if (
+    /(payroll|လစာ|salary|ဝင်ငွေ|ssb|ပင်စင်|tax|အခွန်|paye|တွက်)/i.test(text)
+  ) {
+    return "Payroll အတွက် Services ထဲက protected Payroll testing workspace ကိုဖွင့်ပါ။ Monthly salary ထည့်ပြီး PAYE/SSB estimate နဲ့ result ကို စမ်းနိုင်ပါတယ်။ Official filing မလုပ်ခင် IRD/SSB ရဲ့ လက်ရှိ official guidance ကို သီးခြားစစ်ပါ။ မင်းရဲ့မေးခွန်းက salary calculation အကြောင်းဆိုရင် amount နဲ့ pay period ကို ရေးပေးပါ။";
+  }
+  if (
+    /(service|ဝန်ဆောင်|hr|human resource|recruit|recruitment|employee|ဝန်ထမ်း|policy|လုပ်ငန်း)/i.test(
+      text
+    )
+  ) {
+    return "Zin ရဲ့ HR operations service တွေမှာ people operations, employee experience, HR process, compensation & benefits နဲ့ practical workplace support ပါဝင်ပါတယ်။ Services section မှာ သက်ဆိုင်ရာ workspace ကိုရွေးပြီး protected tools တွေကို ဆက်သုံးနိုင်ပါတယ်။";
+  }
+  if (/(event|events|webinar|သင်တန်း|ပွဲ|video|ဗီဒီယို|learning)/i.test(text)) {
+    return "HR event feed ကို Events menu ကနေဖွင့်နိုင်ပါတယ်။ အဲဒီမှာ HR နဲ့ workplace learning အတွက် curated public links တွေကို မူရင်း source ဆီသွားကြည့်နိုင်အောင် စုစည်းထားပါတယ်။";
+  }
+  if (
+    /(zin|min htet|profile|portfolio|contact|ဆက်သွယ်|linkedin|telegram)/i.test(
+      text
+    )
+  ) {
+    return "Profile section မှာ Zin Min Htet ရဲ့ HR operations experience, strengths နဲ့ contact path တွေရှိပါတယ်။ အလုပ်အပ်နှံလိုတာ ဒါမှမဟုတ် collaboration ပြောချင်တာဆိုရင် Contact area ကနေ စတင်နိုင်ပါတယ်။";
+  }
+  if (/(game|ဂိမ်း|zeke|scenario|practice|လေ့ကျင့်)/i.test(text)) {
+    return "Zeke ကို အခု mood/game helper မဟုတ်တော့ဘဲ မေးခွန်းဖြေတဲ့ HR assistant အဖြစ် ပြောင်းထားပါတယ်။ Workplace scenario တစ်ခုအကြောင်း အကြံလိုရင် အခြေအနေကို ရေးပေးပါ—facts, people, next step ဆိုပြီး ခွဲပြီး စဉ်းစားပေးမယ်။";
+  }
+  if (/(မသိ|မရှင်း|stuck|help|အကူအညီ|ဘယ်လိုစ|what should|how do)/i.test(text)) {
+    return "အရင်ဆုံး ပြဿနာကို facts, people, next step သုံးပိုင်းခွဲကြည့်ပါ။ ဘာဖြစ်နေတယ်၊ ဘယ်သူတွေပါဝင်တယ်၊ ဒီနေ့လုပ်နိုင်တဲ့ next small step ကဘာလဲဆိုတာ ရေးပေးရင် Zeke က ပိုတိကျတဲ့လမ်းညွှန်ပေးမယ်။";
+  }
+
+  return `Zeke ကြားပါတယ် — “${question.trim().slice(0, 140)}${question.trim().length > 140 ? "…" : ""}”။ ဒီမေးခွန်းကို ဖြေဖို့ context နည်းနည်းထပ်ပေးပါ။ ဘာဖြစ်နေတယ်၊ ဘာကိုအောင်မြင်ချင်တယ်၊ ဘယ်အချိန်အတွင်း လုပ်ရမလဲဆိုတာ ရေးပေးရင် practical next step တစ်ခုနဲ့ ပြန်ညွှန်ပေးမယ်။`;
+}
 
 export default function ZekeHelper() {
   const [open, setOpen] = useState(false);
-  const [mood, setMood] = useState<Mood>("need");
   const [message, setMessage] = useState("");
-  const [reply, setReply] = useState(moodReplies.need);
-  const [gameReply, setGameReply] = useState("");
-  const [showGame, setShowGame] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(() => typeof window !== "undefined" && window.__ZEKE_SETTINGS__?.voiceDefault === "on");
-  const dailyQuote = useMemo(() => { const configured = typeof window !== "undefined" ? window.__ZEKE_SETTINGS__?.quotes?.filter(Boolean) : undefined; const activeQuotes = configured?.length ? configured : quotes; return activeQuotes[new Date().getDate() % activeQuotes.length]; }, []);
-  const game = cases[mood];
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { role: "assistant", content: welcomeMessage },
+  ]);
+  const dailyLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date()),
+    []
+  );
 
   const speak = (text: string) => {
-    if (!voiceEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (
+      !voiceEnabled ||
+      typeof window === "undefined" ||
+      !("speechSynthesis" in window)
+    )
+      return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "my-MM";
-    utterance.rate = 0.86;
+    utterance.rate = 0.88;
     utterance.pitch = 1.02;
     window.speechSynthesis.speak(utterance);
   };
-  const chooseMood = (value: Mood) => { setMood(value); setReply(moodReplies[value]); setGameReply(""); setShowGame(true); if (voiceEnabled) window.setTimeout(() => speak(moodReplies[value]), 80); };
-  const sendMessage = () => { if (!message.trim()) return; const next = `Zeke ကြားပါတယ် — “${message.trim().slice(0, 90)}${message.trim().length > 90 ? "…" : ""}”။ အခုချက်ချင်းလုပ်နိုင်တဲ့ next small step တစ်ခုကို ရွေးလိုက်ရအောင်။`; setReply(next); setMessage(""); speak(next); };
 
-  return <>
-    <button className="zeke-launcher" type="button" aria-label="Open Zeke corporate-life helper" aria-expanded={open} onClick={() => setOpen((value) => !value)}><span className="zeke-avatar" aria-hidden="true"><span>Z</span><i /></span><span className="zeke-launcher-copy"><strong>Zeke</strong><small>here to listen</small></span></button>
-    {open && <aside className="zeke-panel" aria-label="Zeke corporate-life helper"><header className="zeke-panel-head"><div className="zeke-signature"><span className="zeke-avatar small"><span>Z</span><i /></span><div><strong>zeke</strong><small>your corporate-life companion</small></div></div><button type="button" className="zeke-close" aria-label="Close Zeke" onClick={() => setOpen(false)}><X size={17} /></button></header>
-      <div className="zeke-panel-body"><div className="zeke-quote"><Quote size={14} /><div><strong>Daily note</strong><p>{dailyQuote}</p><button className="zeke-speak-quote" type="button" onClick={() => { setVoiceEnabled(true); window.setTimeout(() => speak(dailyQuote), 50); }}><Volume2 size={12} /> Listen to daily quote</button></div></div><div className="zeke-welcome"><Sparkles size={15} /><p>{reply}</p></div><div className="zeke-voice-row"><span>မြန်မာအသံ motivation</span><button type="button" className="zeke-voice-toggle" onClick={() => { setVoiceEnabled((value) => !value); if (voiceEnabled) window.speechSynthesis?.cancel(); }} aria-pressed={voiceEnabled}>{voiceEnabled ? <><Volume2 size={13} /> Voice on</> : <><VolumeX size={13} /> Voice off</>}</button></div><p className="zeke-prompt">How are you arriving at work today?</p><div className="zeke-moods"><button type="button" onClick={() => chooseMood("tired")}><span>Low battery</span><small>ပင်ပန်းနေတယ်</small></button><button type="button" onClick={() => chooseMood("stuck")}><span>Need clarity</span><small>မရှင်းသေးဘူး</small></button><button type="button" onClick={() => chooseMood("proud")}><span>Good day</span><small>ဂုဏ်ယူတယ်</small></button></div>
-        {showGame && <div className="zeke-game"><div className="zeke-game-head"><Gamepad2 size={15} /><strong>{game.title}</strong></div><p>{game.prompt}</p>{gameReply ? <div className="zeke-game-result">{gameReply}</div> : <div className="zeke-game-options">{game.options.map((option) => <button key={option.label} type="button" onClick={() => { setGameReply(option.outcome); speak(option.outcome); }}>{option.label}</button>)}</div>}</div>}
-        <div className="zeke-input"><input value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") sendMessage(); }} placeholder="Tell Zeke what is on your mind…" aria-label="Message Zeke" /><button type="button" onClick={sendMessage} aria-label="Send message"><Send size={15} /></button></div><div className="zeke-links"><span><HeartHandshake size={13} /> listen · motivate · guide</span><span><MessageCircle size={13} /> private in this browser</span></div></div>
-    </aside>}
-  </>;
+  const sendMessage = (value = message) => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    const reply = answerQuestion(trimmed);
+    setMessages(current => [
+      ...current,
+      { role: "user", content: trimmed },
+      { role: "assistant", content: reply },
+    ]);
+    setMessage("");
+    window.setTimeout(() => speak(reply), 50);
+  };
+
+  return (
+    <>
+      <button
+        className="zeke-launcher"
+        type="button"
+        aria-label="Open Zeke HR assistant"
+        aria-expanded={open}
+        onClick={() => setOpen(value => !value)}
+      >
+        <span className="zeke-avatar" aria-hidden="true">
+          <span>Z</span>
+          <i />
+        </span>
+        <span className="zeke-launcher-copy">
+          <strong>Zeke</strong>
+          <small>ask anything</small>
+        </span>
+      </button>
+      {open && (
+        <aside className="zeke-panel" aria-label="Zeke HR assistant">
+          <header className="zeke-panel-head">
+            <div className="zeke-signature">
+              <span className="zeke-avatar small">
+                <span>Z</span>
+                <i />
+              </span>
+              <div>
+                <strong>zeke</strong>
+                <small>HR &amp; workplace assistant</small>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="zeke-close"
+              aria-label="Close Zeke"
+              onClick={() => setOpen(false)}
+            >
+              <X size={17} />
+            </button>
+          </header>
+          <div className="zeke-panel-body">
+            <div className="zeke-assistant-status">
+              <span className="zeke-status-dot" /> Available now <span>·</span>{" "}
+              {dailyLabel}
+            </div>
+            <div className="zeke-chat-list" aria-live="polite">
+              {messages.map((item, index) => (
+                <div
+                  className={`zeke-message zeke-message-${item.role}`}
+                  key={`${item.role}-${index}`}
+                >
+                  <span className="zeke-message-icon">
+                    {item.role === "assistant" ? (
+                      <Bot size={13} />
+                    ) : (
+                      <span>You</span>
+                    )}
+                  </span>
+                  <p>{item.content}</p>
+                </div>
+              ))}
+            </div>
+            <div className="zeke-quick-prompts">
+              <span>Try asking</span>
+              {quickPrompts.map(prompt => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => sendMessage(prompt)}
+                >
+                  {prompt}
+                  <ArrowUpRight size={12} />
+                </button>
+              ))}
+            </div>
+            <div className="zeke-input">
+              <input
+                value={message}
+                onChange={event => setMessage(event.target.value)}
+                onKeyDown={event => {
+                  if (event.key === "Enter") sendMessage();
+                }}
+                placeholder="Ask Zeke anything…"
+                aria-label="Message Zeke"
+              />
+              <button
+                type="button"
+                onClick={() => sendMessage()}
+                aria-label="Send message"
+              >
+                <Send size={15} />
+              </button>
+            </div>
+            <div className="zeke-links">
+              <button
+                type="button"
+                className="zeke-voice-toggle"
+                onClick={() => {
+                  setVoiceEnabled(value => !value);
+                  if (voiceEnabled) window.speechSynthesis?.cancel();
+                }}
+                aria-pressed={voiceEnabled}
+              >
+                {voiceEnabled ? (
+                  <>
+                    <Volume2 size={12} /> Voice on
+                  </>
+                ) : (
+                  <>
+                    <VolumeX size={12} /> Voice off
+                  </>
+                )}
+              </button>
+              <span>
+                <Sparkles size={12} /> Replies stay in this browser
+              </span>
+            </div>
+          </div>
+        </aside>
+      )}
+    </>
+  );
 }

@@ -1,12 +1,12 @@
 import {
   ArrowDown,
   ArrowUpRight,
+  Bot,
   BriefcaseBusiness,
   Calculator,
   CalendarDays,
   Check,
   ExternalLink,
-  Gamepad2,
   Linkedin,
   Mail,
   MapPin,
@@ -203,16 +203,16 @@ export default function Home() {
               }
             >
               <span className="toolkit-card-icon">
-                <Gamepad2 size={18} />
+                <Bot size={18} />
               </span>
-              <span className="toolkit-card-index">03 · Practice</span>
-              <strong>Workplace scenario game</strong>
+              <span className="toolkit-card-index">03 · Assistant</span>
+              <strong>Zeke HR assistant</strong>
               <p>
-                Try a short people-operations scenario with Zeke and see how
-                clarity changes the next step.
+                Ask about HR, payroll, workplace process, career, events, and
+                how to use any part of this website.
               </p>
               <span className="toolkit-card-link">
-                Open Zeke game <ArrowUpRight size={15} />
+                Ask Zeke anything <ArrowUpRight size={15} />
               </span>
             </button>
             <a className="toolkit-card" href="/webinars">

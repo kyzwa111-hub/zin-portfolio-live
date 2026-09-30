@@ -16,10 +16,13 @@ interface Env {
   MOBILE_APP_ORIGINS?: string;
   TIDB_DATABASE_URL?: string;
   YOUTUBE_DATA_API_KEY?: string;
+  LINKEDIN_JOB_FEED_URL?: string;
+  JOBNET_JOB_FEED_URL?: string;
 }
 
 import { addVideoLink, listVideoLinks, listPublicDiscoveredVideoLinks, TiDBNotConfiguredError, updateVideoReviewStatus, VideoLinkValidationError } from "./videoLinks";
 import { runDailyYouTubeDiscovery } from "./videoDiscovery";
+import { jobFeedBootstrap } from "./jobFeed";
 
 type AccessStatus = "pending" | "approved" | "denied" | "expired" | "revoked";
 const ADMIN_CHAT_KEY = "admin_chat_id";
@@ -660,9 +663,10 @@ async function serveAssetsWithAccessRecovery(request: Request, env: Env): Promis
   if (request.method !== "GET" || !response.headers.get("content-type")?.toLowerCase().includes("text/html")) return response;
   const html = await response.text();
   if (html.includes('id="access-session-recovery"')) return new Response(html, response);
+  const jobFeedScript = await jobFeedBootstrap(env).catch(() => "");
   const body = /<\/body>/i.test(html)
-    ? html.replace(/<\/body>/i, `${accessRecoveryScript}</body>`)
-    : `${html}${accessRecoveryScript}`;
+    ? html.replace(/<\/body>/i, `${accessRecoveryScript}${jobFeedScript}</body>`)
+    : `${html}${accessRecoveryScript}${jobFeedScript}`;
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("cache-control", "no-store");

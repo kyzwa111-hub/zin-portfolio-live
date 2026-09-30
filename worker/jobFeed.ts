@@ -8,6 +8,10 @@ export type JobFeedItem = {
 const TELEGRAM_SOURCE = "https://t.me/s/thejournalopportunity";
 const MAX_ITEMS = 24;
 
+export function telegramPostUrl(id: string): string {
+  return `https://t.me/s/thejournalopportunity/${encodeURIComponent(id)}`;
+}
+
 function clean(value: string): string {
   return value.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim().slice(0, 180);
 }
@@ -38,7 +42,7 @@ async function readTelegram(): Promise<JobFeedItem[]> {
   if (!response.ok) return [];
   const html = await response.text();
   const ids = [...html.matchAll(/https:\/\/t\.me\/thejournalopportunity\/(\d+)/g)].map((match) => match[1]);
-  return [...new Set(ids)].slice(-12).reverse().map((id) => ({ source: "telegram" as const, title: `အခွင့်အလမ်းဂျာနယ် job update #${id}`, url: `https://t.me/thejournalopportunity/${id}`, updatedAt: new Date().toISOString() }));
+  return [...new Set(ids)].slice(-12).reverse().map((id) => ({ source: "telegram" as const, title: `အခွင့်အလမ်းဂျာနယ် job update #${id}`, url: telegramPostUrl(id), updatedAt: new Date().toISOString() }));
 }
 
 export async function fetchJobFeed(env: { LINKEDIN_JOB_FEED_URL?: string; JOBNET_JOB_FEED_URL?: string }): Promise<JobFeedItem[]> {

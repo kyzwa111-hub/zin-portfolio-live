@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Check,
   ExternalLink,
+  Gamepad2,
   Linkedin,
   Mail,
   MapPin,
@@ -23,6 +24,8 @@ import PayrollCalculator from "@/components/PayrollCalculator";
 import BulkPayroll, { BulkPayrollSection } from "@/components/BulkPayroll";
 import CBResourceCenter from "@/components/CBResourceCenter";
 import HRSectorForm, { hrSectorItems, type HRSectorId } from "@/components/HRTemplateCatalog";
+import LiveJobFeed from "@/components/LiveJobFeed";
+import ScenarioLab from "@/components/ScenarioLab";
 
 const experience = [
   {
@@ -89,6 +92,8 @@ export default function Home() {
           <a href="#toolkit" onClick={closeMenu}>Toolkit</a>
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="/webinars" onClick={closeMenu}>Events</a>
+          <a href="#game" onClick={closeMenu}>Game</a>
+          <a href="#opportunities" onClick={closeMenu}>Jobs</a>
           <a className="nav-cta" href="#contact" onClick={closeMenu}>Start a conversation <ArrowUpRight size={14} /></a>
         </nav>
       </header>
@@ -229,28 +234,24 @@ export default function Home() {
                 View event feed <ArrowUpRight size={15} />
               </span>
             </a>
-            <a
-              className="toolkit-card toolkit-card-wide"
-              href="#services"
-              onClick={() => setSelectedWorkspace("payroll")}
-            >
-              <span className="toolkit-card-icon">
-                <Calculator size={18} />
-              </span>
-              <span className="toolkit-card-index">
-                05 · Test &amp; calculate
-              </span>
+            <a className="toolkit-card toolkit-card-game" href="#game">
+              <span className="toolkit-card-icon"><Gamepad2 size={18} /></span>
+              <span className="toolkit-card-index">05 · Practice</span>
+              <strong>Workplace scenario lab</strong>
+              <p>Practise calm, fair next steps for attendance, payroll variance, and employee concerns.</p>
+              <span className="toolkit-card-link">Play a case <ArrowUpRight size={15} /></span>
+            </a>
+            <a className="toolkit-card toolkit-card-wide toolkit-card-payroll" href="#services" onClick={() => setSelectedWorkspace("payroll")}>
+              <span className="toolkit-card-icon"><Calculator size={18} /></span>
+              <span className="toolkit-card-index">06 · Test &amp; calculate</span>
               <strong>Payroll testing workspace</strong>
-              <p>
-                Use the Myanmar payroll estimator, SSB/PIT guidance, bulk file
-                workflows, and sector forms in one protected workspace.
-              </p>
-              <span className="toolkit-card-link">
-                Open payroll tools <ArrowUpRight size={15} />
-              </span>
+              <p>Use the Myanmar payroll estimator, SSB/PIT guidance, bulk file workflows, and sector forms in one protected workspace.</p>
+              <span className="toolkit-card-link">Open payroll tools <ArrowUpRight size={15} /></span>
             </a>
           </div>
         </section>
+
+        <ScenarioLab />
 
 <section className="work-section section-pad" id="work">
           <div className="section-heading-row"><div><p className="section-kicker">Selected work</p><h2>Where the details<br /><i>become visible.</i></h2></div><p className="section-description compact">A few snapshots from the work around payroll, people operations, culture, and stakeholder coordination.</p></div>
@@ -262,6 +263,7 @@ export default function Home() {
           <div className="recommendations-grid">{recommendations.map((recommendation) => <article className="recommendation-card" key={recommendation.name}><div className="quote-mark">“</div><p className="recommendation-quote">{recommendation.quote}</p><div className="recommendation-author"><span className="author-avatar">{recommendation.name.split(" ").map((part) => part[0]).join("")}</span><div><strong>{recommendation.name}</strong><span>{recommendation.relationship}</span></div></div></article>)}</div>
         </section>
 
+        <div id="opportunities"><LiveJobFeed /></div>
         <section className="contact-section section-pad" id="contact"><div className="contact-inner"><p className="section-kicker">Start a conversation</p><h2>Let’s make the<br /><i>next thing clearer.</i></h2><p>For payroll operations, HR coordination, or a thoughtful conversation about better ways of working.</p><a className="button-dark" href="mailto:fzinmin11@gmail.com">Send an email <Mail size={16} /></a><div className="contact-details"><span><MapPin size={15} /> Yangon, Myanmar</span><span><BriefcaseBusiness size={15} /> Open to meaningful opportunities</span><span><Check size={15} /> Available for a conversation</span></div></div></section>
 
         <section className="services-panel" id="services">

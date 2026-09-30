@@ -742,6 +742,9 @@ async function serveAssetsWithAccessRecovery(request: Request, env: Env): Promis
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.searchParams.get("hr-toolkit") === "1") {
+      return Response.redirect("https://zin-portfolio-live.pages.dev/#toolkit", 301);
+    }
     if (url.pathname === "/api/telegram/webhook" && request.method === "POST") return handleWebhook(request, env);
     if (url.pathname === "/api/telegram/bootstrap") {
       if (request.method !== "GET") return json({ error: "Method not allowed." }, 405);

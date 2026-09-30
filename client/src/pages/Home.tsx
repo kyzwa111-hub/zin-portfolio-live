@@ -2,9 +2,11 @@ import {
   ArrowDown,
   ArrowUpRight,
   BriefcaseBusiness,
+  Calculator,
   CalendarDays,
   Check,
   ExternalLink,
+  Gamepad2,
   Linkedin,
   Mail,
   MapPin,
@@ -83,10 +85,11 @@ export default function Home() {
           {menuOpen ? <X size={21} /> : <Menu size={21} />}
         </button>
         <nav className={menuOpen ? "site-nav site-nav-open" : "site-nav"}>
-          <a href="#personal" onClick={closeMenu}>Personal info</a>
+          <a href="#personal" onClick={closeMenu}>Profile</a>
+          <a href="#toolkit" onClick={closeMenu}>Toolkit</a>
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="/webinars" onClick={closeMenu}>Events</a>
-          <a className="nav-cta" href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer" onClick={closeMenu}>Unlock Telegram <ArrowUpRight size={14} /></a>
+          <a className="nav-cta" href="#contact" onClick={closeMenu}>Start a conversation <ArrowUpRight size={14} /></a>
         </nav>
       </header>
 
@@ -140,7 +143,116 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="work-section section-pad" id="work">
+                <section
+          className="toolkit-section section-pad"
+          id="toolkit"
+          aria-labelledby="toolkit-title"
+        >
+          <div className="toolkit-heading">
+            <div>
+              <p className="section-kicker">
+                <span className="eyebrow-dot" /> The working toolkit
+              </p>
+              <h2 id="toolkit-title">
+                One clear place for
+                <br />
+                <i>people, process, progress.</i>
+              </h2>
+            </div>
+            <p className="section-description">
+              Explore the public profile, practical HR services, learning
+              moments, and protected payroll tools without getting lost.
+            </p>
+          </div>
+          <div className="toolkit-grid">
+            <a className="toolkit-card toolkit-card-dark" href="#personal">
+              <span className="toolkit-card-icon">
+                <UserRound size={18} />
+              </span>
+              <span className="toolkit-card-index">01 · Profile</span>
+              <strong>Personal information</strong>
+              <p>
+                Experience, strengths, recommendations, and a direct way to
+                start a conversation.
+              </p>
+              <span className="toolkit-card-link">
+                Meet Zin <ArrowUpRight size={15} />
+              </span>
+            </a>
+            <a className="toolkit-card" href="#services">
+              <span className="toolkit-card-icon">
+                <BriefcaseBusiness size={18} />
+              </span>
+              <span className="toolkit-card-index">02 · Services</span>
+              <strong>HR &amp; payroll support</strong>
+              <p>
+                Practical operations support, compensation workflows, C&amp;B
+                resources, and protected access.
+              </p>
+              <span className="toolkit-card-link">
+                Explore services <ArrowUpRight size={15} />
+              </span>
+            </a>
+            <button
+              className="toolkit-card toolkit-card-accent"
+              type="button"
+              onClick={() =>
+                document
+                  .querySelector<HTMLButtonElement>(".zeke-launcher")
+                  ?.click()
+              }
+            >
+              <span className="toolkit-card-icon">
+                <Gamepad2 size={18} />
+              </span>
+              <span className="toolkit-card-index">03 · Practice</span>
+              <strong>Workplace scenario game</strong>
+              <p>
+                Try a short people-operations scenario with Zeke and see how
+                clarity changes the next step.
+              </p>
+              <span className="toolkit-card-link">
+                Open Zeke game <ArrowUpRight size={15} />
+              </span>
+            </button>
+            <a className="toolkit-card" href="/webinars">
+              <span className="toolkit-card-icon">
+                <CalendarDays size={18} />
+              </span>
+              <span className="toolkit-card-index">04 · Events</span>
+              <strong>HR event desk</strong>
+              <p>
+                Daily public HR and workplace video links, refreshed from
+                original sources with no re-uploads.
+              </p>
+              <span className="toolkit-card-link">
+                View event feed <ArrowUpRight size={15} />
+              </span>
+            </a>
+            <a
+              className="toolkit-card toolkit-card-wide"
+              href="#services"
+              onClick={() => setSelectedWorkspace("payroll")}
+            >
+              <span className="toolkit-card-icon">
+                <Calculator size={18} />
+              </span>
+              <span className="toolkit-card-index">
+                05 · Test &amp; calculate
+              </span>
+              <strong>Payroll testing workspace</strong>
+              <p>
+                Use the Myanmar payroll estimator, SSB/PIT guidance, bulk file
+                workflows, and sector forms in one protected workspace.
+              </p>
+              <span className="toolkit-card-link">
+                Open payroll tools <ArrowUpRight size={15} />
+              </span>
+            </a>
+          </div>
+        </section>
+
+<section className="work-section section-pad" id="work">
           <div className="section-heading-row"><div><p className="section-kicker">Selected work</p><h2>Where the details<br /><i>become visible.</i></h2></div><p className="section-description compact">A few snapshots from the work around payroll, people operations, culture, and stakeholder coordination.</p></div>
           <div className="project-grid">{projects.map((project) => <article className="project-card" key={project.number}><div className="project-image"><img src={project.image} alt={project.imageAlt} loading="lazy" decoding="async" /><span className="project-number">{project.number}</span><span className="project-open"><ArrowUpRight size={17} /></span></div><div className="project-copy"><div><p>{project.type}</p><h3>{project.title}</h3></div><span className="project-tag">{project.tag}</span></div></article>)}</div>
         </section>

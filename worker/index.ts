@@ -739,11 +739,27 @@ async function serveAssetsWithAccessRecovery(request: Request, env: Env): Promis
   return new Response(body, { status: response.status, statusText: response.statusText, headers });
 }
 
+async function serveIntegratedPortfolio(request: Request): Promise<Response> {
+  const target = new URL("https://zin-portfolio-live.pages.dev/");
+  const upstream = await fetch(new Request(target, { method: "GET", headers: request.headers }));
+  const contentType = upstream.headers.get("content-type") || "";
+  if (!contentType.includes("text/html")) return upstream;
+  const html = await upstream.text();
+  const origin = target.origin;
+  const rewritten = html
+    .replace(/(href|src|action)="\/(?!\/)/g, `$1="${origin}/`)
+    .replace(/url\(\/(?!\/)/g, `url(${origin}/`);
+  const headers = new Headers(upstream.headers);
+  headers.delete("content-length");
+  headers.set("cache-control", "no-store");
+  return new Response(rewritten, { status: upstream.status, statusText: upstream.statusText, headers });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.searchParams.get("hr-toolkit") === "1") {
-      return Response.redirect("https://zin-portfolio-live.pages.dev/#toolkit", 301);
+      return serveIntegratedPortfolio(request);
     }
     if (url.pathname === "/api/telegram/webhook" && request.method === "POST") return handleWebhook(request, env);
     if (url.pathname === "/api/telegram/bootstrap") {

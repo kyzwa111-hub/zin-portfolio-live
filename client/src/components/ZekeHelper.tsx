@@ -20,7 +20,7 @@ const quickPrompts = [
   "ဒီနေ့ HR events တွေဘယ်မှာကြည့်မလဲ?",
 ];
 
-function answerQuestion(question: string): string {
+function fallbackAnswer(question: string): string {
   const text = question.toLowerCase();
 
   if (/^(hi|hello|hey|မင်္ဂလာ|မေးချင်)/i.test(question.trim())) {
@@ -61,6 +61,7 @@ function answerQuestion(question: string): string {
 export default function ZekeHelper() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: welcomeMessage },
@@ -86,16 +87,34 @@ export default function ZekeHelper() {
     window.speechSynthesis.speak(utterance);
   };
 
-  const sendMessage = (value = message) => {
+  const sendMessage = async (value = message) => {
     const trimmed = value.trim();
-    if (!trimmed) return;
-    const reply = answerQuestion(trimmed);
-    setMessages(current => [
-      ...current,
-      { role: "user", content: trimmed },
-      { role: "assistant", content: reply },
-    ]);
+    if (!trimmed || isLoading) return;
+    const conversation = [
+      ...messages,
+      { role: "user" as const, content: trimmed },
+    ];
+    setMessages(conversation);
     setMessage("");
+    setIsLoading(true);
+    let reply = fallbackAnswer(trimmed);
+    try {
+      const response = await fetch("/api/zeke/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: conversation.slice(-12) }),
+      });
+      const data = (await response.json()) as { reply?: string };
+      if (response.ok && data.reply?.trim()) reply = data.reply.trim();
+    } catch {
+      // Keep Zeke useful if the AI binding or network is temporarily unavailable.
+    } finally {
+      setMessages(current => [
+        ...current,
+        { role: "assistant", content: reply },
+      ]);
+      setIsLoading(false);
+    }
     window.setTimeout(() => speak(reply), 50);
   };
 
@@ -109,7 +128,7 @@ export default function ZekeHelper() {
         onClick={() => setOpen(value => !value)}
       >
         <span className="zeke-avatar" aria-hidden="true">
-          <span>Z</span>
+          <span className="zeke-lion">🦁</span>
           <i />
         </span>
         <span className="zeke-launcher-copy">
@@ -122,7 +141,7 @@ export default function ZekeHelper() {
           <header className="zeke-panel-head">
             <div className="zeke-signature">
               <span className="zeke-avatar small">
-                <span>Z</span>
+                <span className="zeke-lion">🦁</span>
                 <i />
               </span>
               <div>
@@ -160,6 +179,18 @@ export default function ZekeHelper() {
                   <p>{item.content}</p>
                 </div>
               ))}
+              {isLoading && (
+                <div className="zeke-message zeke-message-assistant">
+                  <span className="zeke-message-icon">
+                    <Bot size={13} />
+                  </span>
+                  <p className="zeke-typing">
+                    <i />
+                    <i />
+                    <i />
+                  </p>
+                </div>
+              )}
             </div>
             <div className="zeke-quick-prompts">
               <span>Try asking</span>
@@ -167,7 +198,7 @@ export default function ZekeHelper() {
                 <button
                   key={prompt}
                   type="button"
-                  onClick={() => sendMessage(prompt)}
+                  onClick={() => void sendMessage(prompt)}
                 >
                   {prompt}
                   <ArrowUpRight size={12} />
@@ -179,14 +210,14 @@ export default function ZekeHelper() {
                 value={message}
                 onChange={event => setMessage(event.target.value)}
                 onKeyDown={event => {
-                  if (event.key === "Enter") sendMessage();
+                  if (event.key === "Enter") void sendMessage();
                 }}
                 placeholder="Ask Zeke anything…"
                 aria-label="Message Zeke"
               />
               <button
                 type="button"
-                onClick={() => sendMessage()}
+                onClick={() => void sendMessage()}
                 aria-label="Send message"
               >
                 <Send size={15} />
@@ -213,7 +244,7 @@ export default function ZekeHelper() {
                 )}
               </button>
               <span>
-                <Sparkles size={12} /> Replies stay in this browser
+                <Sparkles size={12} /> Cloudflare AI · no account required
               </span>
             </div>
           </div>

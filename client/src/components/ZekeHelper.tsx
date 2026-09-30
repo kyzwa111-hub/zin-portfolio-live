@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Gamepad2, HeartHandshake, MessageCircle, Quote, Send, Sparkles, Volume2, VolumeX, X } from "lucide-react";
 
+declare global { interface Window { __ZEKE_SETTINGS__?: { quotes?: string[]; voiceDefault?: string } } }
+
 type Mood = "tired" | "stuck" | "proud" | "need";
 type GameCase = { title: string; prompt: string; options: { label: string; outcome: string }[] };
 
@@ -35,8 +37,8 @@ export default function ZekeHelper() {
   const [reply, setReply] = useState(moodReplies.need);
   const [gameReply, setGameReply] = useState("");
   const [showGame, setShowGame] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const dailyQuote = useMemo(() => quotes[new Date().getDate() % quotes.length], []);
+  const [voiceEnabled, setVoiceEnabled] = useState(() => typeof window !== "undefined" && window.__ZEKE_SETTINGS__?.voiceDefault === "on");
+  const dailyQuote = useMemo(() => { const configured = typeof window !== "undefined" ? window.__ZEKE_SETTINGS__?.quotes?.filter(Boolean) : undefined; const activeQuotes = configured?.length ? configured : quotes; return activeQuotes[new Date().getDate() % activeQuotes.length]; }, []);
   const game = cases[mood];
 
   const speak = (text: string) => {

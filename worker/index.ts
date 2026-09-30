@@ -677,9 +677,15 @@ async function serveAssetsWithAccessRecovery(request: Request, env: Env): Promis
   const html = await response.text();
   if (html.includes('id="access-session-recovery"')) return new Response(html, response);
   const jobFeedScript = await jobFeedBootstrap(env).catch(() => "");
+  let zekeSettingsScript = `<script id="zeke-settings">window.__ZEKE_SETTINGS__={};</script>`;
+  try {
+    const [quoteSetting, voiceSetting] = await Promise.all([getSetting(env, "zeke_daily_quotes"), getSetting(env, "zeke_voice_default")]);
+    const settings = { quotes: quoteSetting ? quoteSetting.split("\n").map((value) => value.trim()).filter(Boolean) : [], voiceDefault: voiceSetting || "off" };
+    zekeSettingsScript = `<script id="zeke-settings">window.__ZEKE_SETTINGS__=${JSON.stringify(settings).replace(/</g, "\\u003c")}</script>`;
+  } catch {}
   const body = /<\/body>/i.test(html)
-    ? html.replace(/<\/body>/i, `${accessRecoveryScript}${jobFeedScript}</body>`)
-    : `${html}${accessRecoveryScript}${jobFeedScript}`;
+    ? html.replace(/<\/body>/i, `${zekeSettingsScript}${accessRecoveryScript}${jobFeedScript}</body>`)
+    : `${html}${zekeSettingsScript}${accessRecoveryScript}${jobFeedScript}`;
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("cache-control", "no-store");

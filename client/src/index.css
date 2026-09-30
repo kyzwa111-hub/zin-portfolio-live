@@ -1143,3 +1143,18 @@ body { background: var(--cream); }
 .live-job-card:focus-visible, .job-feed-channel-link:focus-visible { outline: 3px solid rgba(50,169,224,.35); outline-offset: 3px; }
 @media (max-width: 850px) { .scenario-lab-heading { align-items: flex-start; flex-direction: column; gap: 24px; } .scenario-options { grid-template-columns: 1fr; } .scenario-options button { min-height: auto; } }
 @media (max-width: 700px) { .scenario-lab { padding-bottom: 72px; padding-top: 75px; } .scenario-lab-card { padding: 24px 20px; } .scenario-lab-meta { gap: 12px; flex-direction: column; } .scenario-lab-card h3 { margin-top: 26px; } .scenario-feedback { align-items: flex-start; flex-wrap: wrap; } .scenario-feedback p { flex-basis: calc(100% - 34px); } .scenario-feedback button { margin-left: 28px; } }
+
+
+/* Zeke lion polish and payroll validation states */
+.zeke-avatar { background: radial-gradient(circle at 35% 25%, #f4cc72 0 8%, #315b4b 40%, #173b36 76%); box-shadow: 0 10px 24px rgba(23,59,54,.2), inset 0 0 0 1px rgba(244,204,114,.5); }
+.zeke-avatar::after { border: 1px solid rgba(244,204,114,.45); border-radius: 50%; content: ""; inset: -5px; opacity: 0; position: absolute; transform: scale(.8); transition: opacity 180ms ease, transform 180ms ease; }
+.zeke-launcher:hover .zeke-avatar::after, .zeke-launcher:focus-visible .zeke-avatar::after { opacity: 1; transform: scale(1); }
+.zeke-launcher-copy small { color: #e7f3d8; letter-spacing: .12em; }
+.zeke-panel-head { background: linear-gradient(135deg, #173b36, #315b4b); color: #f4f7ed; }
+.zeke-panel-head small { color: #cce4c7; }
+.zeke-lion { filter: drop-shadow(0 2px 2px rgba(0,0,0,.18)); }
+.payroll-validation { background: #fff8e9; border-left: 3px solid #e7b34c; display: grid; gap: 4px; margin-top: 18px; padding: 12px 14px; }
+.payroll-validation p { font-size: 10px; line-height: 1.5; margin: 0; }
+.payroll-validation-error { color: #a54535; }
+.payroll-validation-warning { color: #725d2b; }
+@media (prefers-reduced-motion: reduce) { .zeke-avatar::after { transition: none; } }

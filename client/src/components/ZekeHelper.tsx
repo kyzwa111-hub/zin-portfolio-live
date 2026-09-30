@@ -16,8 +16,9 @@ const welcomeMessage =
 
 const quickPrompts = [
   "Payroll calculator ကို ဘယ်လိုသုံးမလဲ?",
-  "HR service တွေက ဘာတွေလဲ?",
-  "ဒီနေ့ HR events တွေဘယ်မှာကြည့်မလဲ?",
+  "Attendance issue ကို ဘယ်လိုစီမံမလဲ?",
+  "SSB နဲ့ PIT ဘာကွာလဲ?",
+  "ဒီ website မှာ game နဲ့ events ဘယ်မှာလဲ?",
 ];
 
 function fallbackAnswer(question: string): string {

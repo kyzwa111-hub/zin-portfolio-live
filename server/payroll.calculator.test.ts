@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TAX_RULES, calculateAnnualPIT, calculateFyAnnualGross, calculateProgressiveTax, calculateSSB, formatFinancialYear } from "../client/src/components/PayrollCalculator";
+import { TAX_RULES, calculateAnnualPIT, calculateFyAnnualGross, calculateProgressiveTax, calculateSSB, formatFinancialYear, validatePayrollInputs } from "../client/src/components/PayrollCalculator";
 import { getSSBTemplateValues } from "../client/src/lib/payrollTemplateFill";
 
 describe("Myanmar payroll calculator", () => {
@@ -36,7 +36,33 @@ describe("Myanmar payroll calculator", () => {
     expect(calculateSSB(800_000)).toEqual({ contributionBase: 300_000, employeeSSB: 6_000, employerSSB: 9_000 });
   });
 
-  it("splits the SSB template employer columns without double-counting injury contribution", () => {
-    expect(getSSBTemplateValues(800_000)).toEqual({ contributionBase: 300_000, employerHealth: 6_000, employerInjury: 3_000, employerTotal: 9_000, employeeTotal: 6_000, total: 15_000 });
-  });
+	it("splits the SSB template employer columns without double-counting injury contribution", () => {
+		expect(getSSBTemplateValues(800_000)).toEqual({ contributionBase: 300_000, employerHealth: 6_000, employerInjury: 3_000, employerTotal: 9_000, employeeTotal: 6_000, total: 15_000 });
+	});
+
+	it("validates negative payroll inputs instead of silently treating them as valid", () => {
+		const validation = validatePayrollInputs({ monthlyGross: -1, annualBonus: 0, otherEarnings: 0, lifeInsurance: 0, otherDeductions: 0, parents: 0, spouse: 0, children: 0, fyIncome: [] });
+		expect(validation.errors).toContain("monthlyGross must be zero or a positive number.");
+	});
+
+	it("warns when relief counts exceed supported caps", () => {
+		const validation = validatePayrollInputs({ monthlyGross: 800_000, annualBonus: 0, otherEarnings: 0, lifeInsurance: 0, otherDeductions: 0, parents: 3, spouse: 2, children: 11, fyIncome: [] });
+		expect(validation.warnings).toEqual(expect.arrayContaining([
+			"Parent relief is capped at 2 qualifying parents.",
+			"Spouse relief is capped at 1 non-earning spouse.",
+			"Please verify the qualifying-child count and supporting documents.",
+		]));
+	});
+
+	it("warns when a user enters explicit FY income without monthly fallback earnings", () => {
+		const validation = validatePayrollInputs({ monthlyGross: 0, annualBonus: 0, otherEarnings: 0, lifeInsurance: 0, otherDeductions: 0, parents: 0, spouse: 0, children: 0, fyIncome: [1_000_000] });
+		expect(validation.errors).toHaveLength(0);
+		expect(validation.warnings).toContain("Explicit April–March income replaces the monthly earnings fallback.");
+	});
+
+	it("identifies an empty earnings test case without blocking data entry", () => {
+		const validation = validatePayrollInputs({ monthlyGross: 0, annualBonus: 0, otherEarnings: 0, lifeInsurance: 0, otherDeductions: 0, parents: 0, spouse: 0, children: 0, fyIncome: [] });
+		expect(validation.errors).toHaveLength(0);
+		expect(validation.warnings).toContain("Enter monthly, financial-year, or annual earnings to produce a useful estimate.");
+	});
 });

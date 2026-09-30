@@ -51,6 +51,7 @@ export const TAX_RULES: Record<TaxRuleVersion, TaxRule> = {
 const emptyStatusInput = { requestId: "pending", token: "pending" } as const;
 const formatMMK = (value: number) => `${Math.round(value).toLocaleString("en-US")} MMK`;
 const numberValue = (value: string) => Math.max(0, Number(value.replace(/,/g, "")) || 0);
+const inputNumber = (value: string) => Number(value.replace(/,/g, "")) || 0;
 export const FY_MONTHS = ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"] as const;
 export function calculateFyAnnualGross(monthlyIncomes: number[], fallbackMonthlyGross: number) {
   const enteredTotal = monthlyIncomes.reduce((sum, income) => sum + Math.max(0, income), 0);
@@ -138,6 +139,38 @@ export function calculateAnnualPIT(grossIncome: number, parentCount: number, spo
   return calculateProgressiveTax(taxableIncome, rules.brackets);
 }
 
+export type PayrollValidation = { errors: string[]; warnings: string[] };
+export type PayrollInputValues = {
+  monthlyGross: number;
+  annualBonus: number;
+  otherEarnings: number;
+  lifeInsurance: number;
+  otherDeductions: number;
+  parents: number;
+  spouse: number;
+  children: number;
+  fyIncome: number[];
+};
+
+export function validatePayrollInputs(values: PayrollInputValues): PayrollValidation {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const monetaryFields = ["monthlyGross", "annualBonus", "otherEarnings", "lifeInsurance", "otherDeductions"] as const;
+  monetaryFields.forEach(field => {
+    const value = values[field];
+    if (!Number.isFinite(value) || value < 0) errors.push(`${field} must be zero or a positive number.`);
+  });
+  values.fyIncome.forEach((income, index) => {
+    if (!Number.isFinite(income) || income < 0) errors.push(`Financial-year month ${index + 1} must be zero or a positive number.`);
+  });
+  if (values.parents > 2) warnings.push("Parent relief is capped at 2 qualifying parents.");
+  if (values.spouse > 1) warnings.push("Spouse relief is capped at 1 non-earning spouse.");
+  if (values.children > 10) warnings.push("Please verify the qualifying-child count and supporting documents.");
+  if (values.fyIncome.some(income => income > 0) && values.monthlyGross === 0) warnings.push("Explicit April–March income replaces the monthly earnings fallback.");
+  if (values.monthlyGross === 0 && values.fyIncome.every(income => income === 0) && (values.annualBonus + values.otherEarnings) === 0) warnings.push("Enter monthly, financial-year, or annual earnings to produce a useful estimate.");
+  return { errors, warnings };
+}
+
 export default function PayrollCalculator() {
   const [access, setAccess] = useState<AccessSession | null>(() => readAccessSession());
   const [paymentRequested, setPaymentRequested] = useState(false);
@@ -196,6 +229,18 @@ export default function PayrollCalculator() {
     return { monthlyGross, employeeSSB, employerSSB, annualEmployeeSSB, annualEmployerSSB, monthlyPIT, monthlyNet, employerCost, taxableIncome, annualPIT, annualGross };
   }, [accessGranted, allowance, annualBonus, basicSalary, children, fyIncome, lifeInsurance, otherDeductions, otherEarnings, overtime, parents, rules, spouse, taxMode]);
 
+  const validation = useMemo(() => validatePayrollInputs({
+    monthlyGross: inputNumber(basicSalary) + inputNumber(allowance) + inputNumber(overtime),
+    annualBonus: inputNumber(annualBonus),
+    otherEarnings: inputNumber(otherEarnings),
+    lifeInsurance: inputNumber(lifeInsurance),
+    otherDeductions: inputNumber(otherDeductions),
+    parents: inputNumber(parents),
+    spouse: inputNumber(spouse),
+    children: inputNumber(children),
+    fyIncome: FY_MONTHS.map(month => inputNumber(fyIncome[month] ?? "")),
+  }), [allowance, annualBonus, basicSalary, children, fyIncome, lifeInsurance, otherDeductions, otherEarnings, overtime, parents, spouse]);
+
   const field = (label: string, value: string, setValue: (value: string) => void, hint = "MMK / month", key?: string) => (
     <label key={key} className="calculator-field"><span>{label}</span><input inputMode="numeric" value={value} onChange={(event) => setValue(event.target.value)} /><small>{hint}</small></label>
   );
@@ -219,7 +264,7 @@ export default function PayrollCalculator() {
       ) : (
         <>
           <div className="calculator-shell">
-            <div className="calculator-form"><div className="calculator-form-heading"><h3>Monthly earnings</h3><span>MMK</span></div><div className="calculator-fields">{field("Basic salary", basicSalary, setBasicSalary)}{field("Recurring allowance", allowance, setAllowance)}{field("Overtime / other monthly pay", overtime, setOvertime)}</div><div className="calculator-form-heading"><h3>FY income by month</h3><span>April → March · optional</span></div><p className="calculator-fy-help">Enter each month’s gross income for the selected financial year. If left blank, the calculator uses the monthly earnings above × 12.</p><div className="calculator-fields calculator-fy-income">{FY_MONTHS.map((month) => field(month, fyIncome[month] ?? "", (value) => setFyIncomeValue(month, value), "MMK / month", month))}</div><div className="calculator-form-heading"><h3>Annual additions</h3><span>Optional</span></div><div className="calculator-fields">{field("Annual bonus", annualBonus, setAnnualBonus, "MMK / year")}{field("Other annual earnings", otherEarnings, setOtherEarnings, "MMK / year")}{field("Life insurance premium", lifeInsurance, setLifeInsurance, "MMK / year")}{field("Other allowable deductions", otherDeductions, setOtherDeductions, "MMK / year")}</div><div className="calculator-form-heading"><h3>Reliefs</h3><span>Annual count</span></div><div className="calculator-fields calculator-counts">{field("Dependent parents", parents, setParents, "Up to 2 × 1,000,000")}{field("Non-earning spouse", spouse, setSpouse, "1 × 1,000,000")}{field("Qualifying children", children, setChildren, "500,000 each")}</div><div className="tax-mode"><div><strong>Who bears employee PIT?</strong><small>Employee mode deducts PIT from net pay. Employer mode gross-ups the PIT and adds it to employer cost.</small></div><div className="tax-mode-buttons"><button className={taxMode === "employee" ? "active" : ""} onClick={() => setTaxMode("employee")}>Employee</button><button className={taxMode === "employer" ? "active" : ""} onClick={() => setTaxMode("employer")}>Employer</button></div></div></div>
+            <div className="calculator-form"><div className="calculator-form-heading"><h3>Monthly earnings</h3><span>MMK</span></div><div className="calculator-fields">{field("Basic salary", basicSalary, setBasicSalary)}{field("Recurring allowance", allowance, setAllowance)}{field("Overtime / other monthly pay", overtime, setOvertime)}</div><div className="calculator-form-heading"><h3>FY income by month</h3><span>April → March · optional</span></div><p className="calculator-fy-help">Enter each month’s gross income for the selected financial year. If left blank, the calculator uses the monthly earnings above × 12.</p><div className="calculator-fields calculator-fy-income">{FY_MONTHS.map((month) => field(month, fyIncome[month] ?? "", (value) => setFyIncomeValue(month, value), "MMK / month", month))}</div><div className="calculator-form-heading"><h3>Annual additions</h3><span>Optional</span></div><div className="calculator-fields">{field("Annual bonus", annualBonus, setAnnualBonus, "MMK / year")}{field("Other annual earnings", otherEarnings, setOtherEarnings, "MMK / year")}{field("Life insurance premium", lifeInsurance, setLifeInsurance, "MMK / year")}{field("Other allowable deductions", otherDeductions, setOtherDeductions, "MMK / year")}</div><div className="calculator-form-heading"><h3>Reliefs</h3><span>Annual count</span></div><div className="calculator-fields calculator-counts">{field("Dependent parents", parents, setParents, "Up to 2 × 1,000,000")}{field("Non-earning spouse", spouse, setSpouse, "1 × 1,000,000")}{field("Qualifying children", children, setChildren, "500,000 each")}</div><div className="tax-mode"><div><strong>Who bears employee PIT?</strong><small>Employee mode deducts PIT from net pay. Employer mode gross-ups the PIT and adds it to employer cost.</small></div><div className="tax-mode-buttons"><button className={taxMode === "employee" ? "active" : ""} onClick={() => setTaxMode("employee")}>Employee</button><button className={taxMode === "employer" ? "active" : ""} onClick={() => setTaxMode("employer")}>Employer</button></div></div>{(validation.errors.length > 0 || validation.warnings.length > 0) && <div className="payroll-validation" role="status">{validation.errors.map(error => <p className="payroll-validation-error" key={error}>{error}</p>)}{validation.warnings.map(warning => <p className="payroll-validation-warning" key={warning}>{warning}</p>)}</div>}</div>
             <div className="calculator-results"><div className="calculator-result-top"><div><p className="section-kicker">Estimated monthly result</p><h3>{formatMMK(result?.monthlyNet ?? 0)}</h3><span>Net pay after SSB{taxMode === "employee" ? " and employee PIT" : " · employee PIT paid by employer"}</span></div><div className="calculator-result-actions"><label className="tax-version-select"><span>FY year</span><select aria-label="Financial year" value={taxVersion} onChange={(event) => setTaxVersion(event.target.value as TaxRuleVersion)}><option value="2026-2027">FY 2026-2027 · current</option><option value="2025-2026">FY 2025-2026</option></select></label><button className="button-print" onClick={() => downloadPayslipPdf(result, rules, taxMode, formatFinancialYear(taxVersion))} disabled={!result}><Download size={15} /> Download payslip PDF</button></div></div><div className="result-list"><div><span>Gross cash earnings</span><strong>{formatMMK(result?.monthlyGross ?? 0)}</strong></div><div><span>Employee SSB · 2%</span><strong>{formatMMK(result?.employeeSSB ?? 0)}</strong></div><div><span>Monthly PIT estimate</span><strong>{formatMMK(result?.monthlyPIT ?? 0)}</strong></div><div><span>Employer SSB · 3%</span><strong>{formatMMK(result?.employerSSB ?? 0)}</strong></div><div><span>Employer monthly cost</span><strong>{formatMMK(result?.employerCost ?? 0)}</strong></div><div><span>Annual taxable income</span><strong>{formatMMK(result?.taxableIncome ?? 0)}</strong></div></div><div className="result-list calculation-breakdown"><div><span>Annual gross salary</span><strong>{formatMMK(result?.annualGross ?? 0)}</strong></div><div><span>Basic relief</span><strong>{formatMMK(result ? Math.min((result.annualGross + (taxMode === "employer" ? result.annualPIT : 0)) * rules.basicReliefRate, rules.basicReliefCap) : 0)}</strong></div><div><span>Annual PIT / monthly PIT</span><strong>{formatMMK(result?.annualPIT ?? 0)} / {formatMMK(result?.monthlyPIT ?? 0)}</strong></div><div><span>SSB contribution base</span><strong>{formatMMK(calculateSSB(result?.monthlyGross ?? 0).contributionBase)}</strong></div><div><span>Employee / employer SSB</span><strong>{formatMMK(result?.employeeSSB ?? 0)} / {formatMMK(result?.employerSSB ?? 0)}</strong></div></div><div className="calculator-note"><Info size={15} /><p>Estimate only. SSB uses the official 2% employee + 3% employer structure on a 300,000 MMK monthly contribution base. {rules.label} is effective {rules.effective}. The selected salary rules are based on {rules.source}; verify final payroll treatment with IRD, SSB, and a qualified payroll/tax adviser.</p></div></div>
           </div>
           <div className="payslip-print"><div className="payslip-print-header"><div><span>PAYSLIP ESTIMATE</span><h1>Zin Min Htet</h1></div><strong>{rules.label}</strong></div><div className="payslip-print-meta"><span>Basis: {rules.effective}</span><span>Tax mode: {taxMode === "employee" ? "Employee-borne PIT" : "Employer-borne PIT"}</span></div><div className="payslip-print-grid"><div><span>Gross cash earnings</span><strong>{formatMMK(result?.monthlyGross ?? 0)}</strong></div><div><span>Employee SSB</span><strong>{formatMMK(result?.employeeSSB ?? 0)}</strong></div><div><span>Monthly PIT</span><strong>{formatMMK(result?.monthlyPIT ?? 0)}</strong></div><div><span>Net pay</span><strong>{formatMMK(result?.monthlyNet ?? 0)}</strong></div><div><span>Employer SSB</span><strong>{formatMMK(result?.employerSSB ?? 0)}</strong></div><div><span>Employer monthly cost</span><strong>{formatMMK(result?.employerCost ?? 0)}</strong></div></div><p className="payslip-print-footnote">Estimate only. Confirm final payroll treatment with the relevant Myanmar authorities or a qualified payroll/tax adviser.</p></div>

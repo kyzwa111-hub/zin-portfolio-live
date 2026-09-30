@@ -29,11 +29,22 @@ function json(data: unknown, status = 200): Response {
 }
 
 function fallback(question: string): string {
+  if (/(attendance|late|leave|အချိန်နောက်ကျ|ခွင့်|ပျက်ကွက်|ဝန်ထမ်းပြဿနာ)/i.test(question))
+    return "Attendance သို့မဟုတ် leave issue ဖြစ်ရင် (၁) attendance record နဲ့ ဖြစ်ရပ်အချက်အလက်ကို အရင်စစ်ပါ၊ (၂) ဝန်ထမ်းနဲ့ သီးသန့်ဆွေးနွေးပြီး အကြောင်းရင်းနားထောင်ပါ၊ (၃) agreed next step နဲ့ supporting document ကို မှတ်တမ်းတင်ပါ။ Team chat ထဲမှာ လူကို အရှက်ရစေမယ့် warning မပေးပါနဲ့။ Company policy နဲ့ applicable labour guidance ကိုလည်း စစ်ပါ။ ဖြစ်ရပ်က ဘယ်နှစ်ကြိမ်ဖြစ်ပြီး ဘာ record ရှိပါသလဲ?";
   if (/(payroll|လစာ|salary|ssb|tax|အခွန်|paye)/i.test(question))
-    return "Payroll အကြောင်းဆိုရင် Services ထဲက Payroll testing workspace ကိုသုံးနိုင်ပါတယ်။ Salary amount, pay period နဲ့ ဘာကိုတွက်ချင်တာလဲ ရေးပေးပါ။ Official filing မလုပ်ခင် IRD/SSB ရဲ့ လက်ရှိ official guidance ကို စစ်ပါ။";
+    return "Payroll အတွက် (၁) gross salary နဲ့ pay period၊ (၂) allowance/bonus၊ (၃) SSB/PIT/relief ဘာကိုစစ်ချင်တာလဲ သတ်မှတ်ပါ။ Website ရဲ့ Payroll testing workspace မှာ estimate စမ်းနိုင်ပါတယ်။ Official filing မလုပ်ခင် လက်ရှိ IRD/SSB guidance နဲ့ qualified adviser ကို အတည်ပြုပါ။ Employee name, ID, password သို့မဟုတ် confidential salary file မပို့ပါနဲ့။";
   if (/(service|ဝန်ဆောင်|hr|employee|ဝန်ထမ်း|recruit)/i.test(question))
     return "HR operations, employee experience, HR process, compensation & benefits နဲ့ workplace support အကြောင်း ကူညီနိုင်ပါတယ်။ အခြေအနေ၊ ပါဝင်သူတွေ၊ ရလဒ်လိုချင်တာကို ရေးပေးပါ။";
   return `Zeke ကြားပါတယ် — “${question.slice(0, 140)}${question.length > 140 ? "…" : ""}”။ ပိုတိကျအောင် ဘာဖြစ်နေတယ်၊ ဘာကိုအောင်မြင်ချင်တယ်၊ ဘယ်အချိန်အတွင်း လုပ်ရမလဲဆိုတာ ထပ်ပြောပေးပါ။`;
+}
+
+function usableReply(reply: string): boolean {
+  const words = reply.toLowerCase().split(/\s+/).map(word => word.replace(/[^\p{L}\p{N}]+/gu, "")).filter(Boolean);
+  if (words.length < 3) return false;
+  const counts = new Map<string, number>();
+  words.forEach(word => counts.set(word, (counts.get(word) || 0) + 1));
+  const mostFrequent = Math.max(...counts.values());
+  return mostFrequent / words.length < 0.45;
 }
 
 export const onRequestPost: PagesFunction<Env> = async context => {
@@ -72,7 +83,7 @@ export const onRequestPost: PagesFunction<Env> = async context => {
         typeof result === "object" && result !== null && "response" in result
           ? String((result as { response?: unknown }).response || "").trim()
           : "";
-      if (reply) return json({ reply, model });
+      if (reply && usableReply(reply)) return json({ reply, model });
     } catch (error) {
       console.warn(
         `[Zeke Pages Function] Workers AI model ${model} unavailable`,

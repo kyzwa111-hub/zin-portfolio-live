@@ -59,6 +59,19 @@ describe("Zeke AI chat endpoint", () => {
     );
   });
 
+  it("rejects repetitive model output and uses a practical workplace fallback", async () => {
+    const testEnv = env({ response: "အေထောက်အပံ့ပါ အေထောက်အပံ့ပါ အေထောက်အပံ့ပါ အေထောက်အပံ့ပါ အေထောက်အပံ့ပါ" });
+    const response = await worker.fetch(
+      new Request("https://example.com/api/zeke/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "user", content: "Attendance issue ကို ဘယ်လို စီမံမလဲ?" }] }),
+      }),
+      testEnv as never
+    );
+    expect(((await response.json()) as { reply: string }).reply).toContain("attendance record");
+  });
+
   it("rejects an empty conversation", async () => {
     const response = await worker.fetch(
       new Request("https://example.com/api/zeke/chat", {

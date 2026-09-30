@@ -47,6 +47,12 @@ function usableReply(reply: string): boolean {
   return mostFrequent / words.length < 0.45;
 }
 
+function relevantReply(reply: string, question: string): boolean {
+  if (/(payroll|လစာ|salary|ssb|tax|အခွန်|paye)/i.test(question)) return /(payroll|လစာ|salary|ssb|pit|tax|အခွန်|gross|net|salary)/i.test(reply);
+  if (/(attendance|late|leave|အချိန်နောက်ကျ|ခွင့်|ပျက်ကွက်|ဝန်ထမ်းပြဿနာ)/i.test(question)) return /(attendance|late|leave|ခွင့်|ဝန်ထမ်း|record|policy|အလုပ်)/i.test(reply);
+  return true;
+}
+
 export const onRequestPost: PagesFunction<Env> = async context => {
   const body = (await context.request.json().catch(() => ({}))) as {
     messages?: unknown;
@@ -83,7 +89,7 @@ export const onRequestPost: PagesFunction<Env> = async context => {
         typeof result === "object" && result !== null && "response" in result
           ? String((result as { response?: unknown }).response || "").trim()
           : "";
-      if (reply && usableReply(reply)) return json({ reply, model });
+      if (reply && usableReply(reply) && relevantReply(reply, lastUser)) return json({ reply, model });
     } catch (error) {
       console.warn(
         `[Zeke Pages Function] Workers AI model ${model} unavailable`,

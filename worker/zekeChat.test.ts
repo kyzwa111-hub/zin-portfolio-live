@@ -72,6 +72,19 @@ describe("Zeke AI chat endpoint", () => {
     expect(((await response.json()) as { reply: string }).reply).toContain("attendance record");
   });
 
+  it("rejects an off-topic model answer for a payroll question", async () => {
+    const testEnv = env({ response: "ဒီနေ့ မိုးရာသီအကြောင်းကို ပျော်ရွှင်စွာ ပြောကြရအောင်။ အားလုံးကောင်းမွန်ပါစေ။" });
+    const response = await worker.fetch(
+      new Request("https://example.com/api/zeke/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "user", content: "Payroll calculation ကို ဘယ်လိုသုံးမလဲ?" }] }),
+      }),
+      testEnv as never
+    );
+    expect(((await response.json()) as { reply: string }).reply).toContain("Payroll");
+  });
+
   it("rejects an empty conversation", async () => {
     const response = await worker.fetch(
       new Request("https://example.com/api/zeke/chat", {

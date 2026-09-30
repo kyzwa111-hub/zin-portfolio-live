@@ -62,6 +62,12 @@ function usableZekeReply(reply: string): boolean {
   return Math.max(...counts.values()) / words.length < 0.45;
 }
 
+function relevantZekeReply(reply: string, question: string): boolean {
+  if (/(payroll|လစာ|salary|ssb|tax|အခွန်|paye)/i.test(question)) return /(payroll|လစာ|salary|ssb|pit|tax|အခွန်|gross|net)/i.test(reply);
+  if (/(attendance|late|leave|အချိန်နောက်ကျ|ခွင့်|ပျက်ကွက်|ဝန်ထမ်းပြဿနာ)/i.test(question)) return /(attendance|late|leave|ခွင့်|ဝန်ထမ်း|record|policy|အလုပ်)/i.test(reply);
+  return true;
+}
+
 async function handleZekeChat(request: Request, env: Env): Promise<Response> {
   if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);
   const body = await request.json().catch(() => ({})) as { messages?: unknown };
@@ -76,7 +82,8 @@ async function handleZekeChat(request: Request, env: Env): Promise<Response> {
   try {
     const result = await env.AI.run(ZEKE_MODEL, { messages: [{ role: "system", content: ZEKE_SYSTEM_PROMPT }, ...safeMessages] });
     const response = typeof result === "object" && result !== null && "response" in result ? String((result as { response?: unknown }).response || "") : "";
-    return json({ reply: response.trim() && usableZekeReply(response.trim()) ? response.trim() : zekeFallback(lastUserMessage), model: response.trim() && usableZekeReply(response.trim()) ? ZEKE_MODEL : "fallback" });
+    const accepted = response.trim() && usableZekeReply(response.trim()) && relevantZekeReply(response.trim(), lastUserMessage);
+    return json({ reply: accepted ? response.trim() : zekeFallback(lastUserMessage), model: accepted ? ZEKE_MODEL : "fallback" });
   } catch (error) {
     console.warn("[Zeke] Cloudflare AI unavailable; using fallback reply", error);
     return json({ reply: zekeFallback(lastUserMessage), model: "fallback" });

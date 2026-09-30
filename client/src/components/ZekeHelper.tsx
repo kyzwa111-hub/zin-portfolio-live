@@ -100,7 +100,8 @@ export default function ZekeHelper() {
     setIsLoading(true);
     let reply = fallbackAnswer(trimmed);
     try {
-      const response = await fetch("/api/zeke/chat", {
+      const apiOrigin = window.location.hostname.endsWith("workers.dev") ? "https://zin-portfolio-live.pages.dev" : "";
+      const response = await fetch(`${apiOrigin}/api/zeke/chat`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ messages: conversation.slice(-12) }),

@@ -2,6 +2,9 @@ import { OAUTH_STATE_COOKIE, encodeOAuthState } from "@shared/const";
 
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
+// The Worker hostname is protected by Cloudflare Access; keep this public payment asset on Pages.
+export const PAYMENT_QR_URL = "https://zin-portfolio-live.pages.dev/manus-storage/pasted_file_kNMX4R_image_1509cee3.png";
+
 // Start the Manus OAuth login. Call this from an event handler or effect at the
 // moment you want to navigate, e.g. `onClick={() => startLogin()}`.
 //

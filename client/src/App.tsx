@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ZekeHelper from "./components/ZekeHelper";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import AdminControlCenter from "./pages/AdminControlCenter";
@@ -35,6 +36,7 @@ export default function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <ZekeHelper />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

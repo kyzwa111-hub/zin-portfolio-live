@@ -328,6 +328,19 @@ async function handleAdminApi(request: Request, env: Env): Promise<Response> {
     await env.DB.prepare("DELETE FROM admin_sessions WHERE session_hash = ?").bind(session.hash).run();
     return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json", "cache-control": "no-store", "set-cookie": "admin_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0" } });
   }
+  const settingsKeys = ["zeke_voice_default", "zeke_daily_quotes", "hr_game_cases", "service_fee_note", "payroll_display_note", "linkedin_job_feed_url", "jobnet_job_feed_url", "telegram_channel_url"];
+  if (url.pathname === "/api/admin/settings" && request.method === "GET") {
+    const rows = await env.DB.prepare("SELECT key, value, updated_at FROM app_settings WHERE key IN (" + settingsKeys.map(() => "?").join(",") + ")").bind(...settingsKeys).all<{ key: string; value: string; updated_at: number }>();
+    return json({ settings: Object.fromEntries((rows.results || []).map((row) => [row.key, { value: row.value, updatedAt: row.updated_at }])) });
+  }
+  if (url.pathname === "/api/admin/settings" && request.method === "POST") {
+    const body = await request.json().catch(() => ({})) as { key?: string; value?: string };
+    const key = String(body.key || "");
+    const value = String(body.value || "");
+    if (!settingsKeys.includes(key) || value.length > 30000) return json({ error: "Invalid admin setting." }, 400);
+    await saveSetting(env, key, value);
+    return json({ ok: true, key });
+  }
   if (url.pathname === "/api/admin/video-links" && request.method === "GET") {
     const statusValue = url.searchParams.get("status");
     if (statusValue && !["pending", "approved", "rejected"].includes(statusValue)) return json({ error: "Invalid review status." }, 400);

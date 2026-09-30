@@ -4,6 +4,7 @@ import "./admin-control.css";
 import { ExternalLink, Loader2, LogOut, Plus, RefreshCw, RotateCcw, ShieldCheck, UserX } from "lucide-react";
 import { Link } from "wouter";
 import AdminVideoLinks from "../components/AdminVideoLinks";
+import AdminEverythingSettings from "../components/AdminEverythingSettings";
 import PWAInstallCard from "../components/PWAInstallCard";
 
 type RequestRow = { request_id: string; requester_name: string; status: string; telegram_username: string | null; expires_at: number; created_at: number; ip_address: string | null; country: string | null; city: string | null };
@@ -109,6 +110,7 @@ export default function AdminControlCenter() {
       {data.payments.length ? <div className="admin-control-table-wrap"><table className="admin-control-table"><thead><tr><th>Requester</th><th>Amount</th><th>Method</th><th>Reference</th><th>Status</th><th>Recorded</th></tr></thead><tbody>{data.payments.map((p) => <tr key={p.id}><td><strong>{p.requester_name}</strong><small>{p.request_id.slice(-8)}</small></td><td>{p.amount.toLocaleString()} {p.currency}</td><td>{p.method}</td><td>{p.reference || "—"}</td><td><select aria-label={"Payment status for " + p.requester_name} value={p.status} disabled={busy} onChange={(e) => void run(() => api("/api/admin/payments/update", { id: p.id, status: e.target.value, reference: p.reference || "", note: p.note || "" }))}><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="rejected">Rejected</option></select></td><td>{new Date(p.recorded_at).toLocaleString()}</td></tr>)}</tbody></table></div> : <p className="admin-control-empty">No payments recorded yet.</p>}
       <p className="admin-control-note">Manual admin record only; this page does not process payments or store receipt images.</p>
     </section>
+    <AdminEverythingSettings />
     <AdminVideoLinks />
     <footer className="admin-control-footer"><span><ShieldCheck size={14} /> Protected by one-time Telegram sign-in.</span><Link href="/">Return to portfolio</Link></footer>
   </main>;

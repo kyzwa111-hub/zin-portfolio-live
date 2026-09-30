@@ -132,6 +132,16 @@ export async function listVideoLinks(env: TiDBEnv, reviewStatus?: ReviewStatus):
   return rows as unknown as VideoLinkRow[];
 }
 
+export async function listPublicDiscoveredVideoLinks(env: TiDBEnv): Promise<VideoLinkRow[]> {
+  const db = connection(env);
+  const rows = await db.execute(
+    `SELECT ${selectColumns} FROM event_video_links
+     WHERE source_kind = 'search_api' AND review_status <> 'rejected'
+     ORDER BY last_seen_at DESC, created_at DESC LIMIT 60`,
+  ) as Array<Record<string, unknown>>;
+  return rows as unknown as VideoLinkRow[];
+}
+
 export async function updateVideoReviewStatus(env: TiDBEnv, id: string, status: ReviewStatus): Promise<boolean> {
   const db = connection(env);
   const result = await db.execute(

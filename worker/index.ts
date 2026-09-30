@@ -18,7 +18,7 @@ interface Env {
   YOUTUBE_DATA_API_KEY?: string;
 }
 
-import { addVideoLink, listVideoLinks, TiDBNotConfiguredError, updateVideoReviewStatus, VideoLinkValidationError } from "./videoLinks";
+import { addVideoLink, listVideoLinks, listPublicDiscoveredVideoLinks, TiDBNotConfiguredError, updateVideoReviewStatus, VideoLinkValidationError } from "./videoLinks";
 import { runDailyYouTubeDiscovery } from "./videoDiscovery";
 
 type AccessStatus = "pending" | "approved" | "denied" | "expired" | "revoked";
@@ -701,6 +701,10 @@ export default {
       const headers = new Headers(response.headers);
       cors.forEach((value, key) => headers.set(key, value));
       return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+    }
+    if (url.pathname === "/api/event-videos" && request.method === "GET") {
+      try { return json({ links: await listPublicDiscoveredVideoLinks(env), updatedAt: new Date().toISOString() }); }
+      catch (error) { return videoLinkErrorResponse(error); }
     }
     if (url.pathname.startsWith("/api/admin/")) return handleAdminApi(request, env);
     if (url.pathname.startsWith("/api/trpc/")) return handleTrpc(request, env);

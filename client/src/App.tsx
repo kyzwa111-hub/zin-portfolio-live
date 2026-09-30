@@ -9,12 +9,16 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import AdminControlCenter from "./pages/AdminControlCenter";
 import FreeWebinars from "./pages/FreeWebinars";
+import LegalPage from "./pages/LegalPage";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/webinars" component={FreeWebinars} />
+      <Route path="/privacy"><LegalPage kind="privacy" /></Route>
+      <Route path="/terms"><LegalPage kind="terms" /></Route>
+      <Route path="/payroll-disclaimer"><LegalPage kind="payroll" /></Route>
       <Route path="/admin" component={AdminControlCenter} />
       {/* Legacy Manus-OAuth admin page. Its backend (oauth callback + tRPC
           telegramAdmin/linkedinUpdates/formTemplates routes) was never migrated

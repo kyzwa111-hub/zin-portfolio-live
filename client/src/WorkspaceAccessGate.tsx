@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, ExternalLink, LockKeyhole, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { readAccessSession, writeAccessSession } from "@/lib/accessSession";
+import { PAYMENT_QR_URL } from "@/const";
 
 export default function WorkspaceAccessGate({ onApprovedChange }: { onApprovedChange?: (approved: boolean) => void }) {
   const [requesterName, setRequesterName] = useState("");
@@ -49,7 +50,7 @@ export default function WorkspaceAccessGate({ onApprovedChange }: { onApprovedCh
             <small>Request ID: {access.requestId.slice(-8)} · Requests expire after 10 minutes.</small>
           </>
         )}
-        {paymentRequested && access && <div className="payment-request-panel workspace-payment-panel" aria-live="polite"><div><p className="section-kicker">Requester-only payment instructions</p><h3>Pay 50,000 MMK via KBZPay</h3><p>After the admin reviews your request, scan the QR code and send the payment screenshot plus your request ID to the Telegram bot. Access unlocks only after administrator approval.</p><strong>Request ID: {access.requestId.slice(-8)}</strong><small>This panel is shown only in the browser session that submitted the request.</small></div><img src="/manus-storage/pasted_file_kNMX4R_image_1509cee3.png" alt="KBZPay QR code for the 50,000 MMK access payment" /></div>}
+        {paymentRequested && access && <div className="payment-request-panel workspace-payment-panel" aria-live="polite"><div><p className="section-kicker">Requester-only payment instructions</p><h3>Pay 50,000 MMK via KBZPay</h3><p>After the admin reviews your request, scan the QR code and send the payment screenshot plus your request ID to the Telegram bot. Access unlocks only after administrator approval.</p><strong>Request ID: {access.requestId.slice(-8)}</strong><small>This panel is shown only in the browser session that submitted the request.</small></div><img src={PAYMENT_QR_URL} alt="KBZPay QR code for the 50,000 MMK access payment" /></div>}
       </div>
       <div className="workspace-unlock-status">{statusQuery.data?.status === "approved" ? <><CheckCircle2 size={16} /> Approved</> : <><ShieldCheck size={16} /> {access ? "Awaiting approval" : "Admin approval"}</>}</div>
     </div>

@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import jsPDF from "jspdf";
 import PayrollFormDownloads from "@/components/PayrollFormDownloads";
 import { readAccessSession } from "@/lib/accessSession";
+import { PAYMENT_QR_URL } from "@/const";
 
 type TaxMode = "employee" | "employer";
 type AccessSession = { requestId: string; token: string };
@@ -214,7 +215,7 @@ export default function PayrollCalculator() {
       {!accessGranted ? (
         <>
           <div className="calculator-gate"><div className="calculator-gate-icon"><LockKeyhole size={24} /></div><div className="calculator-gate-copy"><p className="section-kicker">Admin approval required</p><h3>Unlock the HR sector — request admin approval to access payroll tools.</h3><p>{statusMessage}</p><label className="calculator-requester-field"><span>Your name</span><input value={requesterName} onChange={(event) => setRequesterName(event.target.value)} placeholder="Enter your name" autoComplete="name" maxLength={160} /><small>Your name is shared with the administrator with this request.</small></label><div className="calculator-gate-actions"><button className="button-primary" onClick={requestAccess} disabled={accessRequest.isPending || requesterName.trim().length < 2}>{accessRequest.isPending ? "Sending request…" : "Request access"}</button><a className="text-link" href={botLink} target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a></div><small>Requests expire after 10 minutes. Salary fields remain hidden until approval.</small></div><div className="calculator-gate-status">{statusQuery.data?.status === "approved" ? <><CheckCircle2 size={16} /> Approved</> : <><ShieldCheck size={16} /> Waiting for approval</>}</div></div>
-          {paymentRequested && accessRequest.data && <div className="payment-request-panel" aria-live="polite"><div><p className="section-kicker">Requester-only payment instructions</p><h3>Pay 50,000 MMK via KBZPay</h3><p>Scan the QR code below, then send the payment screenshot and your request ID to the Telegram bot. The calculator and monthly/annual templates unlock only after administrator approval.</p><strong>Request ID: {accessRequest.data.requestId.slice(-8)}</strong><small>This payment panel is shown only in the browser session that submitted the request. It expires with the 10-minute approval request.</small></div><img src="/manus-storage/pasted_file_kNMX4R_image_1509cee3.png" alt="KBZPay QR code for the 50,000 MMK access payment" /></div>}
+          {paymentRequested && accessRequest.data && <div className="payment-request-panel" aria-live="polite"><div><p className="section-kicker">Requester-only payment instructions</p><h3>Pay 50,000 MMK via KBZPay</h3><p>Scan the QR code below, then send the payment screenshot and your request ID to the Telegram bot. The calculator and monthly/annual templates unlock only after administrator approval.</p><strong>Request ID: {accessRequest.data.requestId.slice(-8)}</strong><small>This payment panel is shown only in the browser session that submitted the request. It expires with the 10-minute approval request.</small></div><img src={PAYMENT_QR_URL} alt="KBZPay QR code for the 50,000 MMK access payment" /></div>}
         </>
       ) : (
         <>

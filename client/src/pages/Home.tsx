@@ -1,5 +1,5 @@
 import {
-  ArrowDown, ArrowUpRight, Bot, Calculator, CalendarDays, Check, ExternalLink, Gamepad2, Menu, Sparkles, UsersRound, X,
+  ArrowDown, ArrowUpRight, Bot, BriefcaseBusiness, Calculator, CalendarDays, Check, ExternalLink, Gamepad2, Menu, Sparkles, UserRound, UsersRound, X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import "../workspace.css";

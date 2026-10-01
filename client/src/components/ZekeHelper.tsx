@@ -37,7 +37,7 @@ function fallbackAnswer(question: string): string {
       text
     )
   ) {
-    return "Zin ရဲ့ HR operations service တွေမှာ people operations, employee experience, HR process, compensation & benefits နဲ့ practical workplace support ပါဝင်ပါတယ်။ Services section မှာ သက်ဆိုင်ရာ workspace ကိုရွေးပြီး protected tools တွေကို ဆက်သုံးနိုင်ပါတယ်။";
+    return "ဒီ toolkit ရဲ့ HR operations service တွေမှာ people operations, employee experience, HR process, compensation & benefits နဲ့ practical workplace support ပါဝင်ပါတယ်။ Services section မှာ သက်ဆိုင်ရာ workspace ကိုရွေးပြီး protected tools တွေကို ဆက်သုံးနိုင်ပါတယ်။";
   }
   if (/(event|events|webinar|သင်တန်း|ပွဲ|video|ဗီဒီယို|learning)/i.test(text)) {
     return "HR event feed ကို Events menu ကနေဖွင့်နိုင်ပါတယ်။ အဲဒီမှာ HR နဲ့ workplace learning အတွက် curated public links တွေကို မူရင်း source ဆီသွားကြည့်နိုင်အောင် စုစည်းထားပါတယ်။";
@@ -47,7 +47,7 @@ function fallbackAnswer(question: string): string {
       text
     )
   ) {
-    return "Profile section မှာ Zin Min Htet ရဲ့ HR operations experience, strengths နဲ့ contact path တွေရှိပါတယ်။ အလုပ်အပ်နှံလိုတာ ဒါမှမဟုတ် collaboration ပြောချင်တာဆိုရင် Contact area ကနေ စတင်နိုင်ပါတယ်။";
+    return "HR operations, payroll, workplace process, and public resources အကြောင်း မေးမြန်းနိုင်ပါတယ်။";
   }
   if (/(game|ဂိမ်း|zeke|scenario|practice|လေ့ကျင့်)/i.test(text)) {
     return "Zeke ကို အခု mood/game helper မဟုတ်တော့ဘဲ မေးခွန်းဖြေတဲ့ HR assistant အဖြစ် ပြောင်းထားပါတယ်။ Workplace scenario တစ်ခုအကြောင်း အကြံလိုရင် အခြေအနေကို ရေးပေးပါ—facts, people, next step ဆိုပြီး ခွဲပြီး စဉ်းစားပေးမယ်။";

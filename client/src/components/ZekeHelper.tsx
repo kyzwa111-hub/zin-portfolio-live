@@ -132,7 +132,7 @@ export default function ZekeHelper() {
       >
         <span className="zeke-avatar" aria-hidden="true">
           <video className="zeke-mascot" autoPlay loop muted playsInline preload="auto" poster={`${MASCOT_MEDIA_ORIGIN}/images/zeke-mascot.png`}>
-            <source src={`${MASCOT_MEDIA_ORIGIN}/videos/zeke-live-mascot.mp4`} type="video/mp4" />
+            <source src={`${MASCOT_MEDIA_ORIGIN}/videos/zeke-live-mascot-bright.mp4`} type="video/mp4" />
           </video>
           <span className="zeke-live-spark" />
           <i />
@@ -148,7 +148,7 @@ export default function ZekeHelper() {
             <div className="zeke-signature">
               <span className="zeke-avatar small">
                 <video className="zeke-mascot" autoPlay loop muted playsInline preload="auto" poster={`${MASCOT_MEDIA_ORIGIN}/images/zeke-mascot.png`}>
-                  <source src={`${MASCOT_MEDIA_ORIGIN}/videos/zeke-live-mascot.mp4`} type="video/mp4" />
+                  <source src={`${MASCOT_MEDIA_ORIGIN}/videos/zeke-live-mascot-bright.mp4`} type="video/mp4" />
                 </video>
                 <span className="zeke-live-spark" />
                 <i />

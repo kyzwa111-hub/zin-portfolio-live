@@ -37,6 +37,8 @@ export default function Home() {
         </button>
         <nav className={menuOpen ? "site-nav site-nav-open" : "site-nav"}>
           <a href="#toolkit" onClick={closeMenu}>Toolkit</a>
+          <a href="#features" onClick={closeMenu}>Features</a>
+          <a href="#pricing" onClick={closeMenu}>Pricing</a>
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="/webinars" onClick={closeMenu}>Events</a>
           <a href="/?hr-toolkit=1&v=final&section=game" onClick={closeMenu}>Game</a>
@@ -154,6 +156,39 @@ export default function Home() {
               <p>Use the Myanmar payroll estimator, SSB/PIT guidance, bulk file workflows, and sector forms in one protected workspace.</p>
               <span className="toolkit-card-link">Open payroll tools <ArrowUpRight size={15} /></span>
             </a>
+          </div>
+        </section>
+
+        <section className="feature-section section-pad" id="features" aria-labelledby="features-title">
+          <div className="feature-heading">
+            <div>
+              <p className="section-kicker"><span className="eyebrow-dot" /> Built for practical work</p>
+              <h2 id="features-title">Everything your<br /><i>HR day needs.</i></h2>
+            </div>
+            <p>Clear tools, calm workflows, and useful guidance—structured like a modern product workspace, not a crowded portal.</p>
+          </div>
+          <div className="feature-grid">
+            {[
+              { number: "01", title: "Payroll clarity", copy: "Estimate PIT, SSB, net pay, and employer cost with a focused testing workspace." },
+              { number: "02", title: "Ready-to-use templates", copy: "Open practical forms for recruitment, attendance, performance, employee relations, and reporting." },
+              { number: "03", title: "Guided decisions", copy: "Use the scenario lab and Zeke assistant to turn workplace questions into calm next steps." },
+              { number: "04", title: "Public learning feed", copy: "Find HR events and workplace learning links gathered from original public sources." },
+            ].map((feature) => <article className="feature-card" key={feature.number}><span>{feature.number}</span><strong>{feature.title}</strong><p>{feature.copy}</p><a href="#services">Explore <ArrowUpRight size={14} /></a></article>)}
+          </div>
+        </section>
+
+        <section className="pricing-section section-pad" id="pricing" aria-labelledby="pricing-title">
+          <div className="pricing-heading">
+            <div>
+              <p className="section-kicker"><span className="eyebrow-dot" /> Simple access</p>
+              <h2 id="pricing-title">Choose the right<br /><i>starting point.</i></h2>
+            </div>
+            <p>Start with public resources. Unlock the protected workspace when your team needs calculators, bulk files, and sector forms.</p>
+          </div>
+          <div className="pricing-grid">
+            <article className="pricing-card"><span className="pricing-label">PUBLIC</span><strong>Explore</strong><b>Free</b><p>Public HR resources, events, workplace practice, and the Zeke assistant.</p><a href="#toolkit">Start exploring <ArrowUpRight size={14} /></a></article>
+            <article className="pricing-card pricing-card-featured"><span className="pricing-label">WORKSPACE</span><strong>Protect</strong><b>Telegram unlock</b><p>Payroll calculator, bulk payroll exports, C&amp;B resources, and sector forms.</p><a href="#services">Request access <ArrowUpRight size={14} /></a></article>
+            <article className="pricing-card"><span className="pricing-label">TEAMS</span><strong>Scale</strong><b>Talk to us</b><p>Build a focused HR operations workflow around your team's recurring process.</p><a href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer">Open Telegram <ArrowUpRight size={14} /></a></article>
           </div>
         </section>
 

@@ -26,6 +26,7 @@ import CBResourceCenter from "@/components/CBResourceCenter";
 import HRSectorForm, { hrSectorItems, type HRSectorId } from "@/components/HRTemplateCatalog";
 import LiveJobFeed from "@/components/LiveJobFeed";
 import ScenarioLab from "@/components/ScenarioLab";
+const PUBLIC_MEDIA_ORIGIN = "https://zin-portfolio-live.pages.dev";
 
 const experience = [
   {
@@ -294,8 +295,8 @@ export default function Home() {
               <p>See what Telegram unlock gives you, which payroll tools are included, and what forms you can prepare inside the workspace.</p>
             </div>
             <div className="services-video-shell">
-              <video className="services-explainer-video" controls preload="metadata" poster="/videos/telegram-unlock-explainer-poster.png">
-                <source src="/videos/telegram-unlock-explainer.mp4" type="video/mp4" />
+              <video className="services-explainer-video" controls preload="metadata" poster={`${PUBLIC_MEDIA_ORIGIN}/videos/telegram-unlock-explainer-poster.png`}>
+                <source src={`${PUBLIC_MEDIA_ORIGIN}/videos/telegram-unlock-explainer.mp4`} type="video/mp4" />
                 Your browser does not support the video element.
               </video>
             </div>

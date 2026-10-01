@@ -16,17 +16,50 @@ function clean(value: string): string {
   return value.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim().slice(0, 180);
 }
 
+type FeedRecord = Record<string, unknown>;
+
+function firstString(item: FeedRecord, keys: string[]): string {
+  for (const key of keys) {
+    const value = item[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+function feedRecords(payload: unknown): FeedRecord[] {
+  if (Array.isArray(payload)) return payload.filter((item): item is FeedRecord => Boolean(item && typeof item === "object"));
+  if (!payload || typeof payload !== "object") return [];
+  const record = payload as FeedRecord;
+  for (const key of ["items", "jobs", "results", "data", "feed"]) {
+    const value = record[key];
+    if (Array.isArray(value)) return value.filter((item): item is FeedRecord => Boolean(item && typeof item === "object"));
+    if (value && typeof value === "object") {
+      const nested = feedRecords(value);
+      if (nested.length) return nested;
+    }
+  }
+  return [];
+}
+
+export function parseJsonFeed(text: string, source: JobFeedItem["source"]): JobFeedItem[] {
+  let payload: unknown;
+  try { payload = JSON.parse(text); } catch { return []; }
+  return feedRecords(payload).flatMap((item) => {
+    const link = firstString(item, ["link", "url", "applyUrl", "jobUrl", "canonicalUrl"]);
+    const title = firstString(item, ["title", "jobTitle", "name", "position"]);
+    const updatedAt = firstString(item, ["pubDate", "date_published", "publishedAt", "updatedAt", "date"]) || new Date().toISOString();
+    return /^https:\/\//i.test(link) && title ? [{ source, title: clean(title), url: link, updatedAt }] : [];
+  });
+}
+
 async function readRss(url: string, source: JobFeedItem["source"]): Promise<JobFeedItem[]> {
   const response = await fetch(url, { headers: { accept: "application/rss+xml, application/atom+xml, application/json, text/xml" } });
   if (!response.ok) return [];
   const text = await response.text();
-  try {
-    const payload = JSON.parse(text) as { items?: Array<{ title?: string; link?: string; url?: string; pubDate?: string; date_published?: string }> };
-    return (payload.items || []).flatMap((item) => {
-      const link = String(item.link || item.url || "");
-      return link.startsWith("https://") && item.title ? [{ source, title: clean(item.title), url: link, updatedAt: item.pubDate || item.date_published || new Date().toISOString() }] : [];
-    });
-  } catch {
+  const jsonItems = parseJsonFeed(text, source);
+  if (jsonItems.length) return jsonItems;
+  if (text.trimStart().startsWith("{") || text.trimStart().startsWith("[")) return [];
+  {
     return [...text.matchAll(/<item[\s\S]*?<\/item>/gi)].flatMap((match) => {
       const block = match[0];
       const title = block.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];

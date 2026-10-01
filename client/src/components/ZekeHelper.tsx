@@ -130,7 +130,8 @@ export default function ZekeHelper() {
         onClick={() => setOpen(value => !value)}
       >
         <span className="zeke-avatar" aria-hidden="true">
-          <span className="zeke-lion">🦁</span>
+          <img className="zeke-mascot" src="/images/zeke-mascot.png" alt="" />
+          <span className="zeke-live-spark" />
           <i />
         </span>
         <span className="zeke-launcher-copy">
@@ -143,7 +144,8 @@ export default function ZekeHelper() {
           <header className="zeke-panel-head">
             <div className="zeke-signature">
               <span className="zeke-avatar small">
-                <span className="zeke-lion">🦁</span>
+                <img className="zeke-mascot" src="/images/zeke-mascot.png" alt="" />
+                <span className="zeke-live-spark" />
                 <i />
               </span>
               <div>

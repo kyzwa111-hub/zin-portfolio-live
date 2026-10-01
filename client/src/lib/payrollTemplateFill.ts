@@ -131,7 +131,7 @@ export async function downloadFilledCoverLetter(data: PayrollAutoFillData) {
         new Paragraph({ children: [new TextRun("Employer / Company: "), new TextRun({ text: "[Enter employer name]", bold: true })] }),
         new Paragraph({ children: [new TextRun("TIN: "), new TextRun({ text: "[Enter TIN]", bold: true })] }),
         new Paragraph({ text: `Financial year basis: ${data.financialYear} (${data.taxEffective})`, spacing: { after: 180 } }),
-        new Paragraph({ text: "This working draft was auto-filled from the Zin Min Htet payroll calculator. Replace the placeholders, attach the official salary statement, and verify current IRD filing requirements before submission.", spacing: { after: 180 } }),
+        new Paragraph({ text: "This working draft was auto-filled from the HR Toolkit payroll calculator. Replace the placeholders, attach the official salary statement, and verify current IRD filing requirements before submission.", spacing: { after: 180 } }),
         new Paragraph({ text: `Estimated annual gross salary: ${money(data.annualGross).toLocaleString()} MMK` }),
         new Paragraph({ text: `Annual taxable income: ${money(data.taxableIncome).toLocaleString()} MMK` }),
         new Paragraph({ text: `Estimated employee SSB: ${money(data.employeeSSBAnnual).toLocaleString()} MMK` }),

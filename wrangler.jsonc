@@ -4,23 +4,29 @@
   "main": "./worker/index.ts",
   "keep_vars": true,
   "compatibility_date": "2026-09-25",
-  "triggers": { "crons": ["30 2 * * *"] },
-  "observability": { "enabled": true },
-  "vars": { "TELEGRAM_ADMIN_USERNAME": "zinmin2244" },
+  "triggers": {
+    "crons": ["30 2 * * *"]
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "TELEGRAM_ADMIN_USERNAME": "zinmin2244"
+  },
   "assets": {
     "directory": "./dist/public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": true,
+    "run_worker_first": true
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "zin-portfolio-telegram",
-      "database_id": "70281058-b80b-4187-becb-beafa9004b8e",
-    },
+      "database_id": "70281058-b80b-4187-becb-beafa9004b8e"
+    }
   ],
   "ai": {
-    "binding": "AI",
-  },
+    "binding": "AI"
+  }
 }

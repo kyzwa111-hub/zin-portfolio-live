@@ -1,254 +1,189 @@
 import {
-  ArrowDown, ArrowUpRight, Bot, BriefcaseBusiness, Calculator, CalendarDays, Check, ExternalLink, Gamepad2, Menu, Sparkles, UserRound, UsersRound, X,
+  ArrowDown,
+  ArrowUpRight,
+  BriefcaseBusiness,
+  CalendarDays,
+  Check,
+  ExternalLink,
+  LockKeyhole,
+  Menu,
+  Play,
+  Sparkles,
+  UsersRound,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import "../workspace.css";
 import WorkspaceAccessGate from "@/components/WorkspaceAccessGate";
 import PayrollCalculator from "@/components/PayrollCalculator";
-import BulkPayroll, { BulkPayrollSection } from "@/components/BulkPayroll";
+import { BulkPayrollSection } from "@/components/BulkPayroll";
 import CBResourceCenter from "@/components/CBResourceCenter";
 import HRSectorForm, { hrSectorItems, type HRSectorId } from "@/components/HRTemplateCatalog";
-import ScenarioLab from "@/components/ScenarioLab";
-const PUBLIC_MEDIA_ORIGIN = "https://zin-portfolio-live.pages.dev";
+import LiveJobFeed from "@/components/LiveJobFeed";
+import "../workspace.css";
+
+const MASCOT_VIDEO = "/videos/zeke-live-mascot-vivid.mp4";
+const SERVICE_VIDEO = "/videos/hr-toolkit-services-58sec.mp4";
+const SERVICE_POSTER = "/videos/hr-toolkit-services-58sec-poster.jpg";
+
+const serviceItems = [
+  { id: "payroll", number: "01", title: "Payroll tool", description: "PIT, SSB, net pay, and employer cost." },
+  { id: "bulk", number: "02", title: "Bulk payroll", description: "One employee list; calculation, SSB, and PAYE-A exports." },
+  { id: "cb", number: "03", title: "C&B resources", description: "Official monthly PIT, annual IRD, and SSB guidance." },
+] as const;
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [workspaceApproved, setWorkspaceApproved] = useState(false);
-  const [selectedWorkspace, setSelectedWorkspace] = useState("payroll");
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string>("payroll");
   const closeMenu = () => setMenuOpen(false);
+
+  const askZeke = () => {
+    closeMenu();
+    document.querySelector<HTMLButtonElement>(".zeke-launcher")?.click();
+  };
 
   useEffect(() => {
     const section = new URLSearchParams(window.location.search).get("section");
-    const target = section === "game" ? "game" : section === "payroll" ? "services" : section === "toolkit" ? "toolkit" : null;
-    if (!target) return;
+    const targets: Record<string, string> = {
+      events: "events",
+      jobs: "jobs",
+      services: "services",
+      service: "services",
+      home: "home",
+    };
+    const target = section ? targets[section] : undefined;
     if (section === "payroll") setSelectedWorkspace("payroll");
-    window.requestAnimationFrame(() => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    if (!target) return;
+    window.requestAnimationFrame(() =>
+      document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    );
   }, []);
 
   return (
-    <div className="site-shell two-part-portfolio">
-      <header className="site-header portfolio-header">
-        <a className="brand" href="#home" onClick={closeMenu}>
-          <span className="brand-mark"><Sparkles size={15} /></span>
-          <span>HR <em>toolkit</em></span>
+    <div className="site-shell zeke-experience">
+      <header className="site-header unified-header">
+        <a className="unified-brand" href="#home" onClick={closeMenu} aria-label="Zeke home">
+          <span className="unified-brand-mascot" aria-hidden="true">
+            <video autoPlay loop muted playsInline preload="none" poster="/images/zeke-mascot.png">
+              <source src={MASCOT_VIDEO} type="video/mp4" />
+            </video>
+          </span>
+          <span className="unified-brand-copy"><strong>zeke</strong><small>HR &amp; workplace assistant</small></span>
         </a>
-        <button className="mobile-menu-button" aria-label="Toggle menu" onClick={() => setMenuOpen((open) => !open)}>
+        <button className="mobile-menu-button unified-menu-button" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
           {menuOpen ? <X size={21} /> : <Menu size={21} />}
         </button>
-        <nav className={menuOpen ? "site-nav site-nav-open" : "site-nav"}>
-          <a href="#toolkit" onClick={closeMenu}>Toolkit</a>
-          <a href="#features" onClick={closeMenu}>Features</a>
-          <a href="#pricing" onClick={closeMenu}>Pricing</a>
+        <nav className={menuOpen ? "site-nav unified-nav site-nav-open" : "site-nav unified-nav"} aria-label="Main navigation">
+          <a href="#events" onClick={closeMenu}>Event</a>
+          <a href="#jobs" onClick={closeMenu}>Job</a>
           <a href="#services" onClick={closeMenu}>Services</a>
-          <a href="/webinars" onClick={closeMenu}>Events</a>
-          <a href="/?hr-toolkit=1&v=final&section=game" onClick={closeMenu}>Game</a>
+          <button className="unified-nav-ask" type="button" onClick={askZeke}><Sparkles size={14} /> Ask Zeke</button>
         </nav>
       </header>
 
       <main>
-        <section className="personal-panel generic-landing-panel" id="home">
-          <div className="personal-panel-inner">
-            <div className="personal-copy">
-              <p className="eyebrow"><span className="eyebrow-dot" /> Practical HR workspace</p>
-              <div className="personal-title-row"><span className="personal-icon"><Sparkles size={22} /></span><p className="personal-label">Welcome</p></div>
-              <h1>HR tools for<br /><span>clearer work.</span></h1>
-              <p className="personal-lede">Practical payroll, HR operations, workplace learning, and public event resources in one place.</p>
-              <div className="personal-actions"><a className="button-primary" href="#services">Explore tools <ArrowDown size={16} /></a><a className="text-link light-link" href="/webinars"><CalendarDays size={15} /> View events</a></div>
-            </div>
-            <div className="personal-profile-card generic-tool-card"><div className="profile-card-caption"><span>HR WORKSPACE</span><strong>People · Process · Progress</strong></div><div className="profile-card-note"><Check size={14} /> Tools and resources</div></div>
-          </div>
-        </section>
-        <section
-          className="toolkit-section section-pad"
-          id="toolkit"
-          aria-labelledby="toolkit-title"
-        >
-          <div className="toolkit-heading">
-            <div>
-              <p className="section-kicker">
-                <span className="eyebrow-dot" /> The working toolkit
-              </p>
-              <h2 id="toolkit-title">
-                One clear place for
-                <br />
-                <i>people, process, progress.</i>
-              </h2>
-            </div>
-            <p className="section-description">
-              Explore practical HR services, learning moments, and protected payroll tools in one place.
-            </p>
-          </div>
-          <div className="toolkit-grid">
-            <a className="toolkit-card toolkit-card-dark" href="#services">
-              <span className="toolkit-card-icon">
-                <UserRound size={18} />
-              </span>
-              <span className="toolkit-card-index">01 · HR workspace</span>
-              <strong>HR operations tools</strong>
-              <p>
-                Practical templates and resources for everyday people operations.
-              </p>
-              <span className="toolkit-card-link">
-                Explore tools <ArrowUpRight size={15} />
-              </span>
-            </a>
-            <a className="toolkit-card" href="#services">
-              <span className="toolkit-card-icon">
-                <BriefcaseBusiness size={18} />
-              </span>
-              <span className="toolkit-card-index">02 · Services</span>
-              <strong>HR &amp; payroll support</strong>
-              <p>
-                Practical operations support, compensation workflows, C&amp;B
-                resources, and protected access.
-              </p>
-              <span className="toolkit-card-link">
-                Explore services <ArrowUpRight size={15} />
-              </span>
-            </a>
-            <button
-              className="toolkit-card toolkit-card-accent"
-              type="button"
-              onClick={() =>
-                document
-                  .querySelector<HTMLButtonElement>(".zeke-launcher")
-                  ?.click()
-              }
-            >
-              <span className="toolkit-card-icon">
-                <Bot size={18} />
-              </span>
-              <span className="toolkit-card-index">03 · Assistant</span>
-              <strong>Zeke HR assistant</strong>
-              <p>
-                Ask about HR, payroll, workplace process, career, events, and
-                how to use any part of this website.
-              </p>
-              <span className="toolkit-card-link">
-                Ask Zeke anything <ArrowUpRight size={15} />
-              </span>
-            </button>
-            <a className="toolkit-card" href="/webinars">
-              <span className="toolkit-card-icon">
-                <CalendarDays size={18} />
-              </span>
-              <span className="toolkit-card-index">04 · Events</span>
-              <strong>HR event desk</strong>
-              <p>
-                Daily public HR and workplace video links, refreshed from
-                original sources with no re-uploads.
-              </p>
-              <span className="toolkit-card-link">
-                View event feed <ArrowUpRight size={15} />
-              </span>
-            </a>
-            <a className="toolkit-card toolkit-card-game" href="/?hr-toolkit=1&v=final&section=game">
-              <span className="toolkit-card-icon"><Gamepad2 size={18} /></span>
-              <span className="toolkit-card-index">05 · Practice</span>
-              <strong>Workplace scenario lab</strong>
-              <p>Practise calm, fair next steps for attendance, payroll variance, and employee concerns.</p>
-              <span className="toolkit-card-link">Play a case <ArrowUpRight size={15} /></span>
-            </a>
-            <a className="toolkit-card toolkit-card-wide toolkit-card-payroll" href="/?hr-toolkit=1&v=final&section=payroll" onClick={() => setSelectedWorkspace("payroll")}>
-              <span className="toolkit-card-icon"><Calculator size={18} /></span>
-              <span className="toolkit-card-index">06 · Test &amp; calculate</span>
-              <strong>Payroll testing workspace</strong>
-              <p>Use the Myanmar payroll estimator, SSB/PIT guidance, bulk file workflows, and sector forms in one protected workspace.</p>
-              <span className="toolkit-card-link">Open payroll tools <ArrowUpRight size={15} /></span>
-            </a>
-          </div>
-        </section>
-
-        <section className="feature-section section-pad" id="features" aria-labelledby="features-title">
-          <div className="feature-heading">
-            <div>
-              <p className="section-kicker"><span className="eyebrow-dot" /> Built for practical work</p>
-              <h2 id="features-title">Everything your<br /><i>HR day needs.</i></h2>
-            </div>
-            <p>Clear tools, calm workflows, and useful guidance—structured like a modern product workspace, not a crowded portal.</p>
-          </div>
-          <div className="feature-grid">
-            {[
-              { number: "01", title: "Payroll clarity", copy: "Estimate PIT, SSB, net pay, and employer cost with a focused testing workspace." },
-              { number: "02", title: "Ready-to-use templates", copy: "Open practical forms for recruitment, attendance, performance, employee relations, and reporting." },
-              { number: "03", title: "Guided decisions", copy: "Use the scenario lab and Zeke assistant to turn workplace questions into calm next steps." },
-              { number: "04", title: "Public learning feed", copy: "Find HR events and workplace learning links gathered from original public sources." },
-            ].map((feature) => <article className="feature-card" key={feature.number}><span>{feature.number}</span><strong>{feature.title}</strong><p>{feature.copy}</p><a href="#services">Explore <ArrowUpRight size={14} /></a></article>)}
-          </div>
-        </section>
-
-        <section className="pricing-section section-pad" id="pricing" aria-labelledby="pricing-title">
-          <div className="pricing-heading">
-            <div>
-              <p className="section-kicker"><span className="eyebrow-dot" /> Simple access</p>
-              <h2 id="pricing-title">Choose the right<br /><i>starting point.</i></h2>
-            </div>
-            <p>Start with public resources. Unlock the protected workspace when your team needs calculators, bulk files, and sector forms.</p>
-          </div>
-          <div className="pricing-grid">
-            <article className="pricing-card"><span className="pricing-label">PUBLIC</span><strong>Explore</strong><b>Free</b><p>Public HR resources, events, workplace practice, and the Zeke assistant.</p><a href="#toolkit">Start exploring <ArrowUpRight size={14} /></a></article>
-            <article className="pricing-card pricing-card-featured"><span className="pricing-label">WORKSPACE</span><strong>Protect</strong><b>Telegram unlock</b><p>Payroll calculator, bulk payroll exports, C&amp;B resources, and sector forms.</p><a href="#services">Request access <ArrowUpRight size={14} /></a></article>
-            <article className="pricing-card"><span className="pricing-label">TEAMS</span><strong>Scale</strong><b>Talk to us</b><p>Build a focused HR operations workflow around your team's recurring process.</p><a href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer">Open Telegram <ArrowUpRight size={14} /></a></article>
-          </div>
-        </section>
-
-        <ScenarioLab />
-
-
-        <section className="services-panel" id="services">
-          <div className="services-hero section-pad">
-            <div>
-              <p className="section-kicker"><span className="telegram-dot" /> Unlock Telegram</p>
-              <h2>All services,<br /><i>in one place.</i></h2>
-            </div>
-            <div className="services-hero-copy">
-              <p>One protected workspace for HR administration, payroll calculations, bulk exports, and C&amp;B resources. Access is approved by the administrator.</p>
-            </div>
-          </div>
-
-          <div className="services-explainer section-pad">
-            <div className="services-explainer-heading">
-              <div>
-                <p className="section-kicker"><span className="eyebrow-dot" /> Zeke explains</p>
-                <h3>Unlock the workflow,<br /><i>then make it useful.</i></h3>
+        <section className="unified-hero" id="home" aria-labelledby="unified-hero-title">
+          <div className="unified-hero-noise" aria-hidden="true" />
+          <div className="unified-hero-inner section-pad">
+            <div className="unified-hero-copy">
+              <p className="unified-live-label"><span /> Your HR companion is here</p>
+              <h1 id="unified-hero-title">Work, with<br /><em>Zeke by your side.</em></h1>
+              <p className="unified-hero-lede">Ask Zeke about work, career, feelings, events, and this website. Find an event, discover a job, or unlock the HR services you need.</p>
+              <div className="unified-hero-actions">
+                <button className="unified-primary-action" type="button" onClick={askZeke}>Ask Zeke anything <ArrowUpRight size={16} /></button>
+                <a className="unified-secondary-action" href="#events">Explore the site <ArrowDown size={15} /></a>
               </div>
-              <p>See what Telegram unlock gives you, which payroll tools are included, and what forms you can prepare inside the workspace.</p>
+              <div className="unified-hero-meta" aria-label="Site sections"><span><CalendarDays size={14} /> Event</span><span><BriefcaseBusiness size={14} /> Job</span><span><LockKeyhole size={14} /> Telegram-unlocked services</span></div>
             </div>
-            <div className="services-video-shell">
-              <video className="services-explainer-video" controls preload="metadata" poster={`${PUBLIC_MEDIA_ORIGIN}/videos/hr-toolkit-services-58sec-poster.jpg`}>
-                <source src={`${PUBLIC_MEDIA_ORIGIN}/videos/hr-toolkit-services-58sec.mp4`} type="video/mp4" />
+            <div className="unified-hero-stage" aria-label="Animated Zeke assistant">
+              <div className="unified-stage-orbit unified-orbit-one" aria-hidden="true" />
+              <div className="unified-stage-orbit unified-orbit-two" aria-hidden="true" />
+              <div className="unified-stage-glow" aria-hidden="true" />
+              <div className="unified-stage-character">
+                <video autoPlay loop muted playsInline preload="none" poster="/images/zeke-mascot.png" aria-label="Zeke animated mascot">
+                  <source src={MASCOT_VIDEO} type="video/mp4" />
+                </video>
+              </div>
+              <div className="unified-stage-badge unified-badge-top"><span className="unified-badge-dot" /> LIVE · READY TO HELP</div>
+              <div className="unified-stage-badge unified-badge-bottom"><Sparkles size={15} /><span><strong>Ask Zeke</strong><small>Anything about work</small></span></div>
+            </div>
+          </div>
+          <div className="unified-scroll-cue" aria-hidden="true"><span /> One place · three useful paths</div>
+        </section>
+
+        <section className="unified-paths section-pad" aria-label="Choose a path">
+          <a className="unified-path-card unified-path-event" href="#events"><span className="unified-path-index">01 / EVENT</span><span className="unified-path-icon"><CalendarDays size={19} /></span><strong>Watch an event</strong><small>Daily HR &amp; workplace videos</small><ArrowUpRight className="unified-path-arrow" size={17} /></a>
+          <a className="unified-path-card unified-path-job" href="#jobs"><span className="unified-path-index">02 / JOB</span><span className="unified-path-icon"><BriefcaseBusiness size={19} /></span><strong>Find an opportunity</strong><small>Live links from original sources</small><ArrowUpRight className="unified-path-arrow" size={17} /></a>
+          <a className="unified-path-card unified-path-service" href="#services"><span className="unified-path-index">03 / SERVICE</span><span className="unified-path-icon"><LockKeyhole size={19} /></span><strong>Unlock HR services</strong><small>Access is approved through Telegram</small><ArrowUpRight className="unified-path-arrow" size={17} /></a>
+        </section>
+
+        <section className="unified-section unified-events section-pad" id="events" aria-labelledby="unified-events-title">
+          <div className="unified-section-heading">
+            <div><p className="unified-section-kicker"><span>01</span> EVENT</p><h2 id="unified-events-title">Learn from the<br /><em>live event desk.</em></h2></div>
+            <p>Fresh HR and workplace learning videos, linked to their original publishers. No re-uploads.</p>
+          </div>
+          <article className="unified-event-panel">
+            <div className="unified-event-visual" aria-hidden="true">
+              <div className="unified-event-ring unified-event-ring-one" /><div className="unified-event-ring unified-event-ring-two" />
+              <div className="unified-event-play"><Play size={26} fill="currentColor" /></div>
+              <span className="unified-event-live"><i /> DAILY VIDEO FEED</span>
+              <span className="unified-event-word">EVENT<br /><em>desk</em></span>
+            </div>
+            <div className="unified-event-copy"><p className="unified-section-kicker">HR · PEOPLE · WORKPLACE</p><h3>One tap to the latest events.</h3><p>Browse the daily event feed, then watch each video on its original public channel.</p><a className="unified-text-action" href="/webinars">Open event feed <ArrowUpRight size={15} /></a></div>
+          </article>
+        </section>
+
+        <section className="unified-section unified-jobs section-pad" id="jobs" aria-label="Live job feed">
+          <LiveJobFeed />
+        </section>
+
+        <section className="unified-section unified-services section-pad" id="services" aria-labelledby="unified-services-title">
+          <div className="unified-section-heading">
+            <div><p className="unified-section-kicker"><span>03</span> SERVICE</p><h2 id="unified-services-title">The tools you need,<br /><em>one Telegram unlock.</em></h2></div>
+            <p>HR, payroll, bulk exports, and C&amp;B resources stay protected until the administrator approves access through Telegram.</p>
+          </div>
+          <div className="unified-service-intro">
+            <div className="unified-service-video-shell">
+              <video className="unified-service-video" controls preload="metadata" poster={SERVICE_POSTER} aria-label="Zeke explains Telegram service access">
+                <source src={SERVICE_VIDEO} type="video/mp4" />
                 Your browser does not support the video element.
               </video>
+              <div className="unified-video-caption"><span><i /> Zeke explains</span><small>58 sec · Burmese narration · English UI</small></div>
             </div>
-            <div className="services-explainer-footer">
-              <span>58 sec · Burmese narration · English UI labels</span>
-              <div className="services-explainer-actions">
-                <a className="button-primary" href="#services">Request access <ArrowUpRight size={15} /></a>
-                <a className="telegram-button" href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a>
+            <div className="unified-service-unlock">
+              <div className="unified-lock-mark"><LockKeyhole size={22} /></div>
+              <p className="unified-section-kicker">ONE ACCESS FLOW</p>
+              <h3>Request access on the site.<br /><em>Approval comes through Telegram.</em></h3>
+              <p>Send one request, then follow the administrator’s Telegram instructions. Protected services stay locked until approval.</p>
+              <a className="unified-telegram-link" href="https://t.me/ayelay_bot?start=admin" target="_blank" rel="noopener noreferrer">Open Telegram bot <ExternalLink size={14} /></a>
+            </div>
+          </div>
+
+          <WorkspaceAccessGate onApprovedChange={setWorkspaceApproved} />
+
+          <div className="unified-service-summary" aria-label="Services available after approval">
+            {serviceItems.map((service) => <article className="unified-service-chip" key={service.id}><span>{service.number}</span><div><strong>{service.title}</strong><small>{service.description}</small></div>{workspaceApproved ? <Check size={15} aria-label="Unlocked" /> : <LockKeyhole size={15} aria-label="Telegram approval required" />}</article>)}
+            <div className="unified-service-chip unified-service-chip-sector"><span>04</span><div><strong>HR sector forms</strong><small>Recruitment, attendance, employee relations, performance, and reporting.</small></div>{workspaceApproved ? <Check size={16} aria-label="Unlocked" /> : <UsersRound size={16} aria-label="Telegram approval required" />}</div>
+          </div>
+
+          {workspaceApproved && (
+            <div className="unified-unlocked-workspace" aria-live="polite">
+              <p className="unified-unlocked-label"><Check size={14} /> Telegram approval confirmed · Workspace unlocked</p>
+              <BulkPayrollSection approved={workspaceApproved} />
+              <div className="service-cards unified-service-cards" aria-label="Available services">
+                {serviceItems.map((service) => <button type="button" className={`service-card service-card-button ${selectedWorkspace === service.id ? "selected" : ""}`} key={service.id} onClick={() => { setSelectedWorkspace(service.id); if (service.id === "bulk") document.getElementById("bulk-payroll")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>
+                  <span className="service-card-number">{service.number}</span><div><strong>{service.title}</strong><p>{service.description}</p></div><span className="service-card-status">Open workspace</span>
+                </button>)}
               </div>
+              <div className="hr-sector-heading section-pad"><div><p className="section-kicker"><UsersRound size={15} /> HR sector</p><h3>People work, held together.</h3><p>Choose a sector to open its related working form. Forms are local preparation templates, not government submissions.</p></div></div>
+              <div className="hr-sector-grid section-pad">{hrSectorItems.map((item, index) => <button type="button" className={`hr-sector-card ${selectedWorkspace === item.id ? "selected" : ""}`} key={item.id} onClick={() => setSelectedWorkspace(item.id)}><span>0{index + 1}</span><div><strong>{item.title}</strong><p>{item.description}</p></div><small>Open related forms</small></button>)}</div>
+              {selectedWorkspace !== "bulk" && <div className="workspace-active-panel section-pad">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm key={selectedWorkspace} id={selectedWorkspace as HRSectorId} />}</div>}
             </div>
-          </div>
-
-          <div className="section-pad"><WorkspaceAccessGate onApprovedChange={setWorkspaceApproved} /></div>
-          <BulkPayrollSection approved={workspaceApproved} />
-
-          <div className="service-cards section-pad" aria-label="Available services">
-            {[
-              { id: "payroll", number: "01", title: "Payroll tool", description: "See the number behind the payslip: PIT, SSB, net pay, and employer cost." },
-              { id: "bulk", number: "02", title: "Bulk payroll file pack", description: "Import once, calculate locally, and export calculation, SSB, and PAYE-A files." },
-              { id: "cb", number: "03", title: "C&B resources", description: "Official monthly PIT, annual IRD, and SSB guidance and source links." },
-            ].map((service) => {
-              const locked = !workspaceApproved && service.id !== "bulk";
-              return <button type="button" className={"service-card service-card-button " + (selectedWorkspace === service.id ? "selected" : "")} key={service.id} onClick={() => { setSelectedWorkspace(service.id); if (service.id === "bulk") document.getElementById("bulk-payroll")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} disabled={locked} aria-disabled={locked}><span className="service-card-number">{service.number}</span><div><strong>{service.title}</strong><p>{service.description}</p></div><span className="service-card-status">{workspaceApproved ? "Open workspace" : "Telegram unlock"}</span></button>;
-            })}
-          </div>
-          <div className="hr-sector-heading section-pad"><div><p className="section-kicker"><UsersRound size={15} /> HR sector</p><h3>People work, held together.</h3><p>Choose a sector to open its related working form. Forms are local preparation templates, not government submissions.</p></div></div>
-          <div className="hr-sector-grid section-pad">{hrSectorItems.map((item, index) => <button type="button" className={"hr-sector-card " + (selectedWorkspace === item.id ? "selected" : "")} key={item.id} onClick={() => setSelectedWorkspace(item.id)} disabled={!workspaceApproved} aria-disabled={!workspaceApproved}><span>0{index + 1}</span><div><strong>{item.title}</strong><p>{item.description}</p></div><small>{workspaceApproved ? "Open related forms" : "Unlock with Telegram"}</small></button>)}</div>
-          {workspaceApproved && selectedWorkspace !== "bulk" && <div className="workspace-active-panel section-pad" aria-live="polite">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm key={selectedWorkspace} id={selectedWorkspace as HRSectorId} />}</div>}
+          )}
         </section>
       </main>
 
-      <footer className="site-footer"><div className="footer-brand"><span className="brand-mark"><Sparkles size={14} /></span><span>HR <em>toolkit</em></span></div><span className="footer-note"><Check size={14} /> Practical public resources</span><span className="footer-year">© {new Date().getFullYear()} HR Toolkit</span></footer>
+      <footer className="unified-footer"><a className="unified-footer-brand" href="#home"><span className="unified-footer-icon"><Sparkles size={14} /></span><strong>zeke</strong></a><span>Event · Job · Services · Ask Zeke</span><a href="https://t.me/ayelay_bot" target="_blank" rel="noopener noreferrer">Telegram access <ArrowUpRight size={13} /></a><small>© {new Date().getFullYear()} Zeke HR &amp; workplace assistant</small></footer>
     </div>
   );
 }

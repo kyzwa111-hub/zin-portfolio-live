@@ -15,6 +15,10 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/webinars" component={FreeWebinars} />
+      <Route path="/events"><Redirect to="/webinars" /></Route>
+      <Route path="/jobs"><Redirect to="/?section=jobs" /></Route>
+      <Route path="/service"><Redirect to="/?section=services" /></Route>
+      <Route path="/connections"><Redirect to="/?section=home" /></Route>
       <Route path="/privacy"><LegalPage kind="privacy" /></Route>
       <Route path="/terms"><LegalPage kind="terms" /></Route>
       <Route path="/payroll-disclaimer"><LegalPage kind="payroll" /></Route>

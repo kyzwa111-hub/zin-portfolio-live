@@ -13,13 +13,13 @@ type ChatMessage = { role: "assistant" | "user"; content: string };
 const MASCOT_MEDIA_ORIGIN = "https://zin-portfolio-live.pages.dev";
 
 const welcomeMessage =
-  "မင်္ဂလာပါ — Zeke ပါ။ HR, payroll, workplace process, career, event တွေနဲ့ ဒီ website ထဲက service တွေအကြောင်း မေးနိုင်ပါတယ်။ မေးခွန်းကို တိုက်ရိုက်ရေးပါ။";
+  "မင်္ဂလာပါ — Zeke ပါ။ HR, payroll, workplace process, career, job updates, events, Telegram service unlock နဲ့ ဒီ website ထဲက အရာတွေကို မေးနိုင်ပါတယ်။ မေးခွန်းကို တိုက်ရိုက်ရေးပါ။";
 
 const quickPrompts = [
   "Payroll calculator ကို ဘယ်လိုသုံးမလဲ?",
   "Attendance issue ကို ဘယ်လိုစီမံမလဲ?",
-  "SSB နဲ့ PIT ဘာကွာလဲ?",
-  "ဒီ website မှာ game နဲ့ events ဘယ်မှာလဲ?",
+  "Job update တွေ ဘယ်မှာကြည့်ရမလဲ?",
+  "Event တွေနဲ့ Telegram service unlock ဘယ်မှာလဲ?",
 ];
 
 function fallbackAnswer(question: string): string {
@@ -33,12 +33,15 @@ function fallbackAnswer(question: string): string {
   ) {
     return "Payroll အတွက် Services ထဲက protected Payroll testing workspace ကိုဖွင့်ပါ။ Monthly salary ထည့်ပြီး PAYE/SSB estimate နဲ့ result ကို စမ်းနိုင်ပါတယ်။ Official filing မလုပ်ခင် IRD/SSB ရဲ့ လက်ရှိ official guidance ကို သီးခြားစစ်ပါ။ မင်းရဲ့မေးခွန်းက salary calculation အကြောင်းဆိုရင် amount နဲ့ pay period ကို ရေးပေးပါ။";
   }
+  if (/(job|jobs|career|vacancy|opening|အလုပ်ခေါ်|အလုပ်အကိုင်|အလုပ်ရှာ)/i.test(text)) {
+    return "ဒီ website ရဲ့ Job section မှာ live opportunity link တွေကို မူရင်း Telegram, LinkedIn, JobNet source ဆီကနေ ကြည့်နိုင်ပါတယ်။ Home မှာ Job ကိုရွေးပြီး listing ကိုနှိပ်ပါ—မူရင်း source မှာ အသေးစိတ်နဲ့ လျှောက်ထားပုံကို စစ်ဆေးပါ။";
+  }
   if (
     /(service|ဝန်ဆောင်|hr|human resource|recruit|recruitment|employee|ဝန်ထမ်း|policy|လုပ်ငန်း)/i.test(
       text
     )
   ) {
-    return "ဒီ toolkit ရဲ့ HR operations service တွေမှာ people operations, employee experience, HR process, compensation & benefits နဲ့ practical workplace support ပါဝင်ပါတယ်။ Services section မှာ သက်ဆိုင်ရာ workspace ကိုရွေးပြီး protected tools တွေကို ဆက်သုံးနိုင်ပါတယ်။";
+    return "Services ထဲမှာ payroll, bulk payroll, C&B resources နဲ့ HR sector forms ပါပါတယ်။ Access request တင်ပြီးနောက် administrator က Telegram ကနေ approve လုပ်မှ protected workspace ပွင့်ပါတယ်။ Home ရဲ့ Services section မှာ request လုပ်နိုင်ပါတယ်။";
   }
   if (/(event|events|webinar|သင်တန်း|ပွဲ|video|ဗီဒီယို|learning)/i.test(text)) {
     return "HR event feed ကို Events menu ကနေဖွင့်နိုင်ပါတယ်။ အဲဒီမှာ HR နဲ့ workplace learning အတွက် curated public links တွေကို မူရင်း source ဆီသွားကြည့်နိုင်အောင် စုစည်းထားပါတယ်။";
@@ -50,8 +53,8 @@ function fallbackAnswer(question: string): string {
   ) {
     return "HR operations, payroll, workplace process, and public resources အကြောင်း မေးမြန်းနိုင်ပါတယ်။";
   }
-  if (/(game|ဂိမ်း|zeke|scenario|practice|လေ့ကျင့်)/i.test(text)) {
-    return "Zeke ကို အခု mood/game helper မဟုတ်တော့ဘဲ မေးခွန်းဖြေတဲ့ HR assistant အဖြစ် ပြောင်းထားပါတယ်။ Workplace scenario တစ်ခုအကြောင်း အကြံလိုရင် အခြေအနေကို ရေးပေးပါ—facts, people, next step ဆိုပြီး ခွဲပြီး စဉ်းစားပေးမယ်။";
+  if (/(scenario|practice|လေ့ကျင့်)/i.test(text)) {
+    return "Workplace scenario ကို facts, people, next step သုံးပိုင်းခွဲပြီး စဉ်းစားပေးနိုင်ပါတယ်။ ဖြစ်နေတဲ့အခြေအနေနဲ့ သင်လိုချင်တဲ့ရလဒ်ကို ရေးပေးပါ။";
   }
   if (/(မသိ|မရှင်း|stuck|help|အကူအညီ|ဘယ်လိုစ|what should|how do)/i.test(text)) {
     return "အရင်ဆုံး ပြဿနာကို facts, people, next step သုံးပိုင်းခွဲကြည့်ပါ။ ဘာဖြစ်နေတယ်၊ ဘယ်သူတွေပါဝင်တယ်၊ ဒီနေ့လုပ်နိုင်တဲ့ next small step ကဘာလဲဆိုတာ ရေးပေးရင် Zeke က ပိုတိကျတဲ့လမ်းညွှန်ပေးမယ်။";

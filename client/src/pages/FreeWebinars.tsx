@@ -42,7 +42,7 @@ export default function FreeWebinars() {
   return (
     <main className="webinars-page">
       <section className="webinars-hero">
-        <nav className="webinars-page-nav" aria-label="Event navigation"><a href="/">← Portfolio</a></nav>
+        <nav className="webinars-page-nav" aria-label="Event navigation"><a href="/">← Zeke home</a><a href="/#jobs">Job</a><a href="/#services">Services</a></nav>
         <p className="section-kicker">Daily event video desk</p>
         <h1>HR events, updated daily.</h1>
         <p>နေ့စဉ်ရှာဖွေတွေ့ရှိသော public HR / workplace videos များကို မူရင်း YouTube စာမျက်နှာသို့သာ ချိတ်ပေးပါသည်။ Google Drive မသုံးပါ၊ ဗီဒီယိုကို download/re-upload မလုပ်ပါ။</p>

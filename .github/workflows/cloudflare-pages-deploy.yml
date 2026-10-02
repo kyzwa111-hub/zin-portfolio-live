@@ -1,0 +1,61 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      pages_project_name:
+        description: Cloudflare Pages project name
+        required: true
+        default: zin-portfolio-live
+        type: string
+  push:
+    branches:
+      - manus/zhte-hr-toolkit-refresh
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 22.x
+  PNPM_VERSION: 10.4.1
+
+jobs:
+  deploy:
+    name: Build and deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: pnpm run check
+
+      - name: Build production assets
+        run: pnpm run build
+
+      - name: Deploy static assets to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist/public --project-name ${{ inputs.pages_project_name || vars.CLOUDFLARE_PAGES_PROJECT_NAME || 'zin-portfolio-live' }} --branch ${{ github.ref_name }}

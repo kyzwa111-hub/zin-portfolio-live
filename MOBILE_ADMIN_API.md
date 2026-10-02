@@ -8,7 +8,7 @@ The mobile API and Telegram fixes are implemented in the Worker source but are *
 
 Current API host: `https://zin-portfolio-live.kyzwa111.workers.dev`
 
-The candidate custom domain `zhte.com` is still pending Cloudflare activation; do not use it until its registrar nameservers are changed and Cloudflare reports the zone as active.
+The candidate custom domain is still pending Cloudflare activation; do not use it until its registrar nameservers are changed and Cloudflare reports the zone as active.
 
 ## Sign in
 
@@ -85,7 +85,7 @@ The public access-request endpoint saves the request to D1 independently of Tele
 
 ## CORS and app origin
 
-Native HTTP clients generally do not rely on browser CORS. For a web/PWA client, set the Worker variable `MOBILE_APP_ORIGINS` to a comma-separated list of exact HTTPS origins (for example, `https://zhte.com`) after the domain is active. The Worker accepts same-origin requests by default and does not enable wildcard credentialed CORS.
+Native HTTP clients generally do not rely on browser CORS. For a web/PWA client, set the Worker variable `MOBILE_APP_ORIGINS` to a comma-separated list of exact HTTPS origins (for example, `https://app.example.com`) after the domain is active. The Worker accepts same-origin requests by default and does not enable wildcard credentialed CORS.
 
 ## Bot credential
 
@@ -108,12 +108,12 @@ The Worker secret currently points to the existing bot. Keep it unchanged until 
 
 - Public homepage responds: https://zin-portfolio-live.kyzwa111.workers.dev/ . It still links to the old `@ayelay_bot` because the source-branch changes have not been deployed.
 - Public events page responds: https://zin-portfolio-live.kyzwa111.workers.dev/webinars . It currently lists “Business KPIs Awareness” dated 26 September 2026, but its recording and slides still say “pending”; no event video has been published there yet.
-- The mobile API, new bot username, and custom domain are not live. `zhte.com` still needs its Cloudflare zone activated before it can be attached as a Worker custom domain.
+- The mobile API, new bot username, and custom domain are not live. The custom domain still needs its Cloudflare zone activated before it can be attached as a Worker custom domain.
 
 
 ## Custom domain state (Cloudflare API check, 2026-09-29)
 
-Cloudflare reports the `zhte.com` zone as **pending**. Cloudflare-assigned nameservers are `elmo.ns.cloudflare.com` and `leah.ns.cloudflare.com`; the current nameservers are `ns1.dropcatch.com` and `ns2.dropcatch.com`. At the domain registrar, replace the current nameservers with those two Cloudflare nameservers, then wait until the zone becomes **Active**. Only then can the Worker be attached to `https://zhte.com` and TLS/DNS be verified. The Google Cloud APIs Library page is not where this nameserver change is made.
+Cloudflare reports the custom domain zone as **pending**. Cloudflare-assigned nameservers are `elmo.ns.cloudflare.com` and `leah.ns.cloudflare.com`; the current nameservers are `ns1.dropcatch.com` and `ns2.dropcatch.com`. At the domain registrar, replace the current nameservers with those two Cloudflare nameservers, then wait until the zone becomes **Active**. Only then can the Worker be attached to `https://app.example.com` and TLS/DNS be verified. The Google Cloud APIs Library page is not where this nameserver change is made.
 
 
 ### Manual webhook fallback (only after the Worker update is deployed)

@@ -10,6 +10,7 @@ import PWAInstallCard from "../components/PWAInstallCard";
 type RequestRow = { request_id: string; requester_name: string; status: string; telegram_username: string | null; expires_at: number; created_at: number; ip_address: string | null; country: string | null; city: string | null };
 type PaymentRow = { id: number; request_id: string; requester_name: string; amount: number; currency: string; method: string; reference: string | null; status: string; note: string | null; recorded_at: number };
 type Overview = { requests: RequestRow[]; payments: PaymentRow[] };
+type LinkedInStatus = { configured: boolean; connected: boolean; organizationId: string; expiresAt: number | null; profile: { name: string | null } | null; connectUrl: string | null };
 
 async function api(path: string, body?: unknown) {
   const response = await fetch(path, { method: body === undefined ? "GET" : "POST", credentials: "same-origin", cache: "no-store", headers: body === undefined ? undefined : { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
@@ -30,6 +31,7 @@ export default function AdminControlCenter() {
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [telegramBotStatus, setTelegramBotStatus] = useState("Checking @ayelay_bot connection…");
+  const [linkedin, setLinkedin] = useState<LinkedInStatus | null>(null);
 
   useEffect(() => {
     let meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
@@ -46,6 +48,14 @@ export default function AdminControlCenter() {
       else if (meta) meta.content = previous;
     };
   }, []);
+
+  useEffect(() => {
+    if (!authorized) return;
+    fetch("/api/admin/linkedin/status", { credentials: "same-origin", cache: "no-store" })
+      .then(async response => response.ok ? response.json() as Promise<LinkedInStatus> : null)
+      .then(status => { if (status) setLinkedin(status); })
+      .catch(() => undefined);
+  }, [authorized]);
 
   useEffect(() => {
     let alive = true;
@@ -102,6 +112,10 @@ export default function AdminControlCenter() {
     <header className="admin-control-header"><div><p className="section-kicker"><ShieldCheck size={14} /> Private workspace</p><h1>Admin Control Center</h1><p>Review Telegram access requests and record verified payments.</p></div><div className="admin-control-actions"><Link className="admin-nav-link" href="/webinars">Events</Link><Link className="admin-nav-link" href="/">Portfolio</Link><button onClick={() => void run(refresh)} disabled={busy}><RefreshCw size={14} /> Refresh</button><button onClick={logout} disabled={busy}><LogOut size={14} /> Sign out</button></div></header>
     {error && <p className="admin-control-error" role="alert">{error}</p>}
     <section className="admin-control-stats"><article><span>Pending requests</span><strong>{data.requests.filter((r) => r.status === "pending").length}</strong></article><article><span>Approved</span><strong>{approved.length}</strong></article><article><span>Payment records</span><strong>{data.payments.length}</strong></article></section>
+    <section className="admin-control-card admin-linkedin-card"><div className="admin-control-card-head"><div><p className="section-kicker">LinkedIn integration</p><h2>HR Toolkit Myanmar Page</h2></div><span>{linkedin?.connected ? "Connected" : "Not connected"}</span></div>
+      <p className="admin-control-note">Connect this private admin panel to the LinkedIn Organization API. The OAuth token stays server-side and is never exposed to the browser.</p>
+      {linkedin?.connected ? <p className="admin-linkedin-connected">Connected{linkedin.profile?.name ? ` as ${linkedin.profile.name}` : ""} · Organization {linkedin.organizationId}</p> : linkedin?.configured ? <a className="button-primary" href={linkedin.connectUrl || "/api/linkedin/oauth/start"}>Connect LinkedIn</a> : <p className="admin-linkedin-warning">Add the LinkedIn Worker secrets first: client ID, client secret, redirect URI, and token encryption key.</p>}
+    </section>
     <section className="admin-control-card"><div className="admin-control-card-head"><div><p className="section-kicker">Telegram approval</p><h2>Access requests</h2></div><span>{data.requests.length} total</span></div>
       {data.requests.length ? <div className="admin-control-table-wrap"><table className="admin-control-table"><thead><tr><th>Requester</th><th>Origin</th><th>Request ID</th><th>Status</th><th>Created</th><th>Expires</th><th></th></tr></thead><tbody>{data.requests.map((r) => <tr key={r.request_id}><td><strong>{r.requester_name}</strong><small>{r.telegram_username ? "@" + r.telegram_username : "Telegram user not linked"}</small></td><td className="admin-origin-cell">{[r.city, r.country].filter(Boolean).join(", ") || r.ip_address || "—"}{r.ip_address && <small>{r.ip_address}</small>}</td><td><code>{r.request_id}</code></td><td><span className={"admin-status-pill " + r.status}>{r.status}</span></td><td>{new Date(r.created_at).toLocaleString()}</td><td>{new Date(r.expires_at).toLocaleString()}</td><td>{["pending","approved"].includes(r.status) && <button className="admin-revoke-button" onClick={() => revoke(r.request_id)} disabled={busy}><UserX size={13} /> Revoke</button>}{r.status === "revoked" && <button className="admin-restore-button" onClick={() => restore(r.request_id)} disabled={busy}><RotateCcw size={13} /> Restore</button>}</td></tr>)}</tbody></table></div> : <p className="admin-control-empty">No access requests yet.</p>}
     </section>

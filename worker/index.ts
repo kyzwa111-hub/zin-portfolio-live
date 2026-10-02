@@ -18,6 +18,12 @@ interface Env {
   TIDB_DATABASE_URL?: string;
   YOUTUBE_DATA_API_KEY?: string;
   LINKEDIN_JOB_FEED_URL?: string;
+  LINKEDIN_CLIENT_ID?: string;
+  LINKEDIN_CLIENT_SECRET?: string;
+  LINKEDIN_REDIRECT_URI?: string;
+  LINKEDIN_ORGANIZATION_ID?: string;
+  LINKEDIN_TOKEN_ENCRYPTION_KEY?: string;
+  LINKEDIN_VERSION?: string;
   JOBNET_JOB_FEED_URL?: string;
   ZEKE_MODEL?: string;
 }
@@ -31,6 +37,12 @@ const ADMIN_CHAT_KEY = "admin_chat_id";
 const WEBHOOK_URL_KEY = "webhook_url";
 const TARGET_TELEGRAM_BOT_USERNAME = "ayelay_bot";
 const TELEGRAM_WEBHOOK_URL = "https://zin-portfolio-live.kyzwa111.workers.dev/api/telegram/webhook";
+const DEFAULT_LINKEDIN_ORGANIZATION_ID = "143946372";
+const LINKEDIN_STATE_COOKIE = "linkedin_oauth_state";
+const LINKEDIN_ACCESS_TOKEN_SETTING = "linkedin_access_token_enc";
+const LINKEDIN_PROFILE_SETTING = "linkedin_profile";
+const LINKEDIN_EXPIRES_SETTING = "linkedin_expires_at";
+const LINKEDIN_SCOPES_SETTING = "linkedin_scopes";
 export type ToolkitSection = "toolkit" | "game" | "payroll";
 export function parseToolkitQuery(request: Request): { enabled: boolean; version: "final" | null; section: ToolkitSection | null; error?: string } {
   const url = new URL(request.url);
@@ -160,6 +172,109 @@ async function saveSetting(env: Env, key: string, value: string): Promise<void> 
 async function getSetting(env: Env, key: string): Promise<string | null> {
   const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key = ?").bind(key).first<{ value: string }>();
   return row?.value ?? null;
+}
+
+function base64UrlEncode(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64UrlDecode(value: string): Uint8Array {
+  const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((value.length + 3) % 4);
+  const binary = atob(padded);
+  return Uint8Array.from(binary, character => character.charCodeAt(0));
+}
+
+async function linkedinCryptoKey(env: Env): Promise<CryptoKey> {
+  if (!env.LINKEDIN_TOKEN_ENCRYPTION_KEY) throw new Error("LINKEDIN_TOKEN_ENCRYPTION_KEY is not configured");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(env.LINKEDIN_TOKEN_ENCRYPTION_KEY));
+  return crypto.subtle.importKey("raw", digest, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+}
+
+async function encryptLinkedInToken(env: Env, token: string): Promise<string> {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await linkedinCryptoKey(env), new TextEncoder().encode(token));
+  return `${base64UrlEncode(iv)}.${base64UrlEncode(new Uint8Array(ciphertext))}`;
+}
+
+async function decryptLinkedInToken(env: Env, value: string): Promise<string> {
+  const [ivValue, ciphertextValue] = value.split(".");
+  if (!ivValue || !ciphertextValue) throw new Error("Invalid stored LinkedIn token");
+  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64UrlDecode(ivValue) }, await linkedinCryptoKey(env), base64UrlDecode(ciphertextValue));
+  return new TextDecoder().decode(plaintext);
+}
+
+function linkedInConfigured(env: Env): boolean {
+  return Boolean(env.LINKEDIN_CLIENT_ID && env.LINKEDIN_CLIENT_SECRET && env.LINKEDIN_TOKEN_ENCRYPTION_KEY);
+}
+
+function linkedInOrganizationId(env: Env): string {
+  return env.LINKEDIN_ORGANIZATION_ID || DEFAULT_LINKEDIN_ORGANIZATION_ID;
+}
+
+function linkedInRedirectUri(request: Request, env: Env): string {
+  return env.LINKEDIN_REDIRECT_URI || new URL("/api/linkedin/oauth/callback", request.url).toString();
+}
+
+function clearCookie(name: string): string {
+  return `${name}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+}
+
+async function handleLinkedInOAuth(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  if (url.pathname === "/api/admin/linkedin/status" && request.method === "GET") {
+    const session = await adminSession(request, env);
+    if (!session) return json({ error: "Admin sign-in required." }, 401);
+    const encryptedToken = await getSetting(env, LINKEDIN_ACCESS_TOKEN_SETTING);
+    const expiresAt = await getSetting(env, LINKEDIN_EXPIRES_SETTING);
+    const profile = await getSetting(env, LINKEDIN_PROFILE_SETTING);
+    return json({
+      configured: linkedInConfigured(env),
+      connected: Boolean(encryptedToken),
+      organizationId: linkedInOrganizationId(env),
+      expiresAt: expiresAt ? Number(expiresAt) : null,
+      profile: profile ? JSON.parse(profile) : null,
+      connectUrl: linkedInConfigured(env) ? "/api/linkedin/oauth/start" : null,
+    });
+  }
+
+  if (url.pathname === "/api/linkedin/oauth/start" && request.method === "GET") {
+    if (!(await adminSession(request, env))) return json({ error: "Admin sign-in required." }, 401);
+    if (!linkedInConfigured(env)) return json({ error: "LinkedIn OAuth is not configured in Worker secrets." }, 503);
+    const state = randomToken(24);
+    const authorize = new URL("https://www.linkedin.com/oauth/v2/authorization");
+    authorize.searchParams.set("response_type", "code");
+    authorize.searchParams.set("client_id", env.LINKEDIN_CLIENT_ID!);
+    authorize.searchParams.set("redirect_uri", linkedInRedirectUri(request, env));
+    authorize.searchParams.set("state", state);
+    authorize.searchParams.set("scope", "openid profile w_organization_social rw_organization_admin");
+    return new Response(null, { status: 302, headers: { location: authorize.toString(), "set-cookie": `${LINKEDIN_STATE_COOKIE}=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600` } });
+  }
+
+  if (url.pathname === "/api/linkedin/oauth/callback" && request.method === "GET") {
+    const state = url.searchParams.get("state") || "";
+    const savedState = cookieValue(request, LINKEDIN_STATE_COOKIE) || "";
+    const code = url.searchParams.get("code") || "";
+    if (!state || !savedState || state !== savedState || !code) return json({ error: "Invalid LinkedIn OAuth state." }, 400);
+    if (!(await adminSession(request, env))) return json({ error: "Admin sign-in required." }, 401);
+    if (!linkedInConfigured(env)) return json({ error: "LinkedIn OAuth is not configured in Worker secrets." }, 503);
+    const tokenResponse = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ grant_type: "authorization_code", code, client_id: env.LINKEDIN_CLIENT_ID!, client_secret: env.LINKEDIN_CLIENT_SECRET!, redirect_uri: linkedInRedirectUri(request, env) }),
+    });
+    const tokenBody = await tokenResponse.json().catch(() => ({})) as { access_token?: string; expires_in?: number; scope?: string; error_description?: string };
+    if (!tokenResponse.ok || !tokenBody.access_token) return json({ error: tokenBody.error_description || "LinkedIn token exchange failed." }, 502);
+    const profileResponse = await fetch("https://api.linkedin.com/v2/userinfo", { headers: { authorization: `Bearer ${tokenBody.access_token}` } });
+    const profile = await profileResponse.json().catch(() => ({}));
+    await saveSetting(env, LINKEDIN_ACCESS_TOKEN_SETTING, await encryptLinkedInToken(env, tokenBody.access_token));
+    await saveSetting(env, LINKEDIN_EXPIRES_SETTING, String(Date.now() + Number(tokenBody.expires_in || 0) * 1000));
+    await saveSetting(env, LINKEDIN_SCOPES_SETTING, tokenBody.scope || "");
+    await saveSetting(env, LINKEDIN_PROFILE_SETTING, JSON.stringify({ name: profile?.name || null, sub: profile?.sub || null }));
+    return new Response(null, { status: 302, headers: { location: "/admin?linkedin=connected", "set-cookie": clearCookie(LINKEDIN_STATE_COOKIE) } });
+  }
+  return json({ error: "LinkedIn OAuth endpoint not found." }, 404);
 }
 async function targetWebhookReady(env: Env): Promise<boolean> {
   if (!env.TELEGRAM_BOT_TOKEN) return false;
@@ -829,6 +944,7 @@ export default {
       try { return json({ links: await listPublicDiscoveredVideoLinks(env), updatedAt: new Date().toISOString() }); }
       catch (error) { return videoLinkErrorResponse(error); }
     }
+    if (url.pathname === "/api/admin/linkedin/status" || url.pathname.startsWith("/api/linkedin/oauth/")) return handleLinkedInOAuth(request, env);
     if (url.pathname.startsWith("/api/admin/")) return handleAdminApi(request, env);
     if (url.pathname.startsWith("/api/trpc/")) return handleTrpc(request, env);
     if (url.pathname === "/api/health") {

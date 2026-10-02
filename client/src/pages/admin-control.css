@@ -38,6 +38,9 @@
 .admin-control-error { border: 1px solid #f1c4bc; border-radius: 9px; background: #fff2ef; color: #9a3d2e; padding: 12px 14px; }
 .admin-control-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 18px 0 30px; color: #6f7b74; font-size: 12px; }
 .admin-control-footer span { display: inline-flex; align-items: center; gap: 7px; }
+.admin-linkedin-connected { color: #237046; font-size: 13px; font-weight: 600; }
+.admin-linkedin-warning { color: #8b6519; font-size: 13px; line-height: 1.55; }
+.admin-linkedin-card .button-primary { display: inline-flex; margin-top: 8px; text-decoration: none; }
 .admin-control-footer a { color: inherit; }
 .admin-control-loading { display: flex; gap: 10px; align-items: center; padding: 80px 0; }
 .admin-control-login { max-width: 540px; margin: 12vh auto; padding: clamp(24px,5vw,42px); display: grid; justify-items: start; gap: 14px; }

@@ -1,0 +1,10 @@
+{
+  "routes": [
+    { "path": "/", "title": "ZHTE HR Toolkit" },
+    { "path": "/webinars", "title": "HR Events · ZHTE HR Toolkit" },
+    { "path": "/privacy", "title": "Privacy Policy · ZHTE HR Toolkit" },
+    { "path": "/terms", "title": "Terms of Use · ZHTE HR Toolkit" },
+    { "path": "/payroll-disclaimer", "title": "Payroll Disclaimer · ZHTE HR Toolkit" },
+    { "path": "/admin", "title": "Admin Control Center" }
+  ]
+}

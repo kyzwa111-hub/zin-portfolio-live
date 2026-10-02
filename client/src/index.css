@@ -1326,3 +1326,78 @@ body { background: var(--cream); }
   .feature-card strong { margin-top: 28px; }
   .pricing-card-featured { transform: none; }
 }
+
+/* ZHTE public-facing polish: accessible focus, bilingual rhythm, and resilient mobile layout */
+.skip-link {
+  background: #fffaf2;
+  border: 2px solid #ff4a0a;
+  border-radius: 10px;
+  color: #0d3835;
+  font-size: 12px;
+  font-weight: 800;
+  left: 16px;
+  padding: 10px 14px;
+  position: fixed;
+  top: 12px;
+  transform: translateY(-160%);
+  transition: transform .18s ease;
+  z-index: 100;
+}
+.skip-link:focus { transform: translateY(0); }
+.brand b, .footer-brand b { color: #0d3835; font-size: .85em; letter-spacing: .08em; }
+.personal-panel .brand-badge { color: #123f3a; }
+.personal-title-row { align-items: center; gap: 10px; }
+.personal-title-row .personal-label { letter-spacing: .04em; }
+.personal-lede span[lang="my"],
+.section-description span[lang="my"],
+.feature-heading > p span[lang="my"],
+.pricing-heading > p span[lang="my"],
+.services-hero-copy span[lang="my"],
+.hr-sector-heading p span[lang="my"] { display: block; margin-top: 8px; }
+.personal-lede span[lang="my"] { color: rgba(16,43,42,.72); font-size: .9em; }
+.site-nav a:focus-visible,
+.brand:focus-visible,
+.button-primary:focus-visible,
+.text-link:focus-visible,
+.toolkit-card:focus-visible,
+.feature-card a:focus-visible,
+.pricing-card a:focus-visible,
+.footer-links a:focus-visible,
+.mobile-menu-button:focus-visible,
+.service-card:focus-visible,
+.hr-sector-card:focus-visible,
+.telegram-button:focus-visible { outline: 3px solid #f4cc72; outline-offset: 4px; }
+.mobile-menu-button { border-radius: 10px; }
+.mobile-menu-button:focus-visible { background: #ffeadf; }
+.site-nav { z-index: 20; }
+.services-explainer-video { max-width: 100%; }
+.footer-links { align-items: center; display: flex; flex-wrap: wrap; gap: 12px 18px; }
+.footer-links a { color: rgba(255,255,255,.72); font-size: 10px; text-decoration: underline; text-decoration-color: rgba(255,255,255,.25); text-underline-offset: 3px; }
+.footer-links a:hover { color: #fff; text-decoration-color: #ff4a0a; }
+.footer-year { white-space: nowrap; }
+@media (max-width: 700px) {
+  .skip-link { left: 10px; top: 8px; }
+  .portfolio-header .brand { min-width: 0; }
+  .portfolio-header .brand > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .site-nav { max-height: calc(100vh - 90px); overflow-y: auto; }
+  .site-nav a { min-height: 42px; }
+  .personal-lede span[lang="my"],
+  .section-description span[lang="my"],
+  .feature-heading > p span[lang="my"],
+  .pricing-heading > p span[lang="my"],
+  .services-hero-copy span[lang="my"],
+  .hr-sector-heading p span[lang="my"] { margin-top: 10px; }
+  .personal-actions { align-items: stretch; flex-direction: column; }
+  .personal-actions .button-primary, .personal-actions .text-link { justify-content: center; width: 100%; }
+  .footer-links { align-items: flex-start; flex-direction: column; gap: 9px; }
+  .footer-year { white-space: normal; }
+}
+@media (max-width: 420px) {
+  .portfolio-header .brand { font-size: 13px; }
+  .personal-panel h1 { font-size: clamp(56px, 19vw, 78px); }
+  .toolkit-heading h2, .feature-heading h2, .pricing-heading h2 { font-size: clamp(40px, 13vw, 58px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .skip-link { transition: none; }
+}

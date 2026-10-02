@@ -9,7 +9,6 @@ import BulkPayroll, { BulkPayrollSection } from "@/components/BulkPayroll";
 import CBResourceCenter from "@/components/CBResourceCenter";
 import HRSectorForm, { hrSectorItems, type HRSectorId } from "@/components/HRTemplateCatalog";
 import ScenarioLab from "@/components/ScenarioLab";
-const PUBLIC_MEDIA_ORIGIN = "https://zin-portfolio-live.pages.dev";
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -27,15 +26,16 @@ export default function Home() {
 
   return (
     <div className="site-shell two-part-portfolio">
+      <a className="skip-link" href="#main-content">Skip to content · အကြောင်းအရာသို့</a>
       <header className="site-header portfolio-header">
-        <a className="brand" href="#home" onClick={closeMenu}>
-          <span className="brand-mark"><Sparkles size={15} /></span>
-          <span>HR <em>toolkit</em></span>
+        <a className="brand" href="#home" onClick={closeMenu} aria-label="ZHTE HR Toolkit home">
+          <span className="brand-mark" aria-hidden="true"><Sparkles size={15} /></span>
+          <span><b>ZHTE</b> <em>HR toolkit</em></span>
         </a>
-        <button className="mobile-menu-button" aria-label="Toggle menu" onClick={() => setMenuOpen((open) => !open)}>
-          {menuOpen ? <X size={21} /> : <Menu size={21} />}
+        <button className="mobile-menu-button" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen((open) => !open)}>
+          {menuOpen ? <X size={21} aria-hidden="true" /> : <Menu size={21} aria-hidden="true" />}
         </button>
-        <nav className={menuOpen ? "site-nav site-nav-open" : "site-nav"}>
+        <nav id="primary-navigation" className={menuOpen ? "site-nav site-nav-open" : "site-nav"} aria-label="Primary navigation">
           <a href="#toolkit" onClick={closeMenu}>Toolkit</a>
           <a href="#features" onClick={closeMenu}>Features</a>
           <a href="#pricing" onClick={closeMenu}>Pricing</a>
@@ -45,17 +45,17 @@ export default function Home() {
         </nav>
       </header>
 
-      <main>
+      <main id="main-content">
         <section className="personal-panel generic-landing-panel" id="home">
           <div className="personal-panel-inner">
             <div className="personal-copy">
-              <p className="eyebrow"><span className="eyebrow-dot" /> Practical HR workspace</p>
-              <div className="personal-title-row"><span className="personal-icon"><Sparkles size={22} /></span><p className="personal-label">Welcome</p></div>
+              <p className="eyebrow"><span className="eyebrow-dot" /> ZHTE · HR operations &amp; workplace learning</p>
+              <div className="personal-title-row"><span className="personal-icon" aria-hidden="true"><Sparkles size={22} /></span><p className="personal-label">HR Toolkit · လုပ်ငန်းသုံးအရင်းအမြစ်</p></div>
               <h1>HR tools for<br /><span>clearer work.</span></h1>
-              <p className="personal-lede">Practical payroll, HR operations, workplace learning, and public event resources in one place.</p>
-              <div className="personal-actions"><a className="button-primary" href="#services">Explore tools <ArrowDown size={16} /></a><a className="text-link light-link" href="/webinars"><CalendarDays size={15} /> View events</a></div>
+              <p className="personal-lede">Practical payroll, HR operations, workplace learning, and public event resources in one place. <span lang="my">လူနဲ့လုပ်ငန်းစဉ်ကို ပိုရှင်းလင်းအောင် ကူညီပေးတဲ့ HR toolkit တစ်ခုပါ။</span></p>
+              <div className="personal-actions"><a className="button-primary" href="#services">Explore tools · ကိရိယာများ <ArrowDown size={16} aria-hidden="true" /></a><a className="text-link light-link" href="/webinars"><CalendarDays size={15} aria-hidden="true" /> View events · ပွဲများ</a></div>
             </div>
-            <div className="personal-profile-card generic-tool-card"><div className="profile-card-caption"><span>HR WORKSPACE</span><strong>People · Process · Progress</strong></div><div className="profile-card-note"><Check size={14} /> Tools and resources</div></div>
+            <div className="personal-profile-card generic-tool-card"><div className="profile-card-caption"><span>ZHTE · HR WORKSPACE</span><strong>People · Process · Progress</strong></div><div className="profile-card-note"><Check size={14} aria-hidden="true" /> Tools and resources · လက်တွေ့အသုံးချကိရိယာများ</div></div>
           </div>
         </section>
         <section
@@ -74,8 +74,8 @@ export default function Home() {
                 <i>people, process, progress.</i>
               </h2>
             </div>
-            <p className="section-description">
-              Explore practical HR services, learning moments, and protected payroll tools in one place.
+              <p className="section-description">
+              Explore practical HR services, learning moments, and protected payroll tools in one place. <span lang="my">HR အလုပ်အတွက် လိုအပ်တာတွေကို တစ်နေရာတည်းမှာ ရှာဖွေပါ။</span>
             </p>
           </div>
           <div className="toolkit-grid">
@@ -83,7 +83,7 @@ export default function Home() {
               <span className="toolkit-card-icon">
                 <UserRound size={18} />
               </span>
-              <span className="toolkit-card-index">01 · HR workspace</span>
+              <span className="toolkit-card-index">01 · HR workspace · HR အလုပ်ခွင်</span>
               <strong>HR operations tools</strong>
               <p>
                 Practical templates and resources for everyday people operations.
@@ -96,7 +96,7 @@ export default function Home() {
               <span className="toolkit-card-icon">
                 <BriefcaseBusiness size={18} />
               </span>
-              <span className="toolkit-card-index">02 · Services</span>
+              <span className="toolkit-card-index">02 · Services · ဝန်ဆောင်မှု</span>
               <strong>HR &amp; payroll support</strong>
               <p>
                 Practical operations support, compensation workflows, C&amp;B
@@ -118,7 +118,7 @@ export default function Home() {
               <span className="toolkit-card-icon">
                 <Bot size={18} />
               </span>
-              <span className="toolkit-card-index">03 · Assistant</span>
+                <span className="toolkit-card-index">03 · Assistant · အကူအညီ</span>
               <strong>Zeke HR assistant</strong>
               <p>
                 Ask about HR, payroll, workplace process, career, events, and
@@ -132,7 +132,7 @@ export default function Home() {
               <span className="toolkit-card-icon">
                 <CalendarDays size={18} />
               </span>
-              <span className="toolkit-card-index">04 · Events</span>
+              <span className="toolkit-card-index">04 · Events · အစီအစဉ်များ</span>
               <strong>HR event desk</strong>
               <p>
                 Daily public HR and workplace video links, refreshed from
@@ -144,14 +144,14 @@ export default function Home() {
             </a>
             <a className="toolkit-card toolkit-card-game" href="/?hr-toolkit=1&v=final&section=game">
               <span className="toolkit-card-icon"><Gamepad2 size={18} /></span>
-              <span className="toolkit-card-index">05 · Practice</span>
+              <span className="toolkit-card-index">05 · Practice · လေ့ကျင့်မှု</span>
               <strong>Workplace scenario lab</strong>
               <p>Practise calm, fair next steps for attendance, payroll variance, and employee concerns.</p>
               <span className="toolkit-card-link">Play a case <ArrowUpRight size={15} /></span>
             </a>
             <a className="toolkit-card toolkit-card-wide toolkit-card-payroll" href="/?hr-toolkit=1&v=final&section=payroll" onClick={() => setSelectedWorkspace("payroll")}>
               <span className="toolkit-card-icon"><Calculator size={18} /></span>
-              <span className="toolkit-card-index">06 · Test &amp; calculate</span>
+              <span className="toolkit-card-index">06 · Test &amp; calculate · တွက်ချက်မှု</span>
               <strong>Payroll testing workspace</strong>
               <p>Use the Myanmar payroll estimator, SSB/PIT guidance, bulk file workflows, and sector forms in one protected workspace.</p>
               <span className="toolkit-card-link">Open payroll tools <ArrowUpRight size={15} /></span>
@@ -165,7 +165,7 @@ export default function Home() {
               <p className="section-kicker"><span className="eyebrow-dot" /> Built for practical work</p>
               <h2 id="features-title">Everything your<br /><i>HR day needs.</i></h2>
             </div>
-            <p>Clear tools, calm workflows, and useful guidance—structured like a modern product workspace, not a crowded portal.</p>
+            <p>Clear tools, calm workflows, and useful guidance—structured like a modern product workspace, not a crowded portal. <span lang="my">ရှုပ်ထွေးမနေဘဲ အသုံးချလွယ်အောင် တည်ဆောက်ထားပါတယ်။</span></p>
           </div>
           <div className="feature-grid">
             {[
@@ -183,7 +183,7 @@ export default function Home() {
               <p className="section-kicker"><span className="eyebrow-dot" /> Simple access</p>
               <h2 id="pricing-title">Choose the right<br /><i>starting point.</i></h2>
             </div>
-            <p>Start with public resources. Unlock the protected workspace when your team needs calculators, bulk files, and sector forms.</p>
+            <p>Start with public resources. Unlock the protected workspace when your team needs calculators, bulk files, and sector forms. <span lang="my">အသင်းအဖွဲ့အတွက် လိုအပ်သလို တိုးချဲ့အသုံးပြုနိုင်ပါတယ်။</span></p>
           </div>
           <div className="pricing-grid">
             <article className="pricing-card"><span className="pricing-label">PUBLIC</span><strong>Explore</strong><b>Free</b><p>Public HR resources, events, workplace practice, and the Zeke assistant.</p><a href="#toolkit">Start exploring <ArrowUpRight size={14} /></a></article>
@@ -198,11 +198,11 @@ export default function Home() {
         <section className="services-panel" id="services">
           <div className="services-hero section-pad">
             <div>
-              <p className="section-kicker"><span className="telegram-dot" /> Unlock Telegram</p>
+              <p className="section-kicker"><span className="telegram-dot" /> Unlock Telegram · Telegram ဖြင့်ဖွင့်ပါ</p>
               <h2>All services,<br /><i>in one place.</i></h2>
             </div>
             <div className="services-hero-copy">
-              <p>One protected workspace for HR administration, payroll calculations, bulk exports, and C&amp;B resources. Access is approved by the administrator.</p>
+              <p>One protected workspace for HR administration, payroll calculations, bulk exports, and C&amp;B resources. Access is approved by the administrator. <span lang="my">HR စီမံခန့်ခွဲမှုနဲ့ payroll လုပ်ငန်းစဉ်တွေကို တစ်နေရာတည်းမှာ စုစည်းထားပါတယ်။</span></p>
             </div>
           </div>
 
@@ -215,13 +215,13 @@ export default function Home() {
               <p>See what Telegram unlock gives you, which payroll tools are included, and what forms you can prepare inside the workspace.</p>
             </div>
             <div className="services-video-shell">
-              <video className="services-explainer-video" controls preload="metadata" poster={`${PUBLIC_MEDIA_ORIGIN}/videos/hr-toolkit-services-58sec-poster.jpg`}>
-                <source src={`${PUBLIC_MEDIA_ORIGIN}/videos/hr-toolkit-services-58sec.mp4`} type="video/mp4" />
+              <video className="services-explainer-video" controls preload="metadata" poster="/videos/hr-toolkit-services-58sec-poster.jpg" aria-label="HR Toolkit Telegram access explainer video">
+                <source src="/videos/hr-toolkit-services-58sec.mp4" type="video/mp4" />
                 Your browser does not support the video element.
               </video>
             </div>
             <div className="services-explainer-footer">
-              <span>58 sec · Burmese narration · English UI labels</span>
+              <span>58 sec · Burmese narration · English UI labels · မြန်မာအသံ / English UI</span>
               <div className="services-explainer-actions">
                 <a className="button-primary" href="#services">Request access <ArrowUpRight size={15} /></a>
                 <a className="telegram-button" href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a>
@@ -242,13 +242,13 @@ export default function Home() {
               return <button type="button" className={"service-card service-card-button " + (selectedWorkspace === service.id ? "selected" : "")} key={service.id} onClick={() => { setSelectedWorkspace(service.id); if (service.id === "bulk") document.getElementById("bulk-payroll")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} disabled={locked} aria-disabled={locked}><span className="service-card-number">{service.number}</span><div><strong>{service.title}</strong><p>{service.description}</p></div><span className="service-card-status">{workspaceApproved ? "Open workspace" : "Telegram unlock"}</span></button>;
             })}
           </div>
-          <div className="hr-sector-heading section-pad"><div><p className="section-kicker"><UsersRound size={15} /> HR sector</p><h3>People work, held together.</h3><p>Choose a sector to open its related working form. Forms are local preparation templates, not government submissions.</p></div></div>
+          <div className="hr-sector-heading section-pad"><div><p className="section-kicker"><UsersRound size={15} aria-hidden="true" /> HR sector · လုပ်ငန်းကဏ္ဍ</p><h3>People work, held together.</h3><p>Choose a sector to open its related working form. Forms are local preparation templates, not government submissions. <span lang="my">သက်ဆိုင်ရာကဏ္ဍကို ရွေးပြီး form ကို ပြင်ဆင်နိုင်ပါတယ်။</span></p></div></div>
           <div className="hr-sector-grid section-pad">{hrSectorItems.map((item, index) => <button type="button" className={"hr-sector-card " + (selectedWorkspace === item.id ? "selected" : "")} key={item.id} onClick={() => setSelectedWorkspace(item.id)} disabled={!workspaceApproved} aria-disabled={!workspaceApproved}><span>0{index + 1}</span><div><strong>{item.title}</strong><p>{item.description}</p></div><small>{workspaceApproved ? "Open related forms" : "Unlock with Telegram"}</small></button>)}</div>
           {workspaceApproved && selectedWorkspace !== "bulk" && <div className="workspace-active-panel section-pad" aria-live="polite">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm key={selectedWorkspace} id={selectedWorkspace as HRSectorId} />}</div>}
         </section>
       </main>
 
-      <footer className="site-footer"><div className="footer-brand"><span className="brand-mark"><Sparkles size={14} /></span><span>HR <em>toolkit</em></span></div><span className="footer-note"><Check size={14} /> Practical public resources</span><span className="footer-year">© {new Date().getFullYear()} HR Toolkit</span></footer>
+      <footer className="site-footer" aria-label="Website footer"><div className="footer-brand"><span className="brand-mark" aria-hidden="true"><Sparkles size={14} /></span><span><b>ZHTE</b> <em>HR toolkit</em></span></div><span className="footer-note"><Check size={14} aria-hidden="true" /> Practical public resources · လက်တွေ့အရင်းအမြစ်များ</span><nav className="footer-links" aria-label="Legal navigation"><a href="/privacy">Privacy · ကိုယ်ရေးအချက်အလက်</a><a href="/terms">Terms · စည်းကမ်း</a><a href="/payroll-disclaimer">Payroll note · မှတ်ချက်</a></nav><span className="footer-year">© {new Date().getFullYear()} ZHTE · HR Toolkit</span></footer>
     </div>
   );
 }

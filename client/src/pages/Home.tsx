@@ -183,12 +183,12 @@ export default function Home() {
               <p className="section-kicker"><span className="eyebrow-dot" /> Simple access</p>
               <h2 id="pricing-title">Choose the right<br /><i>starting point.</i></h2>
             </div>
-            <p>Start with public resources. Unlock the protected workspace when your team needs calculators, bulk files, and sector forms. <span lang="my">အသင်းအဖွဲ့အတွက် လိုအပ်သလို တိုးချဲ့အသုံးပြုနိုင်ပါတယ်။</span></p>
+            <p>Start free, then unlock the protected workspace when you need payroll outputs, templates, and official-source preparation. <span lang="my">အခမဲ့စတင်ပြီး လိုအပ်တဲ့အချိန်မှာ workspace ကို ဖွင့်နိုင်ပါတယ်။</span></p>
           </div>
           <div className="pricing-grid">
-            <article className="pricing-card"><span className="pricing-label">PUBLIC</span><strong>Explore</strong><b>Free</b><p>Public HR resources, events, workplace practice, and the Zeke assistant.</p><a href="#toolkit">Start exploring <ArrowUpRight size={14} /></a></article>
-            <article className="pricing-card pricing-card-featured"><span className="pricing-label">WORKSPACE</span><strong>Protect</strong><b>Telegram unlock</b><p>Payroll calculator, bulk payroll exports, C&amp;B resources, and sector forms.</p><a href="#services">Request access <ArrowUpRight size={14} /></a></article>
-            <article className="pricing-card"><span className="pricing-label">TEAMS</span><strong>Scale</strong><b>Talk to us</b><p>Build a focused HR operations workflow around your team's recurring process.</p><a href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer">Open Telegram <ArrowUpRight size={14} /></a></article>
+            <article className="pricing-card"><span className="pricing-label">PUBLIC</span><strong>Start free</strong><b>No approval</b><p>Public HR resources, events, workplace practice, and the Zeke assistant.</p><a href="#toolkit">Start exploring <ArrowUpRight size={14} /></a></article>
+            <article className="pricing-card pricing-card-featured"><span className="pricing-label">WORKSPACE · RECOMMENDED</span><strong>Unlock</strong><b>50,000 MMK access</b><p>Payroll calculator, bulk exports, C&amp;B resources, and sector forms after Telegram review and approval.</p><a href="#telegram-unlock">Request access <ArrowUpRight size={14} /></a></article>
+            <article className="pricing-card"><span className="pricing-label">TEAMS</span><strong>Shape it</strong><b>Custom workflow</b><p>Talk through a recurring HR process and build a focused operating workflow for your team.</p><a href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer">Talk on Telegram <ArrowUpRight size={14} /></a></article>
           </div>
         </section>
 
@@ -198,21 +198,31 @@ export default function Home() {
         <section className="services-panel" id="services">
           <div className="services-hero section-pad">
             <div>
-              <p className="section-kicker"><span className="telegram-dot" /> Unlock Telegram · Telegram ဖြင့်ဖွင့်ပါ</p>
-              <h2>All services,<br /><i>in one place.</i></h2>
+              <p className="section-kicker"><span className="telegram-dot" /> ZHTE service desk · HR လုပ်ငန်းစဉ်</p>
+              <h2>A calmer way<br /><i>to run HR.</i></h2>
             </div>
             <div className="services-hero-copy">
-              <p>One protected workspace for HR administration, payroll calculations, bulk exports, and C&amp;B resources. Access is approved by the administrator. <span lang="my">HR စီမံခန့်ခွဲမှုနဲ့ payroll လုပ်ငန်းစဉ်တွေကို တစ်နေရာတည်းမှာ စုစည်းထားပါတယ်။</span></p>
+              <p>Understand the issue, prepare the work, and move to the official next step with confidence. Choose a public resource, protected workspace, or direct team conversation. <span lang="my">အခြေအနေကို နားလည်၊ လုပ်ငန်းကို ပြင်ဆင်ပြီး official next step ကို ယုံကြည်စွာ ဆက်လုပ်နိုင်ပါတယ်။</span></p>
+              <div className="services-proof-row"><span><strong>6</strong> HR workstreams</span><span><strong>Local-first</strong> salary data</span><span><strong>Official</strong> source handoff</span></div>
+            </div>
+          </div>
+
+          <div className="services-paths section-pad" aria-label="Choose your ZHTE path">
+            <div className="services-paths-heading"><p className="section-kicker"><span className="eyebrow-dot" /> Choose your next step</p><span>Most visitors start with the recommended workspace path.</span></div>
+            <div className="services-path-grid">
+              <a className="services-path-card" href="#toolkit"><span>01</span><strong>Explore publicly</strong><p>Use events, practice cases, Zeke, and public HR resources without an approval step.</p><b>Start free <ArrowUpRight size={14} /></b></a>
+              <a className="services-path-card services-path-card-featured" href="#telegram-unlock"><span>02 · RECOMMENDED</span><strong>Unlock the workspace</strong><p>Get payroll testing, bulk outputs, HR forms, and C&amp;B resources through one Telegram approval flow.</p><b>Request access <ArrowUpRight size={14} /></b></a>
+              <a className="services-path-card" href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer"><span>03</span><strong>Talk to the team</strong><p>For a recurring process, ask about a focused workflow for your team or organisation.</p><b>Open Telegram <ExternalLink size={14} /></b></a>
             </div>
           </div>
 
           <div className="services-explainer section-pad">
             <div className="services-explainer-heading">
               <div>
-                <p className="section-kicker"><span className="eyebrow-dot" /> Zeke explains</p>
-                <h3>Unlock the workflow,<br /><i>then make it useful.</i></h3>
+                <p className="section-kicker"><span className="eyebrow-dot" /> Optional 58-second explainer</p>
+                <h3>See what you get,<br /><i>before you unlock.</i></h3>
               </div>
-              <p>See what Telegram unlock gives you, which payroll tools are included, and what forms you can prepare inside the workspace.</p>
+              <p>Prefer a quick walkthrough? See the access steps and workspace outputs here. You can skip the video and request access directly above or below.</p>
             </div>
             <div className="services-video-shell">
               <video className="services-explainer-video" controls preload="metadata" poster="/videos/hr-toolkit-services-58sec-poster.jpg" aria-label="HR Toolkit Telegram access explainer video">
@@ -223,13 +233,19 @@ export default function Home() {
             <div className="services-explainer-footer">
               <span>58 sec · Burmese narration · English UI labels · မြန်မာအသံ / English UI</span>
               <div className="services-explainer-actions">
-                <a className="button-primary" href="#services">Request access <ArrowUpRight size={15} /></a>
+                <a className="button-primary" href="#telegram-unlock">Request access <ArrowUpRight size={15} /></a>
                 <a className="telegram-button" href="https://t.me/ayelay_bot" target="_blank" rel="noreferrer">Open Telegram bot <ExternalLink size={14} /></a>
               </div>
             </div>
           </div>
 
-          <div className="section-pad"><WorkspaceAccessGate onApprovedChange={setWorkspaceApproved} /></div>
+          <div className="section-pad services-access-wrap">
+            <div className="services-access-heading">
+              <div><p className="section-kicker"><span className="telegram-dot" /> Recommended next step</p><h3>Unlock once.<br /><i>Use the workspace.</i></h3></div>
+              <p>One request covers payroll testing, bulk payroll files, C&amp;B sources, and HR sector forms. Your salary inputs stay in the browser; official filing remains on the relevant authority's site.</p>
+            </div>
+            <WorkspaceAccessGate onApprovedChange={setWorkspaceApproved} />
+          </div>
           <BulkPayrollSection approved={workspaceApproved} />
 
           <div className="service-cards section-pad" aria-label="Available services">

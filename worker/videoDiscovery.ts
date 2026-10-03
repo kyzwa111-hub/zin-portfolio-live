@@ -128,7 +128,7 @@ async function runPublicEventFeedDiscovery(env: YouTubeDiscoveryEnv): Promise<Di
   let linksProcessed = 0;
   for (const feed of PUBLIC_EVENT_FEEDS) {
     try {
-      const response = await fetch(feed.url, { headers: { accept: "application/rss+xml, application/xml, text/xml" } });
+      const response = await fetch(feed.url, { headers: { accept: "application/rss+xml, application/xml, text/xml", "user-agent": "Zeke-Event-Feed/1.0" } });
       if (!response.ok) continue;
       const items = xmlItems(await response.text()).slice(0, 8);
       const candidates: VideoLinkInput[] = items.flatMap(item => {

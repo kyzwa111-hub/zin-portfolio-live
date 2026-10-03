@@ -34,20 +34,26 @@ const serviceItems = [
 ] as const;
 
 const serviceWalkthroughs = [
-  { id: "unlock", label: "Telegram unlock", kicker: "STEP 01", title: "Request access in one tap.", detail: "Send your name, open Telegram, and wait for administrator approval.", screen: "access" },
-  { id: "payroll", label: "Payroll", kicker: "STEP 02", title: "Check payroll with confidence.", detail: "Enter salary inputs, review the estimate, and save your working result.", screen: "payroll" },
-  { id: "bulk", label: "Bulk payroll", kicker: "STEP 03", title: "One upload, three outputs.", detail: "Upload the employee list and export calculation, SSB, and PAYE-A files.", screen: "bulk" },
-  { id: "workspace", label: "HR workspace", kicker: "STEP 04", title: "Open forms and documents.", detail: "Choose a people-work form, prepare it locally, and keep the working record organised.", screen: "workspace" },
-  { id: "plans", label: "Access plans", kicker: "STEP 05", title: "Choose the right access.", detail: "Compare the available plan notes before requesting protected tools.", screen: "plans" },
-  { id: "dashboard", label: "Personal dashboard", kicker: "STEP 06", title: "Keep your progress close.", detail: "Return to saved documents, recent work, and your personal workspace.", screen: "dashboard" },
+  { id: "unlock", label: "Telegram unlock", kicker: "STEP 01", title: "Request access in one tap.", detail: "Send your name, open Telegram, and wait for administrator approval.", screen: "access", steps: ["Open Services", "Send access request", "Follow Telegram approval"] },
+  { id: "payroll", label: "Payroll", kicker: "STEP 02", title: "Check payroll with confidence.", detail: "Enter salary inputs, review the estimate, and save your working result.", screen: "payroll", steps: ["Open Payroll tool", "Enter salary inputs", "Review the estimate"] },
+  { id: "bulk", label: "Bulk payroll", kicker: "STEP 03", title: "One upload, three outputs.", detail: "Upload the employee list and export calculation, SSB, and PAYE-A files.", screen: "bulk", steps: ["Download template", "Upload employee list", "Export three files"] },
+  { id: "workspace", label: "HR workspace", kicker: "STEP 04", title: "Open forms and documents.", detail: "Choose a people-work form, prepare it locally, and keep the working record organised.", screen: "workspace", steps: ["Open HR workspace", "Choose a form", "Save your working record"] },
+  { id: "plans", label: "Access plans", kicker: "STEP 05", title: "Choose the right access.", detail: "Compare the available plan notes before requesting protected tools.", screen: "plans", steps: ["Review plan notes", "Compare access", "Choose your next step"] },
+  { id: "dashboard", label: "Personal dashboard", kicker: "STEP 06", title: "Keep your progress close.", detail: "Return to saved documents, recent work, and your personal workspace.", screen: "dashboard", steps: ["Open dashboard", "Review saved work", "Continue where you stopped"] },
 ] as const;
 
 function ServiceWalkthrough() {
   const [active, setActive] = useState(0);
+  const [demoStep, setDemoStep] = useState(0);
   useEffect(() => {
     const timer = window.setInterval(() => setActive(current => (current + 1) % serviceWalkthroughs.length), 5200);
     return () => window.clearInterval(timer);
   }, []);
+  useEffect(() => {
+    setDemoStep(0);
+    const timer = window.setInterval(() => setDemoStep(current => (current + 1) % 3), 1750);
+    return () => window.clearInterval(timer);
+  }, [active]);
   const item = serviceWalkthroughs[active];
   return <section className="service-walkthrough" aria-label="Service walkthrough demo">
     <div className="service-walkthrough-copy">
@@ -70,7 +76,8 @@ function ServiceWalkthrough() {
           {item.screen === "workspace" && <div className="service-demo-workspace"><span>Attendance</span><span>Recruitment</span><span>Employee relations</span><span>Performance</span></div>}
           {item.screen === "plans" && <div className="service-demo-plans"><span><b>Starter</b><small>Explore the basics</small></span><span className="selected"><b>Protected tools</b><small>Request approval</small></span><span><b>Team access</b><small>Compare options</small></span></div>}
           {item.screen === "dashboard" && <div className="service-demo-dashboard"><div><b>3</b><small>Saved documents</small></div><div><b>2</b><small>Recent forms</small></div><div><b>↗</b><small>Open workspace</small></div></div>}
-          <div className="service-demo-footer"><span>{item.detail}</span><span className="service-demo-cursor"><MousePointer2 size={16} /> Zeke</span></div>
+          <div className="service-demo-step-strip" aria-label="Walkthrough progress">{item.steps.map((step, index) => <span className={index <= demoStep ? "done" : ""} key={step}><b>{index + 1}</b>{step}</span>)}</div>
+          <div className="service-demo-footer"><span><strong>Scene {demoStep + 1}/3 · </strong>{item.detail}</span><span className="service-demo-cursor"><MousePointer2 size={16} /> Zeke guide</span></div>
         </div>
         <video className="service-demo-mascot" autoPlay loop muted playsInline preload="metadata" poster="/images/zeke-mascot.png" aria-label="Zeke guiding the service walkthrough"><source src={MASCOT_VIDEO} type="video/mp4" /></video>
       </div>

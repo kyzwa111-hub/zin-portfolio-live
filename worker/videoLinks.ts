@@ -6,6 +6,18 @@ export type SourceKind = "manual" | "search_api";
 
 export interface TiDBEnv {
   TIDB_DATABASE_URL?: string;
+  DB?: D1VideoDatabase;
+}
+
+interface D1VideoStatement {
+  bind(...values: unknown[]): D1VideoStatement;
+  first<T = Record<string, unknown>>(): Promise<T | null>;
+  all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
+  run(): Promise<unknown>;
+}
+
+interface D1VideoDatabase {
+  prepare(sql: string): D1VideoStatement;
 }
 
 export interface VideoLinkRow {
@@ -50,6 +62,10 @@ export interface VideoLinkInput {
 function connection(env: TiDBEnv) {
   if (!env.TIDB_DATABASE_URL) throw new TiDBNotConfiguredError();
   return connect({ url: env.TIDB_DATABASE_URL });
+}
+
+function d1Connection(env: TiDBEnv): D1VideoDatabase | null {
+  return env.DB || null;
 }
 
 function cleanText(value: unknown, maxLength: number): string | null {
@@ -111,6 +127,18 @@ const selectColumns = "CAST(id AS CHAR) AS id, video_url, platform, title, creat
 export async function addVideoLink(env: TiDBEnv, input: VideoLinkInput, sourceKind: SourceKind = "manual"): Promise<VideoLinkRow> {
   const normalized = normalizeVideoLink(input);
   const urlHash = await hashUrl(normalized.video_url);
+  const d1 = d1Connection(env);
+  if (d1) {
+    const now = new Date().toISOString();
+    await d1.prepare(
+      `INSERT INTO event_video_links (id, url_hash, video_url, platform, title, creator_name, license_name, source_query, source_kind, first_seen_at, last_seen_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(url_hash) DO UPDATE SET last_seen_at = excluded.last_seen_at, updated_at = excluded.updated_at`,
+    ).bind(urlHash, urlHash, normalized.video_url, normalized.platform, normalized.title, normalized.creator_name, normalized.license_name, normalized.source_query, sourceKind, now, now, now, now).run();
+    const row = await d1.prepare("SELECT * FROM event_video_links WHERE url_hash = ? LIMIT 1").bind(urlHash).first<VideoLinkRow>();
+    if (!row) throw new Error("Video link was saved but could not be read back.");
+    return row;
+  }
   const db = connection(env);
   await db.execute(
     `INSERT INTO event_video_links (url_hash, video_url, platform, title, creator_name, license_name, source_query, source_kind)
@@ -124,6 +152,14 @@ export async function addVideoLink(env: TiDBEnv, input: VideoLinkInput, sourceKi
 }
 
 export async function listVideoLinks(env: TiDBEnv, reviewStatus?: ReviewStatus): Promise<VideoLinkRow[]> {
+  const d1 = d1Connection(env);
+  if (d1) {
+    const query = reviewStatus
+      ? d1.prepare("SELECT * FROM event_video_links WHERE review_status = ? ORDER BY created_at DESC LIMIT 200").bind(reviewStatus)
+      : d1.prepare("SELECT * FROM event_video_links ORDER BY created_at DESC LIMIT 200");
+    const result = await query.all<VideoLinkRow>();
+    return result.results;
+  }
   const db = connection(env);
   const sql = reviewStatus
     ? `SELECT ${selectColumns} FROM event_video_links WHERE review_status = ? ORDER BY created_at DESC LIMIT 200`
@@ -133,6 +169,14 @@ export async function listVideoLinks(env: TiDBEnv, reviewStatus?: ReviewStatus):
 }
 
 export async function listPublicDiscoveredVideoLinks(env: TiDBEnv): Promise<VideoLinkRow[]> {
+  const d1 = d1Connection(env);
+  if (d1) {
+    const result = await d1.prepare(
+      `SELECT * FROM event_video_links WHERE source_kind = 'search_api' AND review_status <> 'rejected'
+       ORDER BY last_seen_at DESC, created_at DESC LIMIT 60`,
+    ).all<VideoLinkRow>();
+    return result.results;
+  }
   const db = connection(env);
   const rows = await db.execute(
     `SELECT ${selectColumns} FROM event_video_links
@@ -143,6 +187,11 @@ export async function listPublicDiscoveredVideoLinks(env: TiDBEnv): Promise<Vide
 }
 
 export async function updateVideoReviewStatus(env: TiDBEnv, id: string, status: ReviewStatus): Promise<boolean> {
+  const d1 = d1Connection(env);
+  if (d1) {
+    const result = await d1.prepare("UPDATE event_video_links SET review_status = ?, updated_at = ? WHERE id = ?").bind(status, new Date().toISOString(), id).run() as { meta?: { changes?: number } };
+    return Number(result.meta?.changes || 0) > 0;
+  }
   const db = connection(env);
   const result = await db.execute(
     "UPDATE event_video_links SET review_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
@@ -154,11 +203,20 @@ export async function updateVideoReviewStatus(env: TiDBEnv, id: string, status: 
 
 
 export async function checkVideoLinkStore(env: TiDBEnv): Promise<void> {
+  const d1 = d1Connection(env);
+  if (d1) {
+    await d1.prepare("SELECT 1 AS ready FROM event_video_links LIMIT 1").first();
+    return;
+  }
   const db = connection(env);
   await db.execute("SELECT 1 AS ready FROM event_video_links LIMIT 1");
 }
 
 export async function addVideoLinks(env: TiDBEnv, inputs: VideoLinkInput[], sourceKind: SourceKind = "search_api"): Promise<number> {
+  if (d1Connection(env)) {
+    for (const input of inputs) await addVideoLink(env, input, sourceKind);
+    return inputs.length;
+  }
   const db = connection(env);
   let processed = 0;
   for (const input of inputs) {

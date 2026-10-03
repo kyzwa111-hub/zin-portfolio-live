@@ -1,0 +1,57 @@
+name: Deploy to Cloudflare Worker
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-worker-production
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 22.x
+  CLOUDFLARE_ACCOUNT_ID: ead83feb70b917e21a3c0db613387165
+
+jobs:
+  deploy:
+    name: Build and deploy Worker
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: pnpm run check
+
+      - name: Run tests
+        run: pnpm test -- --reporter=dot
+
+      - name: Build production assets and Worker bundle
+        run: pnpm run build
+
+      - name: Deploy Worker and assets
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: 4.147.0
+          command: deploy --config wrangler.jsonc

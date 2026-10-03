@@ -53,6 +53,19 @@ describe("Zeke AI chat endpoint", () => {
     expect(await response.json()).toMatchObject({ reply: "Payroll guidance from chat completion", model: ZEKE_ADVANCED_MODEL });
   });
 
+  it("answers a general question without forcing it into an HR topic", async () => {
+    const testEnv = env({ response: "The water cycle describes evaporation, condensation, and precipitation." });
+    const response = await worker.fetch(
+      new Request("https://example.com/api/zeke/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "user", content: "What is the water cycle?" }] }),
+      }),
+      testEnv as never
+    );
+    expect(await response.json()).toMatchObject({ reply: "The water cycle describes evaporation, condensation, and precipitation.", model: ZEKE_DEFAULT_MODEL });
+  });
+
   it("falls back to a useful response when Cloudflare AI is unavailable", async () => {
     const testEnv = env();
     testEnv.AI.run.mockRejectedValueOnce(new Error("AI unavailable"));

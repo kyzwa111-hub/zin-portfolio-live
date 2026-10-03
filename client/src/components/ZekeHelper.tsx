@@ -256,7 +256,7 @@ export default function ZekeHelper() {
                 )}
               </button>
               <span>
-                <Sparkles size={12} /> Cloudflare AI · no account required
+                <Sparkles size={12} /> Zeke AI · HR &amp; workplace assistant
               </span>
             </div>
           </div>

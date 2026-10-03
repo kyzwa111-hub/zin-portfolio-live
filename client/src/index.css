@@ -184,6 +184,13 @@ h1 span, h2 i { color: var(--coral); font-family: "Playfair Display", Georgia, s
 .bulk-step p { color: var(--muted-copy); font-size: 11px; line-height: 1.55; margin: 0 0 16px; }
 .bulk-upload { align-items: center; background: var(--blue); color: #fff; cursor: pointer; display: inline-flex; font-size: 10px; font-weight: 700; gap: 8px; padding: 11px 13px; }
 .bulk-upload input { display: none; }
+.bulk-upload-error { color: #a54535 !important; font-size: 10px !important; margin-top: 12px !important; }
+.bulk-upload-summary { background: #f8f4ed; border: 1px solid var(--line); display: grid; gap: 9px; margin-top: 14px; padding: 12px; }
+.bulk-upload-summary > div { align-items: baseline; display: flex; justify-content: space-between; gap: 12px; }
+.bulk-upload-summary span { color: var(--muted-copy); font-size: 9px; }
+.bulk-upload-summary strong { color: var(--blue); font-size: 11px; }
+.bulk-upload-warning { border-top: 1px solid var(--line); color: #725d2b !important; font-size: 9px !important; line-height: 1.45 !important; margin: 3px 0 0 !important; padding-top: 9px; }
+.bulk-clear-button { background: transparent; border: 0; color: var(--coral); cursor: pointer; font: 700 9px "DM Sans", sans-serif; justify-self: start; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
 .bulk-notes { margin: 18px auto 0; max-width: 1184px; }
 .bulk-notes details { background: rgba(255,253,249,.72); border: 1px solid var(--line); }
 .bulk-notes summary { color: var(--blue); cursor: pointer; font-size: 11px; font-weight: 700; list-style: none; padding: 14px 18px; }

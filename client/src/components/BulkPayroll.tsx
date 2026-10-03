@@ -36,6 +36,8 @@ type CalculatedRow = BulkRow & {
   employerCostMonthly: number;
 };
 
+export type BulkPayrollWarning = { row: number; message: string };
+
 const emptyStatusInput = { requestId: "pending", token: "pending" } as const;
 const numberValue = (value: unknown) => Math.max(0, Number(String(value ?? "").replace(/,/g, "")) || 0);
 const formatMMK = (value: number) => `${Math.round(value).toLocaleString("en-US")} MMK`;
@@ -91,6 +93,20 @@ function parseRows(buffer: ArrayBuffer): BulkRow[] {
   }));
 }
 
+export function validateBulkRows(rows: BulkRow[]): BulkPayrollWarning[] {
+  const warnings: BulkPayrollWarning[] = [];
+  rows.forEach((row, index) => {
+    const rowNumber = index + 2;
+    if (!row.name || /^Employee \d+$/.test(row.name)) {
+      warnings.push({ row: rowNumber, message: "Add an employee name." });
+    }
+    if (row.basicSalary + row.allowance + row.overtime === 0 && row.bonus === 0) {
+      warnings.push({ row: rowNumber, message: "No monthly earnings or bonus entered." });
+    }
+  });
+  return warnings;
+}
+
 function calculateBulkRow(row: BulkRow): CalculatedRow {
   const grossMonthly = row.basicSalary + row.allowance + row.overtime;
   const grossAnnual = grossMonthly * 12 + row.bonus;
@@ -137,6 +153,9 @@ export default function BulkPayroll({ sharedApprovalActive = false }: { sharedAp
   const [requesterName, setRequesterName] = useState("");
   const [paymentRequested, setPaymentRequested] = useState(false);
   const [rows, setRows] = useState<CalculatedRow[]>([]);
+  const [uploadName, setUploadName] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const [rowWarnings, setRowWarnings] = useState<BulkPayrollWarning[]>([]);
   const accessRequest = trpc.calculatorAccess.request.useMutation({ onSuccess: (data) => { setPaymentRequested(true); setAccess({ requestId: data.requestId, token: data.token }); }, onError: () => setPaymentRequested(false) });
   const statusQuery = trpc.calculatorAccess.status.useQuery(access ?? emptyStatusInput, { enabled: Boolean(access), refetchInterval: access ? 2500 : false });
   const accessGranted = sharedApprovalActive || statusQuery.data?.status === "approved";
@@ -148,12 +167,26 @@ export default function BulkPayroll({ sharedApprovalActive = false }: { sharedAp
     return () => window.removeEventListener("access-session-updated", syncAccess);
   }, []);
   const summary = useMemo(() => rows.length ? `${rows.length} employee${rows.length === 1 ? "" : "s"} calculated locally` : "No employee file uploaded yet", [rows.length]);
+  const totals = useMemo(() => rows.reduce((total, row) => ({ grossMonthly: total.grossMonthly + row.grossMonthly, netMonthly: total.netMonthly + row.netMonthly, employerCost: total.employerCost + row.employerCostMonthly }), { grossMonthly: 0, netMonthly: 0, employerCost: 0 }), [rows]);
   const handleFile = async (file: File) => {
-    const buffer = await file.arrayBuffer();
-    setRows(buffer.byteLength ? parseRows(buffer).map(calculateBulkRow) : []);
+    setUploadError("");
+    setRowWarnings([]);
+    try {
+      const buffer = await file.arrayBuffer();
+      const parsedRows = buffer.byteLength ? parseRows(buffer) : [];
+      if (!parsedRows.length) throw new Error("The workbook has no employee rows.");
+      setRows(parsedRows.map(calculateBulkRow));
+      setUploadName(file.name);
+      setRowWarnings(validateBulkRows(parsedRows));
+    } catch {
+      setRows([]);
+      setUploadName("");
+      setUploadError("This file could not be read. Download the template and upload a valid .xlsx or .xls file.");
+    }
   };
+  const clearFile = () => { setRows([]); setUploadName(""); setUploadError(""); setRowWarnings([]); };
 
-  return <section className="bulk-section section-pad" id="bulk-payroll"><div className="bulk-intro"><div><p className="section-kicker"><FileSpreadsheet size={15} /> Bulk payroll</p><h2>One upload,<br /><i>three outputs.</i></h2></div><p className="section-description">Upload an employee list and calculate the same PIT/SSB rules as the single payroll calculator. Files stay in this browser and are never sent to the server.</p></div>{!accessGranted ? <><div className="bulk-panel bulk-gate"><div className="bulk-step"><span className="bulk-step-num"><LockKeyhole size={16} /></span><div><strong>Unlock bulk payroll tools</strong><p>Request Telegram admin approval before uploading employee salary data or downloading payroll files.</p><label className="calculator-requester-field"><span>Your name</span><input value={requesterName} onChange={(event) => setRequesterName(event.target.value)} placeholder="Enter your name" autoComplete="name" maxLength={160} /><small>Shared with the administrator for this request.</small></label><div className="calculator-gate-actions"><button className="button-primary" onClick={() => { setPaymentRequested(false); accessRequest.mutate({ requesterName: requesterName.trim() }); }} disabled={accessRequest.isPending || requesterName.trim().length < 2}>{accessRequest.isPending ? "Sending request…" : "Request access"}</button><a className="text-link" href={`https://t.me/${botUsername}?start=admin`} target="_blank" rel="noreferrer">Open Telegram bot</a></div></div></div><div className="calculator-gate-status">{statusQuery.data?.status === "approved" ? <><CheckCircle2 size={16} /> Approved</> : <><ShieldCheck size={16} /> Approval required</>}</div></div>{paymentRequested && accessRequest.data && <div className="payment-request-panel" aria-live="polite"><div><p className="section-kicker">Requester-only payment instructions</p><h3>Pay 50,000 MMK via KBZPay</h3><p>Send the payment screenshot and request ID to the Telegram bot. Bulk payroll tools unlock only after admin approval.</p><strong>Request ID: {accessRequest.data.requestId.slice(-8)}</strong></div><img src={PAYMENT_QR_URL} alt="KBZPay QR code for the 50,000 MMK access payment" /></div>}</> : <div className="bulk-panel"><div className="bulk-step"><span className="bulk-step-num">1</span><div><strong>Download template</strong><p>One row per employee. Use the same columns as the single calculator.</p><button type="button" className="button-print" onClick={downloadTemplate}><Download size={14} /> Download .xlsx template</button></div></div><div className="bulk-step"><span className="bulk-step-num">2</span><div><strong>Upload and calculate</strong><p>{summary}</p><label className="bulk-upload"><Upload size={15} /> Choose .xlsx file<input type="file" accept=".xlsx,.xls" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleFile(file); }} /></label></div></div><div className="bulk-step"><span className="bulk-step-num">3</span><div><strong>Download three files</strong><p>Calculation, SSB contribution list, and PAYE-A schedule.</p><button type="button" className="button-print" disabled={!rows.length} onClick={() => exportRows(rows)}><Download size={14} /> Download all three</button></div></div></div>}<div className="bulk-notes"><details><summary>Plain-language notes</summary><p>PIT uses the same current progressive brackets, reliefs, employee SSB deduction, and employer gross-up logic as the single calculator. Annual income up to MMK 4.8M is exempt; bonuses are included in annual income; SSB is calculated separately at employee 2% and employer 3% on a 300,000 MMK monthly ceiling. Foreign-staff residency and contractor WHT require separate review.</p></details></div></section>;
+  return <section className="bulk-section section-pad" id="bulk-payroll"><div className="bulk-intro"><div><p className="section-kicker"><FileSpreadsheet size={15} /> Bulk payroll</p><h2>One upload,<br /><i>three outputs.</i></h2></div><p className="section-description">Upload an employee list and calculate the same PIT/SSB rules as the single payroll calculator. Files stay in this browser and are never sent to the server.</p></div>{!accessGranted ? <><div className="bulk-panel bulk-gate"><div className="bulk-step"><span className="bulk-step-num"><LockKeyhole size={16} /></span><div><strong>Unlock bulk payroll tools</strong><p>Request Telegram admin approval before uploading employee salary data or downloading payroll files.</p><label className="calculator-requester-field"><span>Your name</span><input value={requesterName} onChange={(event) => setRequesterName(event.target.value)} placeholder="Enter your name" autoComplete="name" maxLength={160} /><small>Shared with the administrator for this request.</small></label><div className="calculator-gate-actions"><button className="button-primary" onClick={() => { setPaymentRequested(false); accessRequest.mutate({ requesterName: requesterName.trim() }); }} disabled={accessRequest.isPending || requesterName.trim().length < 2}>{accessRequest.isPending ? "Sending request…" : "Request access"}</button><a className="text-link" href={`https://t.me/${botUsername}?start=admin`} target="_blank" rel="noreferrer">Open Telegram bot</a></div></div></div><div className="calculator-gate-status">{statusQuery.data?.status === "approved" ? <><CheckCircle2 size={16} /> Approved</> : <><ShieldCheck size={16} /> Approval required</>}</div></div>{paymentRequested && accessRequest.data && <div className="payment-request-panel" aria-live="polite"><div><p className="section-kicker">Requester-only payment instructions</p><h3>Pay 50,000 MMK via KBZPay</h3><p>Send the payment screenshot and request ID to the Telegram bot. Bulk payroll tools unlock only after admin approval.</p><strong>Request ID: {accessRequest.data.requestId.slice(-8)}</strong></div><img src={PAYMENT_QR_URL} alt="KBZPay QR code for the 50,000 MMK access payment" /></div>}</> : <div className="bulk-panel"><div className="bulk-step"><span className="bulk-step-num">1</span><div><strong>Download template</strong><p>One row per employee. Use the same columns as the single calculator.</p><button type="button" className="button-print" onClick={downloadTemplate}><Download size={14} /> Download .xlsx template</button></div></div><div className="bulk-step"><span className="bulk-step-num">2</span><div><strong>Upload and calculate</strong><p>{uploadName ? <><strong>{uploadName}</strong> · {summary}</> : summary}</p><label className="bulk-upload"><Upload size={15} /> Choose .xlsx file<input type="file" accept=".xlsx,.xls" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleFile(file); }} /></label>{uploadError && <p className="bulk-upload-error" role="alert">{uploadError}</p>}{rows.length > 0 && <div className="bulk-upload-summary"><div><span>Gross / month</span><strong>{formatMMK(totals.grossMonthly)}</strong></div><div><span>Net / month</span><strong>{formatMMK(totals.netMonthly)}</strong></div><div><span>Employer cost</span><strong>{formatMMK(totals.employerCost)}</strong></div>{rowWarnings.length > 0 && <p className="bulk-upload-warning">{rowWarnings.length} row warning{rowWarnings.length === 1 ? "" : "s"}; review the highlighted input rows before export.</p>}<button type="button" className="bulk-clear-button" onClick={clearFile}>Clear upload</button></div>}</div></div><div className="bulk-step"><span className="bulk-step-num">3</span><div><strong>Download three files</strong><p>Calculation, SSB contribution list, and PAYE-A schedule.</p><button type="button" className="button-print" disabled={!rows.length} onClick={() => exportRows(rows)}><Download size={14} /> Download all three</button></div></div></div>}<div className="bulk-notes"><details><summary>Plain-language notes</summary><p>PIT uses the same current progressive brackets, reliefs, employee SSB deduction, and employer gross-up logic as the single calculator. Annual income up to MMK 4.8M is exempt; bonuses are included in annual income; SSB is calculated separately at employee 2% and employer 3% on a 300,000 MMK monthly ceiling. Foreign-staff residency and contractor WHT require separate review.</p></details></div></section>;
 }
 
 export function BulkPayrollSection({ approved }: { approved: boolean }) {

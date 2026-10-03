@@ -1015,7 +1015,14 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
     }
     if (url.pathname === "/api/event-videos" && request.method === "GET") {
-      try { return json({ links: await listPublicDiscoveredVideoLinks(env), updatedAt: new Date().toISOString() }); }
+      try {
+        let links = await listPublicDiscoveredVideoLinks(env);
+        if (!links.length) {
+          await runDailyYouTubeDiscovery(env);
+          links = await listPublicDiscoveredVideoLinks(env);
+        }
+        return json({ links, updatedAt: new Date().toISOString() });
+      }
       catch (error) { return videoLinkErrorResponse(error); }
     }
     if (url.pathname === "/api/admin/linkedin/status" || url.pathname.startsWith("/api/linkedin/oauth/")) return handleLinkedInOAuth(request, env);

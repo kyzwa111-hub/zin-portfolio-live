@@ -29,7 +29,7 @@ afterEach(() => {
 describe("runDailyYouTubeDiscovery", () => {
   it("skips without both secrets and makes no external calls", async () => {
     const result = await runDailyYouTubeDiscovery({});
-    expect(result).toMatchObject({ status: "skipped", reason: "missing_credentials" });
+    expect(result).toMatchObject({ status: "skipped", reason: "missing_storage" });
     expect(checkStoreMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });

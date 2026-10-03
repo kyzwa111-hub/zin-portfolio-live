@@ -13,6 +13,13 @@ export const DAILY_YOUTUBE_QUERIES = [
   "လူ့စွမ်းအားအရင်းအမြစ် မြန်မာ",
 ] as const;
 
+export const PUBLIC_EVENT_FEEDS = [
+  { url: "https://hrexecutive.com/category/webinars/feed/feed", label: "English HR webinars" },
+  { url: "https://news.google.com/rss/search?q=Myanmar+HR+webinar&hl=en-US&gl=US&ceid=US:en", label: "Myanmar HR webinars" },
+  { url: "https://news.google.com/rss/search?q=Myanmar+workplace+training&hl=en-US&gl=US&ceid=US:en", label: "Myanmar workplace learning" },
+  { url: "https://news.google.com/rss/search?q=English+HR+workplace+webinar&hl=en-US&gl=US&ceid=US:en", label: "English workplace webinars" },
+] as const;
+
 const SEARCH_ENDPOINT = "https://www.googleapis.com/youtube/v3/search";
 const MAX_RESULTS_PER_QUERY = 10;
 
@@ -35,9 +42,8 @@ type DiscoveryResult = {
 };
 
 export async function runDailyYouTubeDiscovery(env: YouTubeDiscoveryEnv): Promise<DiscoveryResult> {
-  if (!env.TIDB_DATABASE_URL || !env.YOUTUBE_DATA_API_KEY) {
-    return { status: "skipped", reason: "missing_credentials", queriesPlanned: DAILY_YOUTUBE_QUERIES.length };
-  }
+  if (!env.YOUTUBE_DATA_API_KEY) return runPublicEventFeedDiscovery(env);
+  if (!env.TIDB_DATABASE_URL && !env.DB) return { status: "skipped", reason: "missing_storage", queriesPlanned: DAILY_YOUTUBE_QUERIES.length };
 
   try {
     await checkVideoLinkStore(env);
@@ -100,4 +106,41 @@ export async function runDailyYouTubeDiscovery(env: YouTubeDiscoveryEnv): Promis
   }
 
   return { status: "ok", queriesCompleted, queriesPlanned: DAILY_YOUTUBE_QUERIES.length, resultsFound, linksProcessed };
+}
+
+function xmlTag(block: string, tag: string): string | null {
+  const match = block.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, "i"));
+  return match?.[1]?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/<[^>]+>/g, "").trim() || null;
+}
+
+function xmlItems(xml: string): Array<{ title: string | null; link: string | null; creator: string | null; date: string | null }> {
+  return [...xml.matchAll(/<item(?:\s[^>]*)?>([\s\S]*?)<\/item>/gi)].map(match => {
+    const block = match[1];
+    return { title: xmlTag(block, "title"), link: xmlTag(block, "link"), creator: xmlTag(block, "dc:creator") || xmlTag(block, "author") || xmlTag(block, "source"), date: xmlTag(block, "pubDate") };
+  });
+}
+
+async function runPublicEventFeedDiscovery(env: YouTubeDiscoveryEnv): Promise<DiscoveryResult> {
+  if (!env.DB && !env.TIDB_DATABASE_URL) return { status: "skipped", reason: "missing_storage", queriesPlanned: PUBLIC_EVENT_FEEDS.length };
+  try { await checkVideoLinkStore(env); } catch { return { status: "skipped", reason: "storage_unavailable_or_schema_missing", queriesPlanned: PUBLIC_EVENT_FEEDS.length }; }
+  let feedsCompleted = 0;
+  let resultsFound = 0;
+  let linksProcessed = 0;
+  for (const feed of PUBLIC_EVENT_FEEDS) {
+    try {
+      const response = await fetch(feed.url, { headers: { accept: "application/rss+xml, application/xml, text/xml" } });
+      if (!response.ok) continue;
+      const items = xmlItems(await response.text()).slice(0, 8);
+      const candidates: VideoLinkInput[] = items.flatMap(item => {
+        if (!item.link || !/^https:\/\//i.test(item.link)) return [];
+        return [{ url: item.link, title: item.title, creatorName: item.creator, sourceQuery: feed.label }];
+      });
+      feedsCompleted++;
+      resultsFound += candidates.length;
+      if (candidates.length) linksProcessed += await addVideoLinks(env, candidates, "search_api");
+    } catch {
+      // One public feed being unavailable should not stop the remaining feeds.
+    }
+  }
+  return { status: feedsCompleted ? "ok" : "failed", phase: "public_feeds", reason: feedsCompleted ? undefined : "all_feeds_unavailable", queriesCompleted: feedsCompleted, queriesPlanned: PUBLIC_EVENT_FEEDS.length, resultsFound, linksProcessed };
 }

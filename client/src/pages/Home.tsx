@@ -34,12 +34,12 @@ const serviceItems = [
 ] as const;
 
 const serviceWalkthroughs = [
-  { id: "unlock", label: "Telegram unlock", kicker: "STEP 01", title: "Request access in one tap.", detail: "Send your name, open Telegram, and wait for administrator approval.", screen: "access", steps: ["Open Services", "Send access request", "Follow Telegram approval"] },
-  { id: "payroll", label: "Payroll", kicker: "STEP 02", title: "Check payroll with confidence.", detail: "Enter salary inputs, review the estimate, and save your working result.", screen: "payroll", steps: ["Open Payroll tool", "Enter salary inputs", "Review the estimate"] },
-  { id: "bulk", label: "Bulk payroll", kicker: "STEP 03", title: "One upload, one document package.", detail: "Upload the employee list and prepare calculation, SSB, PAYE-A, payslip, Form 15(A), and email-queue files.", screen: "bulk", steps: ["Download template", "Upload employee list", "Export document package"] },
-  { id: "workspace", label: "HR workspace", kicker: "STEP 04", title: "Open forms and documents.", detail: "Choose a people-work form, prepare it locally, and keep the working record organised.", screen: "workspace", steps: ["Open HR workspace", "Choose a form", "Save your working record"] },
-  { id: "plans", label: "Access plans", kicker: "STEP 05", title: "Choose the right access.", detail: "Compare the available plan notes before requesting protected tools.", screen: "plans", steps: ["Review plan notes", "Compare access", "Choose your next step"] },
-  { id: "dashboard", label: "Personal dashboard", kicker: "STEP 06", title: "Keep your progress close.", detail: "Return to saved documents, recent work, and your personal workspace.", screen: "dashboard", steps: ["Open dashboard", "Review saved work", "Continue where you stopped"] },
+  { id: "unlock", label: "Telegram unlock", kicker: "STEP 01", title: "Request access on the site.", detail: "Send one request, then follow the administrator's Telegram instructions. Protected services stay locked until approval.", screen: "access", href: "#services", steps: ["Open Services", "Send access request", "Follow Telegram approval"] },
+  { id: "payroll", label: "Payroll", kicker: "STEP 02", title: "See the number behind the payslip.", detail: "Enter monthly earnings, optional FY income, annual additions, reliefs, and PIT mode; review net pay, PIT, SSB, and employer cost.", screen: "payroll", href: "#services", steps: ["Enter earnings", "Review tax and SSB", "Download payslip PDF"] },
+  { id: "bulk", label: "Bulk payroll", kicker: "STEP 03", title: "One upload, one document package.", detail: "Download the .xlsx template, upload one employee list, then prepare calculation, SSB, PAYE-A, headcount payslips, Form 15(A) working data, and an email queue in the browser.", screen: "bulk", href: "#bulk-payroll", steps: ["Download .xlsx template", "Upload and calculate", "Download document package"] },
+  { id: "workspace", label: "HR workspace", kicker: "STEP 04", title: "Prepare forms in one clear place.", detail: "Choose HR Forms, Documents, Guidance, or Document Generator, then complete a working template and download or print it for review.", screen: "workspace", href: "/workspace", steps: ["Open HR workspace", "Choose a working form", "Download or print"] },
+  { id: "plans", label: "Access plans", kicker: "STEP 05", title: "See what is public and protected.", detail: "Compare public guidance, protected payroll and HR tools, and managed workspace access before requesting anything paid.", screen: "plans", href: "/plans", steps: ["Review public access", "Compare protected tools", "Confirm with admin"] },
+  { id: "dashboard", label: "Personal dashboard", kicker: "STEP 06", title: "Continue where you left off.", detail: "Use quick access for HR workspace, payroll services, and plans; review your workspace snapshot and recent activity.", screen: "dashboard", href: "/dashboard", steps: ["Open dashboard", "Choose quick access", "Review recent activity"] },
 ] as const;
 
 function ServiceWalkthrough() {
@@ -59,7 +59,7 @@ function ServiceWalkthrough() {
     <div className="service-walkthrough-copy">
       <p className="unified-section-kicker"><span>HOW IT WORKS</span> SERVICE WALKTHROUGH</p>
       <h3>See the service flow<br /><em>before you open it.</em></h3>
-      <p>Short screen-recording style previews show what each step looks like. Zeke guides the flow; your real data stays inside the protected workspace.</p>
+      <p>Short previews now follow the live Zeke flow: Telegram approval, payroll inputs, bulk document exports, HR forms, access plans, and your personal workspace.</p>
       <div className="service-walkthrough-tabs" role="tablist" aria-label="Service walkthrough steps">
         {serviceWalkthroughs.map((walkthrough, index) => <button key={walkthrough.id} type="button" role="tab" aria-selected={active === index} className={active === index ? "active" : ""} onClick={() => setActive(index)}><span>{walkthrough.kicker}</span>{walkthrough.label}<ChevronRight size={13} /></button>)}
       </div>
@@ -78,6 +78,7 @@ function ServiceWalkthrough() {
           {item.screen === "dashboard" && <div className="service-demo-dashboard"><div><b>3</b><small>Saved documents</small></div><div><b>2</b><small>Recent forms</small></div><div><b>↗</b><small>Open workspace</small></div></div>}
           <div className="service-demo-step-strip" aria-label="Walkthrough progress">{item.steps.map((step, index) => <span className={index <= demoStep ? "done" : ""} key={step}><b>{index + 1}</b>{step}</span>)}</div>
           <div className="service-demo-footer"><span><strong>Scene {demoStep + 1}/3 · </strong>{item.detail}</span><span className="service-demo-cursor"><MousePointer2 size={16} /> Zeke guide</span></div>
+          <a className="service-demo-open" href={item.href}>Open this live flow <ArrowUpRight size={14} /></a>
         </div>
         <video className="service-demo-mascot" autoPlay loop muted playsInline preload="metadata" poster="/images/zeke-mascot.png" aria-label="Zeke guiding the service walkthrough"><source src={MASCOT_VIDEO} type="video/mp4" /></video>
       </div>

@@ -70,7 +70,7 @@ function d1Connection(env: TiDBEnv): D1VideoDatabase | null {
 
 async function ensureD1VideoTable(db: D1VideoDatabase): Promise<void> {
   await db.prepare(`CREATE TABLE IF NOT EXISTS event_video_links (
-    id TEXT PRIMARY KEY NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     url_hash TEXT NOT NULL UNIQUE,
     video_url TEXT NOT NULL,
     platform TEXT NOT NULL DEFAULT 'other',
@@ -153,10 +153,10 @@ export async function addVideoLink(env: TiDBEnv, input: VideoLinkInput, sourceKi
     await ensureD1VideoTable(d1);
     const now = new Date().toISOString();
     await d1.prepare(
-      `INSERT INTO event_video_links (id, url_hash, video_url, platform, title, creator_name, license_name, source_query, source_kind, first_seen_at, last_seen_at, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO event_video_links (url_hash, video_url, platform, title, creator_name, license_name, source_query, source_kind, first_seen_at, last_seen_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(url_hash) DO UPDATE SET last_seen_at = excluded.last_seen_at, updated_at = excluded.updated_at`,
-    ).bind(urlHash, urlHash, normalized.video_url, normalized.platform, normalized.title, normalized.creator_name, normalized.license_name, normalized.source_query, sourceKind, now, now, now, now).run();
+    ).bind(urlHash, normalized.video_url, normalized.platform, normalized.title, normalized.creator_name, normalized.license_name, normalized.source_query, sourceKind, now, now, now, now).run();
     const row = await d1.prepare("SELECT * FROM event_video_links WHERE url_hash = ? LIMIT 1").bind(urlHash).first<VideoLinkRow>();
     if (!row) throw new Error("Video link was saved but could not be read back.");
     return row;

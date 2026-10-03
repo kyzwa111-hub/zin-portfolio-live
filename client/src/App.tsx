@@ -9,6 +9,9 @@ import Home from "./pages/Home";
 import AdminControlCenter from "./pages/AdminControlCenter";
 import FreeWebinars from "./pages/FreeWebinars";
 import LegalPage from "./pages/LegalPage";
+import WorkspaceHub from "./pages/WorkspaceHub";
+import UserDashboard from "./pages/UserDashboard";
+import Plans from "./pages/Plans";
 
 function Router() {
   return (
@@ -24,6 +27,9 @@ function Router() {
       <Route path="/privacy"><LegalPage kind="privacy" /></Route>
       <Route path="/terms"><LegalPage kind="terms" /></Route>
       <Route path="/payroll-disclaimer"><LegalPage kind="payroll" /></Route>
+      <Route path="/workspace" component={WorkspaceHub} />
+      <Route path="/dashboard" component={UserDashboard} />
+      <Route path="/plans" component={Plans} />
       <Route path="/admin" component={AdminControlCenter} />
       {/* Legacy Manus-OAuth admin page. Its backend (oauth callback + tRPC
           telegramAdmin/linkedinUpdates/formTemplates routes) was never migrated

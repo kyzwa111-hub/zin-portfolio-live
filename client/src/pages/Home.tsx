@@ -80,6 +80,8 @@ export default function Home() {
           <a href="#jobs" onClick={closeMenu}>Job</a>
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="#game" onClick={closeMenu}>Game</a>
+          <a href="/workspace" onClick={closeMenu}>HR workspace</a>
+          <a href="/dashboard" onClick={closeMenu}>Dashboard</a>
           <button className="unified-nav-ask" type="button" onClick={askZeke}><Sparkles size={14} /> Ask Zeke</button>
         </nav>
       </header>
@@ -184,11 +186,12 @@ export default function Home() {
               {selectedWorkspace !== "bulk" && <div className="workspace-active-panel section-pad">{selectedWorkspace === "payroll" && <PayrollCalculator />}{selectedWorkspace === "cb" && <CBResourceCenter />}{hrSectorItems.some((item) => item.id === selectedWorkspace) && <HRSectorForm key={selectedWorkspace} id={selectedWorkspace as HRSectorId} />}</div>}
             </div>
           )}
+          <div className="clean-product-links"><a href="/workspace">Open HR workspace: forms, documents, guidance</a><a href="/plans">View access plans</a><a href="/dashboard">Open personal dashboard</a></div>
         </section>
         <ScenarioLab />
       </main>
 
-      <footer className="unified-footer"><a className="unified-footer-brand" href="#home"><span className="unified-footer-icon"><Sparkles size={14} /></span><strong>zeke</strong></a><span>Event · Job · Services · Game · Ask Zeke</span><a href="https://t.me/ayelay_bot" target="_blank" rel="noopener noreferrer">Telegram access <ArrowUpRight size={13} /></a><small>© {new Date().getFullYear()} Zeke HR &amp; workplace assistant</small></footer>
+      <footer className="unified-footer"><a className="unified-footer-brand" href="#home"><span className="unified-footer-icon"><Sparkles size={14} /></span><strong>zeke</strong></a><span>Event · Job · Services · Game · HR workspace · Dashboard</span><a href="/plans">Plans</a><a href="https://t.me/ayelay_bot" target="_blank" rel="noopener noreferrer">Telegram access <ArrowUpRight size={13} /></a><small>© {new Date().getFullYear()} Zeke HR &amp; workplace assistant</small></footer>
     </div>
   );
 }

@@ -28,6 +28,12 @@ function fallbackAnswer(question: string): string {
   if (/^(hi|hello|hey|မင်္ဂလာ|မေးချင်)/i.test(question.trim())) {
     return "မင်္ဂလာပါ။ Zeke က နားထောင်ဖို့ ready ပါ။ Payroll, HR service, workplace issue, career, event ဒါမှမဟုတ် ဒီ website ကို ဘယ်လိုသုံးရမလဲဆိုတာ မေးနိုင်ပါတယ်။";
   }
+  if (/(stress|စိတ်ဖိစီး|စိတ်ပင်ပန်း|burnout|work mood|အလုပ်လုပ်ချင်စိတ်)/i.test(text)) {
+    return "Corporate life မှာ stress လျော့ဖို့ (၁) အရေးကြီးဆုံး task တစ်ခုကိုပဲ အရင်ရွေးပါ၊ (၂) 25 မိနစ်အလုပ်လုပ်ပြီး 5 မိနစ်နားပါ၊ (၃) မဖြစ်နိုင်တဲ့ deadline ကို manager ကို စောစောပြောပြီး priority ပြန်ညှိပါ။ Stress က ရက်ရှည်ပြီး နေ့စဉ်ဘဝကို ထိခိုက်လာရင် ယုံကြည်ရတဲ့သူ ဒါမှမဟုတ် ကျန်းမာရေးပညာရှင်နဲ့ ဆွေးနွေးပါ။";
+  }
+  if (/(funny|ဟာသ|ရယ်စရာ|icebreaker|ပျော်စရာ|ပျော်ပျော်)/i.test(text)) {
+    return "Office meeting ကို ပေါ့ပေါ့ပါးပါးစဖို့ — “ဒီနေ့ ကိုယ့် productivity ကို battery percentage နဲ့ပြောရရင် ဘယ်လောက်လဲ?” လို့မေးကြည့်ပါ။ လူတိုင်းဖြေရလွယ်ပြီး meeting mood လည်း ပိုကောင်းလာနိုင်ပါတယ်။";
+  }
   if (
     /(payroll|လစာ|salary|ဝင်ငွေ|ssb|ပင်စင်|tax|အခွန်|paye|တွက်)/i.test(text)
   ) {

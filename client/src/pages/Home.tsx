@@ -116,6 +116,23 @@ export default function Home() {
           <div className="unified-scroll-cue" aria-hidden="true"><span /> One place · four useful paths</div>
         </section>
 
+        <section className="unified-intro-video section-pad" aria-labelledby="unified-intro-video-title">
+          <div className="unified-intro-video-heading">
+            <div>
+              <p className="unified-section-kicker"><span>INTRO</span> MEET ZEKE</p>
+              <h2 id="unified-intro-video-title">Welcome to Zeke.<br /><em>Your HR, career &amp; workplace companion.</em></h2>
+            </div>
+            <p>Explore the Zeke experience across workplace learning, opportunities, services, and practical HR judgement.</p>
+          </div>
+          <div className="unified-intro-video-shell">
+            <video controls preload="metadata" poster="/videos/hr-toolkit-services-58sec-poster.jpg" aria-label="Zeke product introduction video">
+              <source src={SERVICE_VIDEO} type="video/mp4" />
+              Your browser does not support the video element.
+            </video>
+            <div className="unified-intro-video-caption"><strong>Events. Jobs. Games.</strong><span>Everything in one place.</span></div>
+          </div>
+        </section>
+
         <section className="unified-paths section-pad" aria-label="Choose a path">
           <a className="unified-path-card unified-path-event" href="#events"><span className="unified-path-index">01 / EVENT</span><span className="unified-path-icon"><CalendarDays size={19} /></span><strong>Watch an event</strong><small>Daily HR &amp; workplace videos</small><ArrowUpRight className="unified-path-arrow" size={17} /></a>
           <a className="unified-path-card unified-path-job" href="#jobs"><span className="unified-path-index">02 / JOB</span><span className="unified-path-icon"><BriefcaseBusiness size={19} /></span><strong>Find an opportunity</strong><small>Live links from original sources</small><ArrowUpRight className="unified-path-arrow" size={17} /></a>

@@ -13,13 +13,13 @@ type ChatMessage = { role: "assistant" | "user"; content: string };
 const MASCOT_MEDIA_ORIGIN = "https://zin-portfolio-live.pages.dev";
 
 const welcomeMessage =
-  "မင်္ဂလာပါ — Zeke ပါ။ HR, payroll, workplace process, career, job updates, events, Telegram service unlock နဲ့ ဒီ website ထဲက အရာတွေကို မေးနိုင်ပါတယ်။ မေးခွန်းကို တိုက်ရိုက်ရေးပါ။";
+  "မင်္ဂလာပါ — Zeke ပါ။ Corporate life, work stress, funny office moments, career, HR နဲ့ general questions အားလုံးကို မေးနိုင်ပါတယ်။ မေးခွန်းကို တိုက်ရိုက်ရေးပါ။";
 
 const quickPrompts = [
-  "Payroll calculator ကို ဘယ်လိုသုံးမလဲ?",
-  "Attendance issue ကို ဘယ်လိုစီမံမလဲ?",
-  "Job update တွေ ဘယ်မှာကြည့်ရမလဲ?",
-  "Event တွေနဲ့ Telegram service unlock ဘယ်မှာလဲ?",
+  "Corporate life မှာ stress မတက်အောင် ဘယ်လိုလုပ်မလဲ?",
+  "Office meeting ကို funny ဖြစ်အောင် icebreaker တစ်ခု ပြောပါ",
+  "Boss ကို polite နဲ့ funny reply ဘယ်လိုပေးမလဲ?",
+  "Work mood မရှိတဲ့နေ့မှာ ဘာလုပ်ရမလဲ?",
 ];
 
 function fallbackAnswer(question: string): string {

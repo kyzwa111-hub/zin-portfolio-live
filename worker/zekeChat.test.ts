@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import worker, { ZEKE_DEFAULT_MODEL } from "./index";
+import worker, { ZEKE_ADVANCED_MODEL, ZEKE_DEFAULT_MODEL } from "./index";
 
 type TestEnv = {
   ASSETS: { fetch: typeof fetch };
@@ -35,7 +35,7 @@ describe("Zeke AI chat endpoint", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       reply: "Payroll guidance from AI",
-      model: ZEKE_DEFAULT_MODEL,
+      model: ZEKE_ADVANCED_MODEL,
     });
     expect(testEnv.AI.run).toHaveBeenCalledOnce();
   });
@@ -50,7 +50,7 @@ describe("Zeke AI chat endpoint", () => {
       }),
       testEnv as never
     );
-    expect(await response.json()).toMatchObject({ reply: "Payroll guidance from chat completion", model: ZEKE_DEFAULT_MODEL });
+    expect(await response.json()).toMatchObject({ reply: "Payroll guidance from chat completion", model: ZEKE_ADVANCED_MODEL });
   });
 
   it("falls back to a useful response when Cloudflare AI is unavailable", async () => {

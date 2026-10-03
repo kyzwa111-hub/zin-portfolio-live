@@ -871,7 +871,8 @@ async function serveAssetsWithAccessRecovery(request: Request, env: Env): Promis
   const response = await env.ASSETS.fetch(request);
   if (request.method !== "GET" || !response.headers.get("content-type")?.toLowerCase().includes("text/html")) return response;
   const html = await response.text();
-  if (html.includes('id="access-session-recovery"')) return new Response(html, response);
+  const seoShell = `<main class="seo-shell" aria-label="Zeke HR and workplace assistant"><h1>Zeke · HR &amp; Workplace Assistant</h1><p>Ask Zeke about work, career, events, job opportunities, payroll, and practical HR services in Myanmar.</p><nav aria-label="Primary navigation"><a href="/#events">HR events</a><a href="/#jobs">Job opportunities</a><a href="/#services">HR and payroll services</a><a href="/webinars">Event feed</a><a href="/privacy">Privacy policy</a><a href="/terms">Terms of use</a></nav><section aria-labelledby="seo-services-title"><h2 id="seo-services-title">HR and payroll services</h2><p>Explore payroll calculations, bulk payroll exports, compensation and benefits resources, HR sector forms, and workplace guidance.</p></section></main>`;
+  const htmlWithSeoShell = html.includes("seo-shell") ? html : html.replace(/<div id="root"><\/div>/i, `<div id="root">${seoShell}</div>`);
   const jobFeedScript = await jobFeedBootstrap(env).catch(() => "");
   let zekeSettingsScript = `<script id="zeke-settings">window.__ZEKE_SETTINGS__={};</script>`;
   try {
@@ -879,9 +880,11 @@ async function serveAssetsWithAccessRecovery(request: Request, env: Env): Promis
     const settings = { quotes: quoteSetting ? quoteSetting.split("\n").map((value) => value.trim()).filter(Boolean) : [], voiceDefault: voiceSetting || "off" };
     zekeSettingsScript = `<script id="zeke-settings">window.__ZEKE_SETTINGS__=${JSON.stringify(settings).replace(/</g, "\\u003c")}</script>`;
   } catch {}
-  const body = /<\/body>/i.test(html)
-    ? html.replace(/<\/body>/i, `${zekeSettingsScript}${accessRecoveryScript}${jobFeedScript}</body>`)
-    : `${html}${zekeSettingsScript}${accessRecoveryScript}${jobFeedScript}`;
+  const recoveryScript = htmlWithSeoShell.includes('id="access-session-recovery"') ? "" : accessRecoveryScript;
+  const feedScript = htmlWithSeoShell.includes("job-feed-bootstrap") ? "" : jobFeedScript;
+  const body = /<\/body>/i.test(htmlWithSeoShell)
+    ? htmlWithSeoShell.replace(/<\/body>/i, `${zekeSettingsScript}${recoveryScript}${feedScript}</body>`)
+    : `${htmlWithSeoShell}${zekeSettingsScript}${recoveryScript}${feedScript}`;
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("cache-control", "no-store");
@@ -915,6 +918,15 @@ export default {
           "cache-control": "public, max-age=300",
         },
       });
+    }
+    if (url.pathname === "/robots.txt" && request.method === "GET") {
+      return new Response("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nDisallow: /manus-storage/\n\nSitemap: https://zin-portfolio-live.kyzwa111.workers.dev/sitemap.xml\n", { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" } });
+    }
+    if (url.pathname === "/sitemap.xml" && request.method === "GET") {
+      return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://zin-portfolio-live.kyzwa111.workers.dev/</loc></url><url><loc>https://zin-portfolio-live.kyzwa111.workers.dev/webinars</loc></url><url><loc>https://zin-portfolio-live.kyzwa111.workers.dev/privacy</loc></url><url><loc>https://zin-portfolio-live.kyzwa111.workers.dev/terms</loc></url><url><loc>https://zin-portfolio-live.kyzwa111.workers.dev/payroll-disclaimer</loc></url></urlset>`, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
+    }
+    if (url.pathname === "/manus-routes.json" && request.method === "GET") {
+      return new Response(JSON.stringify({ routes: [{ path: "/", title: "Zeke · HR & Workplace Assistant" }, { path: "/webinars", title: "HR Events · Zeke" }, { path: "/privacy", title: "Privacy Policy · Zeke" }, { path: "/terms", title: "Terms of Use · Zeke" }, { path: "/payroll-disclaimer", title: "Payroll Disclaimer · Zeke" }] }), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
     }
     const toolkitQuery = parseToolkitQuery(request);
     if (toolkitQuery.error) return json({ error: toolkitQuery.error }, 400);

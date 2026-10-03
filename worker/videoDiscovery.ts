@@ -14,10 +14,10 @@ export const DAILY_YOUTUBE_QUERIES = [
 ] as const;
 
 export const PUBLIC_EVENT_FEEDS = [
-  { url: "https://hrexecutive.com/category/webinars/feed/feed", label: "English HR webinars" },
-  { url: "https://news.google.com/rss/search?q=Myanmar+HR+webinar&hl=en-US&gl=US&ceid=US:en", label: "Myanmar HR webinars" },
-  { url: "https://news.google.com/rss/search?q=Myanmar+workplace+training&hl=en-US&gl=US&ceid=US:en", label: "Myanmar workplace learning" },
-  { url: "https://news.google.com/rss/search?q=English+HR+workplace+webinar&hl=en-US&gl=US&ceid=US:en", label: "English workplace webinars" },
+  { url: "https://news.google.com/rss/search?q=HR+webinar&hl=en-US&gl=US&ceid=US:en", label: "English HR webinars" },
+  { url: "https://news.google.com/rss/search?q=human+resources+webinar&hl=en-US&gl=US&ceid=US:en", label: "English people & HR" },
+  { url: "https://news.google.com/rss/search?q=Myanmar+HR+training&hl=en-US&gl=US&ceid=US:en", label: "Myanmar HR learning" },
+  { url: "https://news.google.com/rss/search?q=workplace+training&hl=en-US&gl=US&ceid=US:en", label: "Workplace learning" },
 ] as const;
 
 const SEARCH_ENDPOINT = "https://www.googleapis.com/youtube/v3/search";

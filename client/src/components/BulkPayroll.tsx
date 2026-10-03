@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Download, FileSpreadsheet, LockKeyhole, ShieldCheck, Upload } from "lucide-react";
 import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
 import { trpc } from "@/lib/trpc";
 import { TAX_RULES, calculateAnnualPIT, calculateSSB, formatFinancialYear } from "@/components/PayrollCalculator";
 import { readAccessSession } from "@/lib/accessSession";
@@ -128,6 +129,52 @@ function calculateBulkRow(row: BulkRow): CalculatedRow {
   return { ...row, grossMonthly, grossAnnual, contributionBase: monthlySSB.contributionBase, employeeSSB: monthlySSB.employeeSSB, employerSSB: monthlySSB.employerSSB, employeeSSBAnnual, employerSSBAnnual, taxableIncome, annualPIT, monthlyPIT, netMonthly: Math.max(0, grossMonthly - monthlySSB.employeeSSB - (row.taxMode === "employee" ? monthlyPIT : 0)), employerCostMonthly: grossMonthly + monthlySSB.employerSSB + (row.taxMode === "employer" ? monthlyPIT : 0) };
 }
 
+function downloadBulkPayslipPdf(rows: CalculatedRow[]) {
+  if (!rows.length) return;
+  const pdf = new jsPDF({ unit: "mm", format: "a4" });
+  rows.forEach((row, index) => {
+    if (index > 0) pdf.addPage();
+    pdf.setTextColor(36, 61, 85);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+    pdf.text("PAYSLIP ESTIMATE", 22, 24);
+    pdf.setFontSize(22);
+    pdf.text("ZEKE HR TOOLKIT", 22, 35);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(10);
+    pdf.text(`Employee: ${row.name}`, 22, 49);
+    pdf.text("Financial year: FY 2026-2027", 22, 56);
+    pdf.text(`Tax mode: ${row.taxMode === "employee" ? "Employee-borne PIT" : "Employer-borne PIT"}`, 22, 63);
+    pdf.setDrawColor(220, 214, 204);
+    pdf.line(22, 70, 188, 70);
+    const values: Array<[string, string]> = [
+      ["Gross monthly earnings", formatMMK(row.grossMonthly)],
+      ["Employee SSB", formatMMK(row.employeeSSB)],
+      ["Monthly PIT", formatMMK(row.monthlyPIT)],
+      ["Net pay", formatMMK(row.netMonthly)],
+      ["Employer SSB", formatMMK(row.employerSSB)],
+      ["Employer monthly cost", formatMMK(row.employerCostMonthly)],
+      ["Annual gross earnings", formatMMK(row.grossAnnual)],
+      ["Annual PIT", formatMMK(row.annualPIT)],
+    ];
+    values.forEach(([label, value], valueIndex) => {
+      const y = 84 + valueIndex * 12;
+      pdf.setTextColor(90, 98, 105);
+      pdf.setFontSize(10);
+      pdf.text(label, 22, y);
+      pdf.setTextColor(36, 61, 85);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(value, 188, y, { align: "right" });
+      pdf.setFont("helvetica", "normal");
+    });
+    pdf.setTextColor(110, 105, 98);
+    pdf.setFontSize(8);
+    pdf.text("Estimate only. Verify final payroll treatment with the relevant Myanmar authorities or a qualified adviser.", 22, 190);
+    pdf.text(`Payslip ${index + 1} of ${rows.length}`, 22, 198);
+  });
+  pdf.save(`bulk-payslips-FY-2026-2027-${rows.length}-employees.pdf`);
+}
+
 function exportRows(rows: CalculatedRow[]) {
   const total = rows.reduce((sum, row) => ({
     grossMonthly: sum.grossMonthly + row.grossMonthly,
@@ -160,6 +207,7 @@ function exportRows(rows: CalculatedRow[]) {
     "Annual Gross": Math.round(row.grossAnnual),
     "Annual PIT": Math.round(row.annualPIT),
   })), `bulk-payroll-payslips-${stamp}.xlsx`, "Payslips");
+  downloadBulkPayslipPdf(rows);
 }
 
 export default function BulkPayroll({ sharedApprovalActive = false }: { sharedApprovalActive?: boolean } = {}) {

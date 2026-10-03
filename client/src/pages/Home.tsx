@@ -4,9 +4,11 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   Check,
+  ChevronRight,
   ExternalLink,
   LockKeyhole,
   Menu,
+  MousePointer2,
   Play,
   Sparkles,
   UsersRound,
@@ -24,14 +26,57 @@ import "../workspace.css";
 
 const MASCOT_VIDEO = "/videos/zeke-live-mascot-vivid.mp4";
 const INTRO_VIDEO = "/videos/zeke-product-intro.mp4";
-const SERVICE_VIDEO = "/videos/hr-toolkit-services-58sec.mp4";
-const SERVICE_POSTER = "/videos/hr-toolkit-services-58sec-poster.jpg";
 
 const serviceItems = [
   { id: "payroll", number: "01", title: "Payroll tool", description: "PIT, SSB, net pay, and employer cost." },
   { id: "bulk", number: "02", title: "Bulk payroll", description: "One employee list; calculation, SSB, and PAYE-A exports." },
   { id: "cb", number: "03", title: "C&B resources", description: "Official monthly PIT, annual IRD, and SSB guidance." },
 ] as const;
+
+const serviceWalkthroughs = [
+  { id: "unlock", label: "Telegram unlock", kicker: "STEP 01", title: "Request access in one tap.", detail: "Send your name, open Telegram, and wait for administrator approval.", screen: "access" },
+  { id: "payroll", label: "Payroll", kicker: "STEP 02", title: "Check payroll with confidence.", detail: "Enter salary inputs, review the estimate, and save your working result.", screen: "payroll" },
+  { id: "bulk", label: "Bulk payroll", kicker: "STEP 03", title: "One upload, three outputs.", detail: "Upload the employee list and export calculation, SSB, and PAYE-A files.", screen: "bulk" },
+  { id: "workspace", label: "HR workspace", kicker: "STEP 04", title: "Open forms and documents.", detail: "Choose a people-work form, prepare it locally, and keep the working record organised.", screen: "workspace" },
+  { id: "plans", label: "Access plans", kicker: "STEP 05", title: "Choose the right access.", detail: "Compare the available plan notes before requesting protected tools.", screen: "plans" },
+  { id: "dashboard", label: "Personal dashboard", kicker: "STEP 06", title: "Keep your progress close.", detail: "Return to saved documents, recent work, and your personal workspace.", screen: "dashboard" },
+] as const;
+
+function ServiceWalkthrough() {
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => setActive(current => (current + 1) % serviceWalkthroughs.length), 5200);
+    return () => window.clearInterval(timer);
+  }, []);
+  const item = serviceWalkthroughs[active];
+  return <section className="service-walkthrough" aria-label="Service walkthrough demo">
+    <div className="service-walkthrough-copy">
+      <p className="unified-section-kicker"><span>HOW IT WORKS</span> SERVICE WALKTHROUGH</p>
+      <h3>See the service flow<br /><em>before you open it.</em></h3>
+      <p>Short screen-recording style previews show what each step looks like. Zeke guides the flow; your real data stays inside the protected workspace.</p>
+      <div className="service-walkthrough-tabs" role="tablist" aria-label="Service walkthrough steps">
+        {serviceWalkthroughs.map((walkthrough, index) => <button key={walkthrough.id} type="button" role="tab" aria-selected={active === index} className={active === index ? "active" : ""} onClick={() => setActive(index)}><span>{walkthrough.kicker}</span>{walkthrough.label}<ChevronRight size={13} /></button>)}
+      </div>
+    </div>
+    <div className="service-demo-window" aria-live="polite">
+      <div className="service-demo-topbar"><span /><span /><span /><small>zeke / {item.label.toLowerCase()}</small></div>
+      <div className="service-demo-body">
+        <div className="service-demo-sidebar"><strong>zeke</strong><i className="active" /><i /><i /><i /></div>
+        <div className="service-demo-screen">
+          <div className="service-demo-screen-head"><div><small>{item.kicker}</small><h4>{item.title}</h4></div><span className="service-demo-status">Preview</span></div>
+          {item.screen === "access" && <div className="service-demo-access"><div className="service-demo-lock">↗</div><strong>Request access</strong><span>Your request is sent securely to the admin.</span><b>Open Telegram bot</b></div>}
+          {item.screen === "payroll" && <div className="service-demo-form"><label>Monthly salary <b>1,200,000 MMK</b></label><div className="service-demo-input" /><label>Pay period <b>Monthly</b></label><div className="service-demo-input short" /><div className="service-demo-result"><span>Estimated net pay</span><strong>Review result →</strong></div></div>}
+          {item.screen === "bulk" && <div className="service-demo-bulk"><div className="service-demo-upload">＋ <strong>Drop employee list here</strong><small>.xlsx template accepted</small></div><div className="service-demo-output"><span>01 Calculation</span><span>02 SSB list</span><span>03 PAYE-A</span></div></div>}
+          {item.screen === "workspace" && <div className="service-demo-workspace"><span>Attendance</span><span>Recruitment</span><span>Employee relations</span><span>Performance</span></div>}
+          {item.screen === "plans" && <div className="service-demo-plans"><span><b>Starter</b><small>Explore the basics</small></span><span className="selected"><b>Protected tools</b><small>Request approval</small></span><span><b>Team access</b><small>Compare options</small></span></div>}
+          {item.screen === "dashboard" && <div className="service-demo-dashboard"><div><b>3</b><small>Saved documents</small></div><div><b>2</b><small>Recent forms</small></div><div><b>↗</b><small>Open workspace</small></div></div>}
+          <div className="service-demo-footer"><span>{item.detail}</span><span className="service-demo-cursor"><MousePointer2 size={16} /> Zeke</span></div>
+        </div>
+        <video className="service-demo-mascot" autoPlay loop muted playsInline preload="metadata" poster="/images/zeke-mascot.png" aria-label="Zeke guiding the service walkthrough"><source src={MASCOT_VIDEO} type="video/mp4" /></video>
+      </div>
+    </div>
+  </section>;
+}
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -167,13 +212,6 @@ export default function Home() {
             <p>HR, payroll, bulk exports, and C&amp;B resources stay protected until the administrator approves access through Telegram.</p>
           </div>
           <div className="unified-service-intro">
-            <div className="unified-service-video-shell">
-              <video className="unified-service-video" controls preload="metadata" poster={SERVICE_POSTER} aria-label="Zeke explains Telegram service access">
-                <source src={SERVICE_VIDEO} type="video/mp4" />
-                Your browser does not support the video element.
-              </video>
-              <div className="unified-video-caption"><span><i /> Zeke explains</span><small>58 sec · Burmese narration · English UI</small></div>
-            </div>
             <div className="unified-service-unlock">
               <div className="unified-lock-mark"><LockKeyhole size={22} /></div>
               <p className="unified-section-kicker">ONE ACCESS FLOW</p>
@@ -182,6 +220,8 @@ export default function Home() {
               <a className="unified-telegram-link" href="https://t.me/ayelay_bot?start=admin" target="_blank" rel="noopener noreferrer">Open Telegram bot <ExternalLink size={14} /></a>
             </div>
           </div>
+
+          <ServiceWalkthrough />
 
           <WorkspaceAccessGate onApprovedChange={setWorkspaceApproved} />
 

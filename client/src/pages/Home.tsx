@@ -19,6 +19,7 @@ import { BulkPayrollSection } from "@/components/BulkPayroll";
 import CBResourceCenter from "@/components/CBResourceCenter";
 import HRSectorForm, { hrSectorItems, type HRSectorId } from "@/components/HRTemplateCatalog";
 import LiveJobFeed from "@/components/LiveJobFeed";
+import ScenarioLab from "@/components/ScenarioLab";
 import "../workspace.css";
 
 const MASCOT_VIDEO = "/videos/zeke-live-mascot-vivid.mp4";
@@ -78,6 +79,7 @@ export default function Home() {
           <a href="#events" onClick={closeMenu}>Event</a>
           <a href="#jobs" onClick={closeMenu}>Job</a>
           <a href="#services" onClick={closeMenu}>Services</a>
+          <a href="#game" onClick={closeMenu}>Game</a>
           <button className="unified-nav-ask" type="button" onClick={askZeke}><Sparkles size={14} /> Ask Zeke</button>
         </nav>
       </header>
@@ -94,7 +96,7 @@ export default function Home() {
                 <button className="unified-primary-action" type="button" onClick={askZeke}>Ask Zeke anything <ArrowUpRight size={16} /></button>
                 <a className="unified-secondary-action" href="#events">Explore the site <ArrowDown size={15} /></a>
               </div>
-              <div className="unified-hero-meta" aria-label="Site sections"><span><CalendarDays size={14} /> Event</span><span><BriefcaseBusiness size={14} /> Job</span><span><LockKeyhole size={14} /> Telegram-unlocked services</span></div>
+              <div className="unified-hero-meta" aria-label="Site sections"><span><CalendarDays size={14} /> Event</span><span><BriefcaseBusiness size={14} /> Job</span><span><LockKeyhole size={14} /> Telegram-unlocked services</span><span><Sparkles size={14} /> HR game</span></div>
             </div>
             <div className="unified-hero-stage" aria-label="Animated Zeke assistant">
               <div className="unified-stage-orbit unified-orbit-one" aria-hidden="true" />
@@ -109,13 +111,14 @@ export default function Home() {
               <div className="unified-stage-badge unified-badge-bottom"><Sparkles size={15} /><span><strong>Ask Zeke</strong><small>Anything about work</small></span></div>
             </div>
           </div>
-          <div className="unified-scroll-cue" aria-hidden="true"><span /> One place · three useful paths</div>
+          <div className="unified-scroll-cue" aria-hidden="true"><span /> One place · four useful paths</div>
         </section>
 
         <section className="unified-paths section-pad" aria-label="Choose a path">
           <a className="unified-path-card unified-path-event" href="#events"><span className="unified-path-index">01 / EVENT</span><span className="unified-path-icon"><CalendarDays size={19} /></span><strong>Watch an event</strong><small>Daily HR &amp; workplace videos</small><ArrowUpRight className="unified-path-arrow" size={17} /></a>
           <a className="unified-path-card unified-path-job" href="#jobs"><span className="unified-path-index">02 / JOB</span><span className="unified-path-icon"><BriefcaseBusiness size={19} /></span><strong>Find an opportunity</strong><small>Live links from original sources</small><ArrowUpRight className="unified-path-arrow" size={17} /></a>
           <a className="unified-path-card unified-path-service" href="#services"><span className="unified-path-index">03 / SERVICE</span><span className="unified-path-icon"><LockKeyhole size={19} /></span><strong>Unlock HR services</strong><small>Access is approved through Telegram</small><ArrowUpRight className="unified-path-arrow" size={17} /></a>
+          <a className="unified-path-card unified-path-game" href="#game"><span className="unified-path-index">04 / GAME</span><span className="unified-path-icon"><Sparkles size={19} /></span><strong>Practice HR judgement</strong><small>Myanmar-law learning levels</small><ArrowUpRight className="unified-path-arrow" size={17} /></a>
         </section>
 
         <section className="unified-section unified-events section-pad" id="events" aria-labelledby="unified-events-title">
@@ -182,9 +185,10 @@ export default function Home() {
             </div>
           )}
         </section>
+        <ScenarioLab />
       </main>
 
-      <footer className="unified-footer"><a className="unified-footer-brand" href="#home"><span className="unified-footer-icon"><Sparkles size={14} /></span><strong>zeke</strong></a><span>Event · Job · Services · Ask Zeke</span><a href="https://t.me/ayelay_bot" target="_blank" rel="noopener noreferrer">Telegram access <ArrowUpRight size={13} /></a><small>© {new Date().getFullYear()} Zeke HR &amp; workplace assistant</small></footer>
+      <footer className="unified-footer"><a className="unified-footer-brand" href="#home"><span className="unified-footer-icon"><Sparkles size={14} /></span><strong>zeke</strong></a><span>Event · Job · Services · Game · Ask Zeke</span><a href="https://t.me/ayelay_bot" target="_blank" rel="noopener noreferrer">Telegram access <ArrowUpRight size={13} /></a><small>© {new Date().getFullYear()} Zeke HR &amp; workplace assistant</small></footer>
     </div>
   );
 }

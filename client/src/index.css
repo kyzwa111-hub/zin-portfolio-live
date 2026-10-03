@@ -1143,6 +1143,9 @@ body { background: var(--cream); }
 .scenario-checkpoint { align-items: center; color: #f4cc72; display: inline-flex; gap: 5px; margin-left: auto; }
 .scenario-skill { align-items: center; color: #cce4c7; display: inline-flex; font-size: 10px; gap: 6px; letter-spacing: .05em; margin-top: 24px; text-transform: uppercase; }
 .scenario-skill svg { color: #f4cc72; }
+.scenario-law-note { align-items: flex-start; background: rgba(231,179,76,.12); border-left: 3px solid #e7b34c; color: #f4cc72; display: flex; flex-direction: column; gap: 4px; margin-top: 16px; padding: 10px 12px; }
+.scenario-law-note strong { font-size: 9px; letter-spacing: .13em; text-transform: uppercase; }
+.scenario-law-note span { color: rgba(244,247,237,.78); font-size: 10px; line-height: 1.45; }
 .scenario-lab-card h3 { font-size: clamp(24px, 3vw, 40px); letter-spacing: -.05em; line-height: 1.1; margin: 34px 0 28px; max-width: 760px; }
 .scenario-options { display: grid; gap: 9px; grid-template-columns: repeat(3, 1fr); }
 .scenario-options button { align-items: flex-start; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); color: #f4f7ed; cursor: pointer; display: flex; flex-direction: column; gap: 18px; min-height: 145px; padding: 17px; text-align: left; transition: background 180ms ease, border-color 180ms ease, transform 180ms ease; }
@@ -1166,6 +1169,9 @@ body { background: var(--cream); }
 .scenario-footer-actions button { background: transparent; border: 0; color: rgba(244,247,237,.7); cursor: pointer; font-size: 10px; padding: 3px 0; }
 .scenario-footer-actions button:hover:not(:disabled) { color: #f4cc72; }
 .scenario-footer-actions button:disabled { cursor: not-allowed; opacity: .35; }
+.scenario-disclaimer { border-top: 1px solid rgba(255,255,255,.12); color: rgba(244,247,237,.52); font-size: 9px; line-height: 1.55; margin: 19px 0 0; padding-top: 13px; }
+.scenario-source-links { color: rgba(244,247,237,.58); font-size: 9px; line-height: 1.55; margin: 8px 0 0; }
+.scenario-source-links a { color: #f4cc72; text-underline-offset: 3px; }
 .job-feed-channel-link { align-items: center; color: #32a9e0; display: inline-flex; font-size: 10px; font-weight: 800; gap: 5px; margin-top: 12px; text-decoration: none; }
 .job-feed-channel-link:hover { color: #e7603f; }
 .live-job-card:focus-visible, .job-feed-channel-link:focus-visible { outline: 3px solid rgba(50,169,224,.35); outline-offset: 3px; }
@@ -1385,13 +1391,15 @@ body { background: var(--cream); }
 .unified-badge-bottom small { color: rgba(255,250,242,.65); font-size: 8px; }
 .unified-scroll-cue { align-items: center; bottom: 20px; color: rgba(255,250,242,.42); display: flex; font-size: 8px; gap: 10px; left: 50%; letter-spacing: .13em; position: absolute; text-transform: uppercase; transform: translateX(-50%); white-space: nowrap; }
 .unified-scroll-cue span { background: #ff7447; border-radius: 99px; height: 1px; width: 24px; }
-.unified-paths { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: -36px auto 0; max-width: 1260px; position: relative; z-index: 5; }
+.unified-paths { display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: -36px auto 0; max-width: 1260px; position: relative; z-index: 5; }
 .unified-path-card { align-items: flex-start; background: #fffdf8; border: 1px solid rgba(13,56,53,.13); border-radius: 18px; box-shadow: 0 15px 38px rgba(13,56,53,.08); color: #0d3835; display: flex; flex-direction: column; min-height: 166px; padding: 22px; position: relative; text-decoration: none; transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
 .unified-path-card:hover { border-color: #ff4a0a; box-shadow: 0 20px 42px rgba(13,56,53,.12); transform: perspective(800px) rotateX(2deg) translateY(-4px); }
 .unified-path-index { color: #f25a28; font-size: 8px; font-weight: 900; letter-spacing: .16em; }
 .unified-path-icon { align-items: center; background: #edf3e9; border-radius: 12px; color: #0d3835; display: inline-flex; height: 38px; justify-content: center; margin: 17px 0 12px; width: 38px; }
 .unified-path-card strong { font-size: 14px; letter-spacing: -.02em; }
 .unified-path-card small { color: #687773; font-size: 10px; margin-top: 5px; }
+.unified-path-game .unified-path-icon { background: #fff0dc; color: #9a5a17; }
+.unified-path-game .unified-path-index { color: #9a5a17; }
 .unified-path-arrow { color: #f25a28; position: absolute; right: 21px; top: 21px; }
 .unified-section { margin: 0 auto; max-width: 1440px; padding-bottom: clamp(74px, 9vw, 118px); padding-top: clamp(78px, 9vw, 124px); scroll-margin-top: 20px; }
 .unified-section-heading { align-items: flex-end; display: flex; gap: 48px; justify-content: space-between; margin: 0 auto 38px; max-width: 1184px; }

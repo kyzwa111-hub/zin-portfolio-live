@@ -13,6 +13,16 @@
 .recommended-videos-heading { max-width: 900px; margin: 0 auto 28px; }
 .recommended-videos-heading h2 { margin: 6px 0 10px; font-size: clamp(1.7rem,4vw,2.6rem); }
 .recommended-videos-heading > p:last-child { max-width: 650px; color: #666; line-height: 1.7; }
+.event-feed-tools { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:22px; }
+.event-filter-list { display:flex; flex-wrap:wrap; gap:8px; }
+.event-filter-list button { border:1px solid rgba(23,43,61,.16); border-radius:999px; background:#fff; color:#172b3d; cursor:pointer; padding:8px 13px; font:inherit; font-size:.82rem; font-weight:700; }
+.event-filter-list button:hover,.event-filter-list button.active { background:#172b3d; border-color:#172b3d; color:#fff; }
+.event-featured-card { display:flex; align-items:center; justify-content:space-between; gap:24px; max-width:1100px; margin:0 auto 22px; padding:26px 28px; border:1px solid rgba(232,102,69,.3); border-radius:20px; background:linear-gradient(135deg,#fffaf2,#fff); box-shadow:0 12px 26px rgba(23,43,61,.08); }
+.event-featured-label { color:#c25338; font-size:.72rem; font-weight:800; letter-spacing:.08em; }
+.event-featured-card h3 { margin:10px 0 6px; font-size:clamp(1.3rem,3vw,2rem); }
+.event-featured-card p { margin:0; color:#706b64; font-size:.88rem; }
+.event-featured-card a { display:inline-flex; align-items:center; gap:8px; flex:none; border-radius:999px; background:#e86645; color:#fff; padding:11px 15px; font-size:.87rem; font-weight:700; text-decoration:none; }
+.event-featured-card a:hover { background:#172b3d; }
 .recommended-videos-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 16px; max-width: 1100px; margin: 0 auto; }
 .recommended-video-card { display: flex; flex-direction: column; align-items: flex-start; min-height: 250px; padding: 22px; border: 1px solid #e7e2da; border-radius: 16px; background: #fff; box-shadow: 0 5px 16px #00000008; }
 .recommended-video-number { color: #8a5c43; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
@@ -22,6 +32,7 @@
 .recommended-video-card a { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding: 10px 13px; border-radius: 8px; background: #1f1f1f; color: #fff; font-size: .87rem; font-weight: 700; text-decoration: none; }
 .recommended-video-card a:hover { background: #8a4e3c; }
 @media(max-width:600px) { .recommended-videos { padding: 48px 5vw 56px; } .recommended-video-card { min-height: 0; } }
+@media(max-width:600px) { .event-featured-card { align-items:flex-start; flex-direction:column; padding:22px; } .event-featured-card a { width:100%; justify-content:center; } .event-feed-tools { align-items:stretch; flex-direction:column; } }
 
 
 /* Shared visual language with the personal toolkit */

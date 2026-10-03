@@ -19,6 +19,8 @@ function displayDate(value: string): string {
 
 const filters = ["All", "HR", "Career", "Workplace", "Learning"] as const;
 type EventFilter = (typeof filters)[number];
+const languages = ["All languages", "မြန်မာ", "English"] as const;
+type EventLanguage = (typeof languages)[number];
 
 function eventCategory(video: EventVideo): Exclude<EventFilter, "All"> {
   const text = `${video.title || ""} ${video.source_query || ""}`.toLowerCase();
@@ -28,9 +30,15 @@ function eventCategory(video: EventVideo): Exclude<EventFilter, "All"> {
   return "HR";
 }
 
+function eventLanguage(video: EventVideo): Exclude<EventLanguage, "All languages"> {
+  const text = `${video.title || ""} ${video.source_query || ""}`;
+  return /[\u1000-\u109F]/.test(text) ? "မြန်မာ" : "English";
+}
+
 export default function FreeWebinars() {
   const [videos, setVideos] = useState<EventVideo[]>([]);
   const [activeFilter, setActiveFilter] = useState<EventFilter>("All");
+  const [activeLanguage, setActiveLanguage] = useState<EventLanguage>("All languages");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -52,8 +60,8 @@ export default function FreeWebinars() {
   useEffect(() => { void refresh(); }, []);
 
   const filteredVideos = useMemo(
-    () => activeFilter === "All" ? videos : videos.filter(video => eventCategory(video) === activeFilter),
-    [activeFilter, videos]
+    () => videos.filter(video => (activeFilter === "All" || eventCategory(video) === activeFilter) && (activeLanguage === "All languages" || eventLanguage(video) === activeLanguage)),
+    [activeFilter, activeLanguage, videos]
   );
   const featuredVideo = filteredVideos[0];
   const remainingVideos = filteredVideos.slice(1);
@@ -76,17 +84,20 @@ export default function FreeWebinars() {
             <div className="event-filter-list" aria-label="Filter event videos">
               {filters.map(filter => <button key={filter} type="button" className={activeFilter === filter ? "active" : ""} aria-pressed={activeFilter === filter} onClick={() => setActiveFilter(filter)}>{filter}</button>)}
             </div>
+            <div className="event-filter-list" aria-label="Filter event language">
+              {languages.map(language => <button key={language} type="button" className={activeLanguage === language ? "active language-filter" : "language-filter"} aria-pressed={activeLanguage === language} onClick={() => setActiveLanguage(language)}>{language}</button>)}
+            </div>
             <button className="button-print" type="button" onClick={() => void refresh()} disabled={loading}>{loading ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />} Refresh feed</button>
           </div>
         </div>
         {error && <p className="admin-control-error" role="alert">{error}</p>}
         {loading ? <p className="webinar-unavailable"><Loader2 className="spin" size={15} /> Loading daily event videos…</p> : videos.length ? filteredVideos.length ? <>
           {featuredVideo && <article className="event-featured-card">
-            <div><span className="event-featured-label">FEATURED · {eventCategory(featuredVideo)}</span><h3>{featuredVideo.title || "Today’s HR & workplace video"}</h3><p>{featuredVideo.creator_name || "Original publisher"} · Updated {displayDate(featuredVideo.last_seen_at)}</p></div>
+            <div><span className="event-featured-label">FEATURED · {eventCategory(featuredVideo)} · {eventLanguage(featuredVideo)}</span><h3>{featuredVideo.title || "Today’s HR & workplace video"}</h3><p>{featuredVideo.creator_name || "Original publisher"} · Updated {displayDate(featuredVideo.last_seen_at)}</p></div>
             <a href={featuredVideo.video_url} target="_blank" rel="noopener noreferrer"><PlayCircle size={16} /> Watch featured event <ExternalLink size={13} /></a>
           </article>}
           {remainingVideos.length ? <div className="recommended-videos-grid">{remainingVideos.map((video, index) => <article className="recommended-video-card" key={video.id || video.video_url}>
-            <span className="recommended-video-number">{String(index + 2).padStart(2, "0")} · {eventCategory(video)} · {video.platform}</span>
+            <span className="recommended-video-number">{String(index + 2).padStart(2, "0")} · {eventCategory(video)} · {eventLanguage(video)} · {video.platform}</span>
             <h3>{video.title || "HR event video"}</h3>
             <p className="recommended-video-topic">From: {video.source_query || "HR video search"}</p>
             <p className="recommended-video-creator">{video.creator_name || "Original publisher"} · Updated {displayDate(video.last_seen_at)}</p>

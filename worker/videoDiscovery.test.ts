@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   checkVideoLinkStore: vi.fn(),
   addVideoLinks: vi.fn(),
+  isLikelyRelevantVideo: vi.fn(() => true),
 }));
 
 vi.mock("./videoLinks", () => mocks);

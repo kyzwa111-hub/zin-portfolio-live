@@ -59,6 +59,14 @@ export interface VideoLinkInput {
   sourceQuery?: string | null;
 }
 
+const relevantVideoTerms = /(\bhr\b|human resources?|people operations?|recruit(ment|ing)?|employee|employer|payroll|salary|compensation|benefit|workplace|work culture|leadership|management|onboarding|performance review|talent|career|hiring|interview|သင်တန်း|ဝန်ထမ်း|အလုပ်အကိုင်|လုပ်ငန်းခွင်|လစာ|လူ့စွမ်းအား|အလုပ်သမား|စီမံခန့်ခွဲမှု|webinar|training)/i;
+const irrelevantVideoTerms = /(earthquake|special rapporteur|politics|election|war|football|sport|music video|celebrity|movie|recipe|weather forecast|news headlines|သတင်း|ငလျင်|နိုင်ငံရေး|အားကစား|သီချင်း)/i;
+
+export function isLikelyRelevantVideo(video: Pick<VideoLinkRow, "title" | "creator_name" | "source_query">): boolean {
+  const text = `${video.title || ""} ${video.creator_name || ""} ${video.source_query || ""}`;
+  return relevantVideoTerms.test(text) && !irrelevantVideoTerms.test(text);
+}
+
 function connection(env: TiDBEnv) {
   if (!env.TIDB_DATABASE_URL) throw new TiDBNotConfiguredError();
   return connect({ url: env.TIDB_DATABASE_URL });
@@ -199,7 +207,7 @@ export async function listPublicDiscoveredVideoLinks(env: TiDBEnv): Promise<Vide
       `SELECT * FROM event_video_links WHERE source_kind = 'search_api' AND review_status <> 'rejected'
        ORDER BY last_seen_at DESC, created_at DESC LIMIT 60`,
     ).all<VideoLinkRow>();
-    return result.results;
+    return result.results.filter(isLikelyRelevantVideo);
   }
   const db = connection(env);
   const rows = await db.execute(
@@ -207,7 +215,7 @@ export async function listPublicDiscoveredVideoLinks(env: TiDBEnv): Promise<Vide
      WHERE source_kind = 'search_api' AND review_status <> 'rejected'
      ORDER BY last_seen_at DESC, created_at DESC LIMIT 60`,
   ) as Array<Record<string, unknown>>;
-  return rows as unknown as VideoLinkRow[];
+  return (rows as unknown as VideoLinkRow[]).filter(isLikelyRelevantVideo);
 }
 
 export async function updateVideoReviewStatus(env: TiDBEnv, id: string, status: ReviewStatus): Promise<boolean> {

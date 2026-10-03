@@ -1,4 +1,4 @@
-import { addVideoLinks, checkVideoLinkStore } from "./videoLinks";
+import { addVideoLinks, checkVideoLinkStore, isLikelyRelevantVideo } from "./videoLinks";
 import type { TiDBEnv, VideoLinkInput } from "./videoLinks";
 
 export interface YouTubeDiscoveryEnv extends TiDBEnv {
@@ -6,11 +6,11 @@ export interface YouTubeDiscoveryEnv extends TiDBEnv {
 }
 
 export const DAILY_YOUTUBE_QUERIES = [
-  "HR Myanmar",
-  "HR event Myanmar",
+  "HR webinar Myanmar",
   "HR training Myanmar",
-  "human resources Myanmar",
-  "လူ့စွမ်းအားအရင်းအမြစ် မြန်မာ",
+  "human resource management Myanmar",
+  "employee workplace webinar Myanmar",
+  "HR သင်တန်း မြန်မာ",
 ] as const;
 
 export const PUBLIC_EVENT_FEEDS = [
@@ -85,13 +85,14 @@ export async function runDailyYouTubeDiscovery(env: YouTubeDiscoveryEnv): Promis
     const candidates: VideoLinkInput[] = (payload.items || []).flatMap((item) => {
       const videoId = item.id?.videoId;
       if (!videoId || !/^[\w-]{6,}$/.test(videoId)) return [];
-      return [{
+      const candidate = {
         url: `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`,
         platform: "youtube",
         title: item.snippet?.title || null,
         creatorName: item.snippet?.channelTitle || null,
         sourceQuery: query,
-      }];
+      };
+      return isLikelyRelevantVideo({ title: candidate.title, creator_name: candidate.creatorName, source_query: candidate.sourceQuery }) ? [candidate] : [];
     });
 
     queriesCompleted++;
@@ -134,7 +135,8 @@ async function runPublicEventFeedDiscovery(env: YouTubeDiscoveryEnv): Promise<Di
       const items = xmlItems(await response.text()).slice(0, 8);
       const candidates: VideoLinkInput[] = items.flatMap(item => {
         if (!item.link || !/^https:\/\//i.test(item.link)) return [];
-        return [{ url: item.link, title: item.title, creatorName: item.creator, sourceQuery: feed.label }];
+        const candidate = { url: item.link, title: item.title, creatorName: item.creator, sourceQuery: feed.label };
+        return isLikelyRelevantVideo({ title: candidate.title, creator_name: candidate.creatorName, source_query: candidate.sourceQuery }) ? [candidate] : [];
       });
       feedsCompleted++;
       resultsFound += candidates.length;

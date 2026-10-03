@@ -45,23 +45,18 @@ const serviceWalkthroughs = [
 function ServiceWalkthrough() {
   const [active, setActive] = useState(0);
   const [demoStep, setDemoStep] = useState(0);
-  useEffect(() => {
-    const timer = window.setInterval(() => setActive(current => (current + 1) % serviceWalkthroughs.length), 5200);
-    return () => window.clearInterval(timer);
-  }, []);
-  useEffect(() => {
-    setDemoStep(0);
-    const timer = window.setInterval(() => setDemoStep(current => (current + 1) % 3), 1750);
-    return () => window.clearInterval(timer);
-  }, [active]);
   const item = serviceWalkthroughs[active];
+  const selectWalkthrough = (index: number) => {
+    setActive(index);
+    setDemoStep(0);
+  };
   return <section className="service-walkthrough" aria-label="Service walkthrough demo">
     <div className="service-walkthrough-copy">
       <p className="unified-section-kicker"><span>HOW IT WORKS</span> SERVICE WALKTHROUGH</p>
       <h3>See the service flow<br /><em>before you open it.</em></h3>
-      <p>Short previews now follow the live Zeke flow: Telegram approval, payroll inputs, bulk document exports, HR forms, access plans, and your personal workspace.</p>
+      <p>Manual previews follow the live Zeke flow: choose a service tab, then select each step yourself so you can read the process without anything moving ahead automatically.</p>
       <div className="service-walkthrough-tabs" role="tablist" aria-label="Service walkthrough steps">
-        {serviceWalkthroughs.map((walkthrough, index) => <button key={walkthrough.id} type="button" role="tab" aria-selected={active === index} className={active === index ? "active" : ""} onClick={() => setActive(index)}><span>{walkthrough.kicker}</span>{walkthrough.label}<ChevronRight size={13} /></button>)}
+        {serviceWalkthroughs.map((walkthrough, index) => <button key={walkthrough.id} type="button" role="tab" aria-selected={active === index} className={active === index ? "active" : ""} onClick={() => selectWalkthrough(index)}><span>{walkthrough.kicker}</span>{walkthrough.label}<ChevronRight size={13} /></button>)}
       </div>
     </div>
     <div className="service-demo-window" aria-live="polite">
@@ -76,11 +71,11 @@ function ServiceWalkthrough() {
           {item.screen === "workspace" && <div className="service-demo-workspace"><span>Attendance</span><span>Recruitment</span><span>Employee relations</span><span>Performance</span></div>}
           {item.screen === "plans" && <div className="service-demo-plans"><span><b>Starter</b><small>Explore the basics</small></span><span className="selected"><b>Protected tools</b><small>Request approval</small></span><span><b>Team access</b><small>Compare options</small></span></div>}
           {item.screen === "dashboard" && <div className="service-demo-dashboard"><div><b>3</b><small>Saved documents</small></div><div><b>2</b><small>Recent forms</small></div><div><b>↗</b><small>Open workspace</small></div></div>}
-          <div className="service-demo-step-strip" aria-label="Walkthrough progress">{item.steps.map((step, index) => <span className={index <= demoStep ? "done" : ""} key={step}><b>{index + 1}</b>{step}</span>)}</div>
+          <div className="service-demo-step-strip" aria-label="Walkthrough progress">{item.steps.map((step, index) => <button type="button" className={index <= demoStep ? "done" : ""} aria-current={index === demoStep ? "step" : undefined} onClick={() => setDemoStep(index)} key={step}><b>{index + 1}</b>{step}</button>)}</div>
           <div className="service-demo-footer"><span><strong>Scene {demoStep + 1}/3 · </strong>{item.detail}</span><span className="service-demo-cursor"><MousePointer2 size={16} /> Zeke guide</span></div>
           <a className="service-demo-open" href={item.href}>Open this live flow <ArrowUpRight size={14} /></a>
         </div>
-        <video className="service-demo-mascot" autoPlay loop muted playsInline preload="metadata" poster="/images/zeke-mascot.png" aria-label="Zeke guiding the service walkthrough"><source src={MASCOT_VIDEO} type="video/mp4" /></video>
+        <img className="service-demo-mascot" src="/images/zeke-mascot.png" alt="Zeke guiding the service walkthrough" />
       </div>
     </div>
   </section>;

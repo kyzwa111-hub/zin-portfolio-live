@@ -61,6 +61,7 @@ export default function Home() {
 
   return (
     <div className="site-shell zeke-experience">
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="site-header unified-header">
         <a className="unified-brand" href="#home" onClick={closeMenu} aria-label="Zeke home">
           <span className="unified-brand-mascot" aria-hidden="true">
@@ -70,10 +71,10 @@ export default function Home() {
           </span>
           <span className="unified-brand-copy"><strong>zeke</strong><small>HR &amp; workplace assistant</small></span>
         </a>
-        <button className="mobile-menu-button unified-menu-button" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
+        <button className="mobile-menu-button unified-menu-button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-controls="primary-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
           {menuOpen ? <X size={21} /> : <Menu size={21} />}
         </button>
-        <nav className={menuOpen ? "site-nav unified-nav site-nav-open" : "site-nav unified-nav"} aria-label="Main navigation">
+        <nav id="primary-navigation" className={menuOpen ? "site-nav unified-nav site-nav-open" : "site-nav unified-nav"} aria-label="Main navigation">
           <a href="#events" onClick={closeMenu}>Event</a>
           <a href="#jobs" onClick={closeMenu}>Job</a>
           <a href="#services" onClick={closeMenu}>Services</a>
@@ -81,7 +82,7 @@ export default function Home() {
         </nav>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <section className="unified-hero" id="home" aria-labelledby="unified-hero-title">
           <div className="unified-hero-noise" aria-hidden="true" />
           <div className="unified-hero-inner section-pad">

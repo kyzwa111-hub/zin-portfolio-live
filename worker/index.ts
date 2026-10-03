@@ -887,8 +887,19 @@ async function serveAssetsWithAccessRecovery(request: Request, env: Env): Promis
     : `${htmlWithSeoShell}${zekeSettingsScript}${recoveryScript}${feedScript}`;
   const headers = new Headers(response.headers);
   headers.delete("content-length");
-  headers.set("cache-control", "no-store");
+  headers.set("content-type", "text/html; charset=utf-8");
+  headers.set("cache-control", "public, max-age=60, must-revalidate");
   return new Response(body, { status: response.status, statusText: response.statusText, headers });
+}
+
+function addSecurityHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.set("strict-transport-security", "max-age=31536000; includeSubDomains");
+  headers.set("x-content-type-options", "nosniff");
+  headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  headers.set("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  headers.set("content-security-policy", "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' https:; connect-src 'self' https:; form-action 'self' https://t.me");
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
 async function serveIntegratedPortfolio(request: Request): Promise<Response> {
@@ -907,8 +918,7 @@ async function serveIntegratedPortfolio(request: Request): Promise<Response> {
   return new Response(rewritten, { status: upstream.status, statusText: upstream.statusText, headers });
 }
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+async function handleRequest(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if ((url.pathname === "/Website" || url.pathname === "/website") && request.method === "GET") {
       return new Response(null, {
@@ -977,6 +987,11 @@ export default {
       return json({ ok: true, backend: "cloudflare-worker", telegramWebhookReady });
     }
     return serveAssetsWithAccessRecovery(request, env);
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    return addSecurityHeaders(await handleRequest(request, env));
   },
   async scheduled(_controller: unknown, env: Env): Promise<void> {
     const result = await runDailyYouTubeDiscovery(env);

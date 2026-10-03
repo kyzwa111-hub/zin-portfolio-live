@@ -84,11 +84,14 @@
   body { @apply bg-background text-foreground; margin: 0; font-family: "DM Sans", system-ui, sans-serif; }
   button, a { -webkit-tap-highlight-color: transparent; }
   button { font: inherit; }
+  :focus-visible { outline: 3px solid #ff9271; outline-offset: 3px; }
 }
 
 
 :root { --ink: #191816; --cream: #f4f1ec; --paper: #fffdf9; --line: #d9d2c8; --coral: #e7603f; --blue: #243d55; --muted-copy: #756f67; }
 * { box-sizing: border-box; }
+.skip-link { background: #fffaf2; border: 2px solid #ff9271; border-radius: 0 0 10px 10px; color: #0d3835; font-size: 12px; font-weight: 800; left: 16px; padding: 10px 14px; position: fixed; top: 0; transform: translateY(-140%); transition: transform 160ms ease; z-index: 100; }
+.skip-link:focus { transform: translateY(0); }
 .site-shell { min-height: 100vh; overflow: hidden; background: var(--cream); }
 .site-header { align-items: center; display: flex; justify-content: space-between; margin: 0 auto; max-width: 1440px; padding: 26px clamp(20px, 5vw, 76px); position: relative; z-index: 10; }
 .brand, .footer-brand { align-items: center; color: var(--ink); display: inline-flex; font-size: 16px; font-weight: 700; gap: 9px; letter-spacing: -.04em; text-decoration: none; text-transform: lowercase; }

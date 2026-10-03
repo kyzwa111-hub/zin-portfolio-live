@@ -182,6 +182,12 @@ export default function Home() {
               <source src={INTRO_VIDEO} type="video/mp4" />
               Your browser does not support the video element.
             </video>
+            <div className="intro-video-zeke-guide" aria-label="Zeke animated guide">
+              <video autoPlay loop muted playsInline preload="metadata" poster="/images/zeke-mascot.png">
+                <source src={MASCOT_VIDEO} type="video/mp4" />
+              </video>
+              <span><strong>Zeke guide</strong><small>Follow the experience</small></span>
+            </div>
             <div className="unified-intro-video-caption"><strong>Events. Jobs. Games.</strong><span>Everything in one place.</span></div>
           </div>
         </section>

@@ -68,6 +68,27 @@ function d1Connection(env: TiDBEnv): D1VideoDatabase | null {
   return env.DB || null;
 }
 
+async function ensureD1VideoTable(db: D1VideoDatabase): Promise<void> {
+  await db.prepare(`CREATE TABLE IF NOT EXISTS event_video_links (
+    id TEXT PRIMARY KEY NOT NULL,
+    url_hash TEXT NOT NULL UNIQUE,
+    video_url TEXT NOT NULL,
+    platform TEXT NOT NULL DEFAULT 'other',
+    title TEXT,
+    creator_name TEXT,
+    license_name TEXT,
+    rights_status TEXT NOT NULL DEFAULT 'public',
+    review_status TEXT NOT NULL DEFAULT 'pending',
+    source_kind TEXT NOT NULL DEFAULT 'search_api',
+    source_query TEXT,
+    first_seen_at TEXT NOT NULL,
+    last_seen_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`).run();
+  await db.prepare("CREATE INDEX IF NOT EXISTS event_video_links_public_idx ON event_video_links(source_kind, review_status, last_seen_at)").run();
+}
+
 function cleanText(value: unknown, maxLength: number): string | null {
   const text = String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
   return text ? text.slice(0, maxLength) : null;
@@ -129,6 +150,7 @@ export async function addVideoLink(env: TiDBEnv, input: VideoLinkInput, sourceKi
   const urlHash = await hashUrl(normalized.video_url);
   const d1 = d1Connection(env);
   if (d1) {
+    await ensureD1VideoTable(d1);
     const now = new Date().toISOString();
     await d1.prepare(
       `INSERT INTO event_video_links (id, url_hash, video_url, platform, title, creator_name, license_name, source_query, source_kind, first_seen_at, last_seen_at, created_at, updated_at)
@@ -154,6 +176,7 @@ export async function addVideoLink(env: TiDBEnv, input: VideoLinkInput, sourceKi
 export async function listVideoLinks(env: TiDBEnv, reviewStatus?: ReviewStatus): Promise<VideoLinkRow[]> {
   const d1 = d1Connection(env);
   if (d1) {
+    await ensureD1VideoTable(d1);
     const query = reviewStatus
       ? d1.prepare("SELECT * FROM event_video_links WHERE review_status = ? ORDER BY created_at DESC LIMIT 200").bind(reviewStatus)
       : d1.prepare("SELECT * FROM event_video_links ORDER BY created_at DESC LIMIT 200");
@@ -171,6 +194,7 @@ export async function listVideoLinks(env: TiDBEnv, reviewStatus?: ReviewStatus):
 export async function listPublicDiscoveredVideoLinks(env: TiDBEnv): Promise<VideoLinkRow[]> {
   const d1 = d1Connection(env);
   if (d1) {
+    await ensureD1VideoTable(d1);
     const result = await d1.prepare(
       `SELECT * FROM event_video_links WHERE source_kind = 'search_api' AND review_status <> 'rejected'
        ORDER BY last_seen_at DESC, created_at DESC LIMIT 60`,
@@ -189,6 +213,7 @@ export async function listPublicDiscoveredVideoLinks(env: TiDBEnv): Promise<Vide
 export async function updateVideoReviewStatus(env: TiDBEnv, id: string, status: ReviewStatus): Promise<boolean> {
   const d1 = d1Connection(env);
   if (d1) {
+    await ensureD1VideoTable(d1);
     const result = await d1.prepare("UPDATE event_video_links SET review_status = ?, updated_at = ? WHERE id = ?").bind(status, new Date().toISOString(), id).run() as { meta?: { changes?: number } };
     return Number(result.meta?.changes || 0) > 0;
   }
@@ -205,6 +230,7 @@ export async function updateVideoReviewStatus(env: TiDBEnv, id: string, status: 
 export async function checkVideoLinkStore(env: TiDBEnv): Promise<void> {
   const d1 = d1Connection(env);
   if (d1) {
+    await ensureD1VideoTable(d1);
     await d1.prepare("SELECT 1 AS ready FROM event_video_links LIMIT 1").first();
     return;
   }

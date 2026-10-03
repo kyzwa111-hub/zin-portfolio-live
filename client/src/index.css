@@ -1598,7 +1598,7 @@ body { background: var(--cream); }
 .unified-intro-video-heading h2 em { color: #ff4a0a; font-style: normal; }
 .unified-intro-video-heading > p { color: rgba(13,56,53,.72); font-size: 15px; line-height: 1.7; margin: 0 0 4px; max-width: 330px; }
 .unified-intro-video-shell { background: #102f3d; border: 1px solid rgba(13,56,53,.12); border-radius: 28px; box-shadow: 0 28px 70px rgba(13,56,53,.16); margin: 0 auto; max-width: 1184px; overflow: hidden; position: relative; }
-.unified-intro-video-shell video { aspect-ratio: 16 / 9; background: #102f3d; display: block; object-fit: cover; width: 100%; }
+.unified-intro-video-shell video { aspect-ratio: 16 / 9; background: #102f3d; display: block; object-fit: contain; object-position: center; width: 100%; }
 .unified-intro-video-caption { align-items: center; background: linear-gradient(90deg, rgba(16,47,61,.96), rgba(16,47,61,.55), transparent); bottom: 0; color: #fffaf2; display: flex; gap: 16px; left: 0; padding: 22px 28px; position: absolute; right: 0; }
 .unified-intro-video-caption strong { font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
 .unified-intro-video-caption span { color: rgba(255,250,242,.72); font-size: 12px; }

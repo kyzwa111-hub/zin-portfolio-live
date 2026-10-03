@@ -3,7 +3,7 @@ import { CheckCircle2, Download, FileSpreadsheet, LockKeyhole, ShieldCheck, Uplo
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import { trpc } from "@/lib/trpc";
-import { TAX_RULES, calculateAnnualPIT, calculateSSB, formatFinancialYear } from "@/components/PayrollCalculator";
+import { FY_MONTHS, TAX_RULES, calculateAnnualPIT, calculateSSB, formatFinancialYear } from "@/components/PayrollCalculator";
 import { readAccessSession } from "@/lib/accessSession";
 import { PAYMENT_QR_URL } from "@/const";
 
@@ -129,9 +129,13 @@ function calculateBulkRow(row: BulkRow): CalculatedRow {
   return { ...row, grossMonthly, grossAnnual, contributionBase: monthlySSB.contributionBase, employeeSSB: monthlySSB.employeeSSB, employerSSB: monthlySSB.employerSSB, employeeSSBAnnual, employerSSBAnnual, taxableIncome, annualPIT, monthlyPIT, netMonthly: Math.max(0, grossMonthly - monthlySSB.employeeSSB - (row.taxMode === "employee" ? monthlyPIT : 0)), employerCostMonthly: grossMonthly + monthlySSB.employerSSB + (row.taxMode === "employer" ? monthlyPIT : 0) };
 }
 
-function downloadBulkPayslipPdf(rows: CalculatedRow[]) {
+function downloadBulkPayslipPdf(rows: CalculatedRow[], password = "") {
   if (!rows.length) return;
-  const pdf = new jsPDF({ unit: "mm", format: "a4" });
+  const pdf = new jsPDF({
+    unit: "mm",
+    format: "a4",
+    ...(password ? { encryption: { userPassword: password, ownerPassword: `${password}-owner`, userPermissions: ["print"] } } : {}),
+  });
   rows.forEach((row, index) => {
     if (index > 0) pdf.addPage();
     pdf.setTextColor(36, 61, 85);
@@ -175,6 +179,45 @@ function downloadBulkPayslipPdf(rows: CalculatedRow[]) {
   pdf.save(`bulk-payslips-FY-2026-2027-${rows.length}-employees.pdf`);
 }
 
+function downloadDocumentVaultWorkbook(rows: CalculatedRow[]) {
+  const workbook = XLSX.utils.book_new();
+  const payslips = rows.map((row, index) => ({
+    "Payslip No.": index + 1,
+    Name: row.name,
+    "Tax Mode": row.taxMode,
+    "Gross Monthly": Math.round(row.grossMonthly),
+    "Employee SSB": Math.round(row.employeeSSB),
+    "Monthly PIT": Math.round(row.monthlyPIT),
+    "Net Pay": Math.round(row.netMonthly),
+    "Employer SSB": Math.round(row.employerSSB),
+    "Employer Cost": Math.round(row.employerCostMonthly),
+    "Annual Gross": Math.round(row.grossAnnual),
+    "Annual PIT": Math.round(row.annualPIT),
+  }));
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(payslips), "Payslips");
+
+  const form15Headers = ["Name", "Tax Mode", ...FY_MONTHS.flatMap(month => [`${month} Gross`, `${month} PIT`]), "Annual Gross", "Annual PIT", "Parents", "Spouse", "Children", "Life Insurance", "Other Deductions", "Review status"];
+  const form15Rows = rows.map(row => [row.name, row.taxMode, ...FY_MONTHS.flatMap(() => [Math.round(row.grossMonthly), Math.round(row.monthlyPIT)]), Math.round(row.grossAnnual), Math.round(row.annualPIT), row.parents, row.spouse, row.children, Math.round(row.lifeInsurance), Math.round(row.otherDeductions), "Working data - verify monthly changes and payment references"]);
+  const form15Sheet = XLSX.utils.aoa_to_sheet([[
+    "Form 15(A) working data",
+  ], [
+    "Monthly values start from the Bulk Payroll baseline. Verify actual month-by-month salary, tax payment reference, employee identity, and employer details before filing.",
+  ], [], form15Headers, ...form15Rows]);
+  XLSX.utils.book_append_sheet(workbook, form15Sheet, "Form 15(A) Working");
+
+  const emailRows = rows.map((row, index) => ({
+    "Employee No.": index + 1,
+    Name: row.name,
+    Email: "",
+    "Payslip file": `payslip-${index + 1}-${row.name}.pdf`,
+    "Form 15(A) file": `form-15a-${index + 1}-${row.name}.pdf`,
+    Subject: "Your payroll documents",
+    "Message status": "Ready for review",
+  }));
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(emailRows), "Email Queue");
+  XLSX.writeFile(workbook, `hr-document-vault-FY-2026-2027-${rows.length}-employees.xlsx`);
+}
+
 function exportRows(rows: CalculatedRow[]) {
   const total = rows.reduce((sum, row) => ({
     grossMonthly: sum.grossMonthly + row.grossMonthly,
@@ -207,7 +250,9 @@ function exportRows(rows: CalculatedRow[]) {
     "Annual Gross": Math.round(row.grossAnnual),
     "Annual PIT": Math.round(row.annualPIT),
   })), `bulk-payroll-payslips-${stamp}.xlsx`, "Payslips");
-  downloadBulkPayslipPdf(rows);
+  downloadDocumentVaultWorkbook(rows);
+  const password = window.prompt("Optional: enter a password to protect the payslip PDF. Leave blank for no password.") ?? "";
+  downloadBulkPayslipPdf(rows, password.trim());
 }
 
 export default function BulkPayroll({ sharedApprovalActive = false }: { sharedApprovalActive?: boolean } = {}) {

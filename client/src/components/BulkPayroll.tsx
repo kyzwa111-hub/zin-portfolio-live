@@ -146,6 +146,20 @@ function exportRows(rows: CalculatedRow[]) {
   downloadWorkbook([...rows.map((row) => ({ Name: row.name, "Gross Monthly": Math.round(row.grossMonthly), "Gross Annual": Math.round(row.grossAnnual), "Employee SSB Monthly": Math.round(row.employeeSSB), "Employer SSB Monthly": Math.round(row.employerSSB), "Annual PIT": Math.round(row.annualPIT), "Monthly PIT": Math.round(row.monthlyPIT), "Net Monthly": Math.round(row.netMonthly), "Employer Cost Monthly": Math.round(row.employerCostMonthly), "Tax Mode": row.taxMode })), { Name: "TOTAL", ...Object.fromEntries(Object.entries(total).map(([key, value]) => [key, Math.round(value)])) }], `bulk-payroll-calculation-${stamp}.xlsx`, "Calculation");
   downloadWorkbook([...rows.map((row) => ({ Name: row.name, "Contribution Base": Math.round(row.contributionBase), "Employee SSB 2%": Math.round(row.employeeSSB), "Employer SSB 3%": Math.round(row.employerSSB), "Annual Employee SSB": Math.round(row.employeeSSBAnnual), "Annual Employer SSB": Math.round(row.employerSSBAnnual) })), { Name: "TOTAL", "Contribution Base": "—", "Employee SSB 2%": Math.round(total.employeeSSB), "Employer SSB 3%": Math.round(total.employerSSB), "Annual Employee SSB": Math.round(total.employeeSSBAnnual), "Annual Employer SSB": Math.round(total.employerSSBAnnual) }], `bulk-payroll-ssb-${stamp}.xlsx`, "SSB list");
   downloadWorkbook([...rows.map((row) => ({ Name: row.name, "Gross Annual": Math.round(row.grossAnnual), "Taxable Income": Math.round(row.taxableIncome), "Annual PIT": Math.round(row.annualPIT), "Monthly PIT": Math.round(row.monthlyPIT) })), { Name: "TOTAL", "Gross Annual": Math.round(total.grossAnnual), "Taxable Income": Math.round(total.taxableIncome), "Annual PIT": Math.round(total.annualPIT), "Monthly PIT": Math.round(total.monthlyPIT) }], `bulk-payroll-paye-${stamp}.xlsx`, "PAYE-A schedule");
+  downloadWorkbook(rows.map((row, index) => ({
+    "Payslip No.": index + 1,
+    Name: row.name,
+    "Financial Year": formatFinancialYear("2026-2027"),
+    "Tax Mode": row.taxMode,
+    "Gross Monthly": Math.round(row.grossMonthly),
+    "Employee SSB": Math.round(row.employeeSSB),
+    "Monthly PIT": Math.round(row.monthlyPIT),
+    "Net Pay": Math.round(row.netMonthly),
+    "Employer SSB": Math.round(row.employerSSB),
+    "Employer Cost": Math.round(row.employerCostMonthly),
+    "Annual Gross": Math.round(row.grossAnnual),
+    "Annual PIT": Math.round(row.annualPIT),
+  })), `bulk-payroll-payslips-${stamp}.xlsx`, "Payslips");
 }
 
 export default function BulkPayroll({ sharedApprovalActive = false }: { sharedApprovalActive?: boolean } = {}) {

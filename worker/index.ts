@@ -907,6 +907,15 @@ async function serveIntegratedPortfolio(request: Request): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if ((url.pathname === "/Website" || url.pathname === "/website") && request.method === "GET") {
+      return new Response(null, {
+        status: 308,
+        headers: {
+          location: `/${url.search}`,
+          "cache-control": "public, max-age=300",
+        },
+      });
+    }
     const toolkitQuery = parseToolkitQuery(request);
     if (toolkitQuery.error) return json({ error: toolkitQuery.error }, 400);
     if (toolkitQuery.enabled) {

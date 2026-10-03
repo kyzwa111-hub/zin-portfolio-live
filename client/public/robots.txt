@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /manus-storage/
+
+Sitemap: https://zin-portfolio-live.kyzwa111.workers.dev/sitemap.xml

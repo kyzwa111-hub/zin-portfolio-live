@@ -888,7 +888,7 @@ async function serveAssetsWithAccessRecovery(request: Request, env: Env): Promis
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("content-type", "text/html; charset=utf-8");
-  headers.set("cache-control", "public, max-age=60, must-revalidate");
+  headers.set("cache-control", "no-store");
   return new Response(body, { status: response.status, statusText: response.statusText, headers });
 }
 

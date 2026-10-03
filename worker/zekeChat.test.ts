@@ -72,6 +72,20 @@ describe("Zeke AI chat endpoint", () => {
     );
   });
 
+  it("directs job-seeker questions to the live Job feed when AI is unavailable", async () => {
+    const testEnv = env();
+    testEnv.AI.run.mockRejectedValue(new Error("AI unavailable"));
+    const response = await worker.fetch(
+      new Request("https://example.com/api/zeke/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "user", content: "Where can I find current jobs?" }] }),
+      }),
+      testEnv as never
+    );
+    expect(((await response.json()) as { reply: string }).reply).toContain("Job section");
+  });
+
   it("rejects repetitive model output and uses a practical workplace fallback", async () => {
     const testEnv = env({ response: "အေထောက်အပံ့ပါ အေထောက်အပံ့ပါ အေထောက်အပံ့ပါ အေထောက်အပံ့ပါ အေထောက်အပံ့ပါ" });
     const response = await worker.fetch(

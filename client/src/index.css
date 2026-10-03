@@ -1194,9 +1194,9 @@ body { background: var(--cream); }
 .scenario-score-form small { color: #687773; flex-basis: 100%; font-size: 9px; }
 .scenario-how-to-score { background: #f1f6ef; border: 1px solid #d8e5d8; color: #173b36; padding: 18px 20px; }
 .scenario-how-to-title { font-size: 10px; font-weight: 900; letter-spacing: .14em; margin: 0 0 13px; text-transform: uppercase; }
-.scenario-how-to-score ol { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
-.scenario-how-to-score li { display: grid; gap: 2px; grid-template-columns: 20px minmax(0, 1fr); }
-.scenario-how-to-score li::before { color: #b38327; content: counter(list-item, decimal-leading-zero); font-size: 10px; font-weight: 900; }
+.scenario-how-to-score ol { counter-reset: score-step; display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
+.scenario-how-to-score li { counter-increment: score-step; display: grid; gap: 2px; grid-template-columns: 20px minmax(0, 1fr); }
+.scenario-how-to-score li::before { color: #b38327; content: counter(score-step, decimal-leading-zero); font-size: 10px; font-weight: 900; }
 .scenario-how-to-score li strong { font-size: 11px; }
 .scenario-how-to-score li span { color: #687773; font-size: 10px; line-height: 1.5; }
 .scenario-how-to-note { border-top: 1px solid #d8e5d8; color: #687773; font-size: 9px; line-height: 1.5; margin: 15px 0 0; padding-top: 12px; }

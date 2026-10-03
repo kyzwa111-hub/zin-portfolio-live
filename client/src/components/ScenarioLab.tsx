@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowRight, Check, RotateCcw, ShieldCheck, Trophy } from "lucide-react";
 
 type Option = { label: string; feedback: string; best: boolean };
 type Scenario = { title: string; skill: string; law: string; context: string; options: Option[] };
 type GameProgress = { level: number; score: number; streak: number; bestStreak: number; checkpointLevel: number };
+type LeaderboardEntry = { id: string; nickname: string; score: number; level: number; streak: number; bestStreak: number; createdAt: string };
 
 const MAX_LEVEL = 1000;
 const CHECKPOINT_INTERVAL = 10;
@@ -122,6 +123,41 @@ export const scenarios: Scenario[] = [
     { label: "Delete the older files and keep only the cleanest version.", feedback: "Deleting evidence can make the issue much more serious.", best: false },
     { label: "Ask employees to sign blank backdated forms.", feedback: "Backdating and blank signatures are not credible controls.", best: false },
   ] },
+  { title: "Recruitment fairness", skill: "Job-related selection", law: "Employment contract principles · non-discrimination good practice", context: "A hiring panel wants to reject every applicant over 35 without checking the role requirements. What should HR do?", options: [
+    { label: "Use documented, job-related criteria and review whether the age rule is necessary and lawful.", feedback: "Selection should be based on capability and genuine role requirements, not a blanket assumption.", best: true },
+    { label: "Approve it because age is easy to screen.", feedback: "Convenience is not a defensible reason for a broad exclusion.", best: false },
+    { label: "Hide the rule from applicants and apply it privately.", feedback: "Secret criteria reduce fairness and make the process difficult to defend.", best: false },
+  ] },
+  { title: "Personnel file access", skill: "Privacy discipline", law: "Employment records · privacy-aware HR practice", context: "A manager asks HR to send an employee’s full medical and identity file to a group chat. What should HR do?", options: [
+    { label: "Share only the minimum information with authorized people through a secure channel and record the reason.", feedback: "Need-to-know access protects the employee and reduces accidental disclosure.", best: true },
+    { label: "Send everything because the manager is senior.", feedback: "Seniority alone does not justify unrestricted access to sensitive records.", best: false },
+    { label: "Print the file and leave it in the reception area.", feedback: "Physical exposure is still a confidentiality failure.", best: false },
+  ] },
+  { title: "Performance support", skill: "Documented coaching", law: "Employment contract and fair-process principles", context: "A worker misses targets for the first time. The manager wants an immediate dismissal with no conversation. What is the better HR step?", options: [
+    { label: "Clarify the expectation, hear context, offer a reasonable improvement plan and document the review.", feedback: "A clear, proportionate process gives the worker a fair chance and gives HR reliable evidence.", best: true },
+    { label: "Invent earlier warnings to strengthen the file.", feedback: "Backfilling warnings damages record integrity and trust.", best: false },
+    { label: "Announce the performance issue to the whole department.", feedback: "Public embarrassment is not a fair performance-management tool.", best: false },
+  ] },
+  { title: "Equal pay check", skill: "Compensation review", law: "Minimum Wage Law · Payment of Wages Law", context: "Two people perform substantially similar work but their pay records use different unexplained allowances. What should HR do?", options: [
+    { label: "Compare role scope, tenure, lawful pay factors and payroll components, then document any correction.", feedback: "A structured pay review can identify unexplained differences without assuming every difference is unlawful.", best: true },
+    { label: "Tell the lower-paid worker not to ask questions.", feedback: "Silencing a concern does not resolve the underlying pay-control issue.", best: false },
+    { label: "Rename both allowances as bonuses and close the review.", feedback: "Relabelling compensation without analysis hides rather than fixes the record.", best: false },
+  ] },
+  { title: "Disciplinary meeting", skill: "Procedural fairness", law: "Employment and Skills Development Law · workplace rules", context: "A disciplinary meeting is scheduled, but the employee receives no allegation or time to prepare. What should HR change?", options: [
+    { label: "Explain the concern, give reasonable notice, allow a response and keep a balanced record of the outcome.", feedback: "A fair process is clearer, more defensible and less likely to create an avoidable dispute.", best: true },
+    { label: "Keep the allegation secret until the meeting ends.", feedback: "A person cannot meaningfully respond to an undisclosed concern.", best: false },
+    { label: "Require a resignation before hearing the response.", feedback: "Pressure to resign is not a substitute for fair fact-finding.", best: false },
+  ] },
+  { title: "Recruitment data", skill: "Consent and retention", law: "Employment records · privacy-aware HR practice", context: "A recruiter wants to keep every applicant’s ID photo forever in a personal cloud folder. What should HR do?", options: [
+    { label: "Set a purpose, access rule and retention period, then store only what the hiring process needs.", feedback: "Purpose-limited collection and controlled retention reduce privacy and security risk.", best: true },
+    { label: "Allow it because rejected applicants are no longer relevant.", feedback: "Rejected applicants’ personal data still needs responsible handling.", best: false },
+    { label: "Ask the recruiter to forward the folder to friends for backup.", feedback: "Uncontrolled copying multiplies the exposure risk.", best: false },
+  ] },
+  { title: "Business continuity", skill: "People-first planning", law: "Occupational safety · workplace emergency practice", context: "Flooding makes the normal worksite unsafe, but a manager says everyone must report or lose pay. What should HR do?", options: [
+    { label: "Activate the safety plan, communicate a safe alternative and check the lawful pay and attendance treatment.", feedback: "Protecting people comes first; the pay and leave treatment should then be documented against the applicable rule.", best: true },
+    { label: "Ignore the hazard because the office is still technically open.", feedback: "A physical opening does not make an unsafe journey or workplace acceptable.", best: false },
+    { label: "Delete the emergency messages so the decision cannot be reviewed.", feedback: "Keep the incident trail and use it to improve the response.", best: false },
+  ] },
 ];
 
 const emptyProgress: GameProgress = { level: 1, score: 0, streak: 0, bestStreak: 0, checkpointLevel: 1 };
@@ -144,6 +180,9 @@ export default function ScenarioLab() {
   const [progress, setProgress] = useState<GameProgress>(loadProgress);
   const [selected, setSelected] = useState<number | null>(null);
   const [showCheckpoint, setShowCheckpoint] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [nickname, setNickname] = useState(() => typeof window === "undefined" ? "" : window.localStorage.getItem("zeke-game-nickname") || "");
+  const [leaderboardStatus, setLeaderboardStatus] = useState("");
   const scenario = useMemo(() => stageFor(progress.level), [progress.level]);
   const selectedOption = selected === null ? null : scenario.options[selected];
   const isComplete = progress.level === MAX_LEVEL && selected !== null;
@@ -152,6 +191,9 @@ export default function ScenarioLab() {
   const answered = progress.level - 1;
   const accuracy = answered ? Math.round((progress.score / answered) * 100) : 0;
   useEffect(() => { if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }, [progress]);
+  useEffect(() => {
+    fetch("/api/game/leaderboard").then(response => response.ok ? response.json() : Promise.reject(new Error("unavailable"))).then((data: { entries?: LeaderboardEntry[] }) => setLeaderboard(data.entries || [])).catch(() => setLeaderboardStatus("Leaderboard will appear when the game service is ready."));
+  }, []);
   const choose = (index: number) => { if (selected === null) setSelected(index); };
   const next = () => {
     if (selectedOption === null) return;
@@ -165,6 +207,20 @@ export default function ScenarioLab() {
   };
   const resetToCheckpoint = () => { setProgress(current => ({ ...emptyProgress, level: current.checkpointLevel, checkpointLevel: current.checkpointLevel })); setSelected(null); setShowCheckpoint(false); };
   const resetGame = () => { setProgress(emptyProgress); setSelected(null); setShowCheckpoint(false); };
+  const submitScore = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const cleanName = nickname.trim();
+    if (cleanName.length < 2) { setLeaderboardStatus("Enter at least 2 characters for your player name."); return; }
+    setLeaderboardStatus("Saving score…");
+    try {
+      const response = await fetch("/api/game/leaderboard", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nickname: cleanName, score: progress.score, level: progress.level, streak: progress.streak, bestStreak: progress.bestStreak }) });
+      const data = await response.json() as { entries?: LeaderboardEntry[]; error?: string };
+      if (!response.ok) throw new Error(data.error || "Unable to save score.");
+      setLeaderboard(data.entries || []);
+      setLeaderboardStatus("Score saved to the board.");
+      if (typeof window !== "undefined") window.localStorage.setItem("zeke-game-nickname", cleanName);
+    } catch (error) { setLeaderboardStatus(error instanceof Error ? error.message : "Unable to save score."); }
+  };
   return (
     <section className="scenario-lab section-pad" id="game" aria-labelledby="scenario-lab-title">
       <div className="scenario-lab-heading"><div><p className="section-kicker"><span className="eyebrow-dot" /> Myanmar HR practice game</p><h2 id="scenario-lab-title">Think clearly,<br /><i>then act.</i></h2></div><p className="section-description">A 1,000-level HR decision game built around Myanmar employment, leave, wage, SSB, safety and dispute-process topics. Learn the minimum-protection mindset; verify the current official rule before taking real action.</p></div>
@@ -182,6 +238,11 @@ export default function ScenarioLab() {
         <div className="scenario-footer-actions"><span>Checkpoint {checkpointProgress}/{CHECKPOINT_INTERVAL - 1}</span><button type="button" onClick={resetToCheckpoint} disabled={progress.checkpointLevel === progress.level}>Restore checkpoint</button><button type="button" onClick={resetGame}>Reset game</button></div>
         <p className="scenario-disclaimer">Educational practice only — not legal advice. Myanmar labour requirements vary by sector, coverage, contract, notification and effective date. Confirm with current Ministry of Labour, SSB, IRD or qualified counsel guidance.</p>
         <p className="scenario-source-links">Reference reading: <a href="https://www.dol.gov/sites/dolgov/files/Hachemian.Sara.C%40dol.gov/ILOGUI~1.PDF" target="_blank" rel="noreferrer">ILO Myanmar Labour Law guide</a> · <a href="https://tradefordecentwork.ilo.org/wp-content/uploads/2024/09/Myanmar-Labour-Laws-and-COVID-19-FAQ.pdf" target="_blank" rel="noreferrer">ILO Myanmar labour-law FAQ</a></p>
+      </div>
+      <div className="scenario-leaderboard">
+        <div className="scenario-leaderboard-heading"><div><p className="section-kicker"><Trophy size={14} /> Global board</p><h3>Play smart.<br /><i>Leave a mark.</i></h3></div><p>Share a player name and submit your current score. The board stores only the nickname and game result; scores are self-reported practice results, not verified employment credentials.</p></div>
+        <form className="scenario-score-form" onSubmit={submitScore}><label><span>Player name</span><input value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={24} placeholder="e.g. People Ops" /></label><button type="submit"><Trophy size={14} /> Submit score</button>{leaderboardStatus && <small role="status">{leaderboardStatus}</small>}</form>
+        <div className="scenario-leaderboard-list" aria-label="Top ten player scores">{leaderboard.length ? leaderboard.map((entry, index) => <div className="scenario-leaderboard-row" key={entry.id}><span className={`scenario-rank rank-${index + 1}`}>{String(index + 1).padStart(2, "0")}</span><strong>{entry.nickname}</strong><span>Lv {padLevel(entry.level)}</span><b>{entry.score} pts</b></div>) : <p className="scenario-empty-board">Be the first player on the board.</p>}</div>
       </div>
     </section>
   );

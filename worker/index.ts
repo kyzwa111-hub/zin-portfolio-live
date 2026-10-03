@@ -31,6 +31,7 @@ interface Env {
 import { addVideoLink, listVideoLinks, listPublicDiscoveredVideoLinks, TiDBNotConfiguredError, updateVideoReviewStatus, VideoLinkValidationError } from "./videoLinks";
 import { runDailyYouTubeDiscovery } from "./videoDiscovery";
 import { jobFeedBootstrap } from "./jobFeed";
+import { listLeaderboard, submitLeaderboardScore } from "./gameLeaderboard";
 
 type AccessStatus = "pending" | "approved" | "denied" | "expired" | "revoked";
 const ADMIN_CHAT_KEY = "admin_chat_id";
@@ -963,6 +964,20 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       }
     }
     if (url.pathname === "/api/zeke/chat") return handleZekeChat(request, env);
+    if (url.pathname === "/api/game/leaderboard") {
+      try {
+        if (request.method === "GET") return json({ entries: await listLeaderboard(env) });
+        if (request.method === "POST") {
+          const result = await submitLeaderboardScore(env, await request.json().catch(() => null));
+          if ("error" in result) return json({ error: result.error }, 400);
+          return json(result, 201);
+        }
+        return json({ error: "Method not allowed." }, 405);
+      } catch (error) {
+        console.error("[Game] leaderboard unavailable", error);
+        return json({ error: "Leaderboard is temporarily unavailable." }, 503);
+      }
+    }
     if (url.pathname.startsWith("/api/mobile/")) {
       const cors = mobileCorsHeaders(request, url, env);
       if (cors === false) return json({ error: "Origin not allowed." }, 403);

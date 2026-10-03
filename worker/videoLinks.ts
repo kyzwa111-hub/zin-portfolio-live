@@ -63,7 +63,7 @@ const relevantVideoTerms = /(\bhr\b|human resources?|people operations?|recruit(
 const irrelevantVideoTerms = /(earthquake|special rapporteur|politics|election|war|football|sport|music video|celebrity|movie|recipe|weather forecast|news headlines|သတင်း|ငလျင်|နိုင်ငံရေး|အားကစား|သီချင်း)/i;
 
 export function isLikelyRelevantVideo(video: Pick<VideoLinkRow, "title" | "creator_name" | "source_query">): boolean {
-  const text = `${video.title || ""} ${video.creator_name || ""} ${video.source_query || ""}`;
+  const text = `${video.title || ""} ${video.creator_name || ""}`;
   return relevantVideoTerms.test(text) && !irrelevantVideoTerms.test(text);
 }
 

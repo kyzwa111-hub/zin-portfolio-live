@@ -23,6 +23,7 @@ import ScenarioLab from "@/components/ScenarioLab";
 import "../workspace.css";
 
 const MASCOT_VIDEO = "/videos/zeke-live-mascot-vivid.mp4";
+const INTRO_VIDEO = "/videos/zeke-product-intro.mp4";
 const SERVICE_VIDEO = "/videos/hr-toolkit-services-58sec.mp4";
 const SERVICE_POSTER = "/videos/hr-toolkit-services-58sec-poster.jpg";
 
@@ -126,7 +127,7 @@ export default function Home() {
           </div>
           <div className="unified-intro-video-shell">
             <video controls preload="metadata" poster="/videos/hr-toolkit-services-58sec-poster.jpg" aria-label="Zeke product introduction video">
-              <source src={SERVICE_VIDEO} type="video/mp4" />
+              <source src={INTRO_VIDEO} type="video/mp4" />
               Your browser does not support the video element.
             </video>
             <div className="unified-intro-video-caption"><strong>Events. Jobs. Games.</strong><span>Everything in one place.</span></div>

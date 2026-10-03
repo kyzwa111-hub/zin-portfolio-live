@@ -99,8 +99,9 @@ export async function runDailyYouTubeDiscovery(env: YouTubeDiscoveryEnv): Promis
     if (candidates.length) {
       try {
         linksProcessed += await addVideoLinks(env, candidates, "search_api");
-      } catch {
-        return { status: "failed", phase: "tidb_write", reason: "database_write_failed", queriesCompleted, resultsFound, linksProcessed, queriesPlanned: DAILY_YOUTUBE_QUERIES.length };
+      } catch (error) {
+        const detail = error instanceof Error ? error.message.slice(0, 160) : "unknown_database_error";
+        return { status: "failed", phase: "d1_write", reason: `database_write_failed: ${detail}`, queriesCompleted, resultsFound, linksProcessed, queriesPlanned: DAILY_YOUTUBE_QUERIES.length };
       }
     }
   }

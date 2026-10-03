@@ -1017,11 +1017,12 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     if (url.pathname === "/api/event-videos" && request.method === "GET") {
       try {
         let links = await listPublicDiscoveredVideoLinks(env);
+        let sync: unknown = null;
         if (!links.length) {
-          await runDailyYouTubeDiscovery(env);
+          sync = await runDailyYouTubeDiscovery(env);
           links = await listPublicDiscoveredVideoLinks(env);
         }
-        return json({ links, updatedAt: new Date().toISOString() });
+        return json({ links, sync, updatedAt: new Date().toISOString() });
       }
       catch (error) { return videoLinkErrorResponse(error); }
     }
